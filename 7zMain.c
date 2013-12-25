@@ -251,16 +251,22 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
 #endif
 
 
-static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name)
+static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name, Bool doYes)
 {
   #ifdef USE_WINDOWS_FILE
+  /* TODO(pts): Don't overwrite. */
   return OutFile_OpenW(p, name);
   #else
+  struct stat st;
   CBuf buf;
   WRes res;
   Buf_Init(&buf);
   RINOK(Utf16_To_Char(&buf, name, 1));
-  res = OutFile_Open(p, (const char *)buf.data);
+  if (!doYes && 0 == lstat((const char *)buf.data, &st)) {
+    res = SZ_ERROR_WRITE;
+  } else {
+    res = OutFile_Open(p, (const char *)buf.data);
+  }
   Buf_Free(&buf, &g_Alloc);
   return res;
   #endif
@@ -384,7 +390,8 @@ int MY_CDECL main(int numargs, char *args[])
   size_t tempSize = 0;
   unsigned umaskv = -1;
   const char *archive = args[0];
-  int listCommand = 0, testCommand = 0, argi = 2;
+  Bool listCommand = 0, testCommand = 0, doYes = 0;
+  int argi = 2;
 
   printf("Tiny 7z extractor " MY_VERSION "\n\n");
   if (numargs >= 2 &&
@@ -396,8 +403,8 @@ int MY_CDECL main(int numargs, char *args[])
       "  t: Test integrity of archive\n"
       "  x: eXtract files with full pathname (default)\n"
       "<Switches>\n"
-      "  -e{Archive}: archive to Extract (default is self, argv[0])\n",
-      args[0]);
+      "  -e{Archive}: archive to Extract (default is self, argv[0])\n"
+      "  -y: assume Yes on all queries\n", args[0]);
      return 0;
   }
   if (numargs >= 2) {
@@ -420,8 +427,15 @@ int MY_CDECL main(int numargs, char *args[])
       PrintError("incorrect switch");
       return 1;
     }
+   same_arg:
     if (arg[1] == 'e') {
       archive = arg + 2;
+    } else if (arg[1] == 'y') {
+      doYes = 1;
+      if (arg[2] != '\0') {
+        ++arg;
+        goto same_arg;
+      }
     } else {
       goto incorrect_switch;
     }
@@ -559,10 +573,11 @@ int MY_CDECL main(int numargs, char *args[])
             printf("\n");
             continue;
           }
-          else if (OutFile_OpenUtf16(&outFile, destPath))
+          else if ((res = OutFile_OpenUtf16(&outFile, destPath, doYes)))
           {
-            PrintError("can not open output file");
-            res = SZ_ERROR_FAIL;
+            PrintError(res == SZ_ERROR_WRITE ?
+                       "already exists, specify -y to overwrite" :
+                       "can not open output file");
             break;
           }
           #ifndef USE_WINDOWS_FILE
