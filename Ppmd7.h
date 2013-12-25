@@ -59,10 +59,6 @@ typedef struct
   UInt16 BinSumm[128][64];
 } CPpmd7;
 
-STATIC void Ppmd7_Construct(CPpmd7 *p);
-STATIC Bool Ppmd7_Alloc(CPpmd7 *p, UInt32 size, ISzAlloc *alloc);
-STATIC void Ppmd7_Free(CPpmd7 *p, ISzAlloc *alloc);
-STATIC void Ppmd7_Init(CPpmd7 *p, unsigned maxOrder);
 #define Ppmd7_WasAllocated(p) ((p)->Base != NULL)
 
 
@@ -80,20 +76,12 @@ extern const Byte PPMD7_kExpEscape[16];
   #define Ppmd7_GetStats(p, ctx) ((CPpmd_State *)Ppmd7_GetPtr((p), ((ctx)->Stats)))
 #endif
 
-STATIC void Ppmd7_Update1(CPpmd7 *p);
-STATIC void Ppmd7_Update1_0(CPpmd7 *p);
-STATIC void Ppmd7_Update2(CPpmd7 *p);
-STATIC void Ppmd7_UpdateBin(CPpmd7 *p);
-
 #define Ppmd7_GetBinSumm(p) \
     &p->BinSumm[Ppmd7Context_OneState(p->MinContext)->Freq - 1][p->PrevSuccess + \
     p->NS2BSIndx[Ppmd7_GetContext(p, p->MinContext->Suffix)->NumStats - 1] + \
     (p->HiBitsFlag = p->HB2Flag[p->FoundState->Symbol]) + \
     2 * p->HB2Flag[Ppmd7Context_OneState(p->MinContext)->Symbol] + \
     ((p->RunLength >> 26) & 0x20)]
-
-STATIC CPpmd_See *Ppmd7_MakeEscFreq(CPpmd7 *p, unsigned numMasked, UInt32 *scale);
-
 
 /* ---------- Decode ---------- */
 
@@ -112,12 +100,7 @@ typedef struct
   IByteIn *Stream;
 } CPpmd7z_RangeDec;
 
-STATIC void Ppmd7z_RangeDec_CreateVTable(CPpmd7z_RangeDec *p);
-STATIC Bool Ppmd7z_RangeDec_Init(CPpmd7z_RangeDec *p);
 #define Ppmd7z_RangeDec_IsFinishedOK(p) ((p)->Code == 0)
-
-STATIC int Ppmd7_DecodeSymbol(CPpmd7 *p, IPpmd7_RangeDec *rc);
-
 
 /* ---------- Encode ---------- */
 

@@ -134,9 +134,6 @@ LzmaDec_Allocate* can return:
 STATIC SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned propsSize, ISzAlloc *alloc);
 STATIC void LzmaDec_FreeProbs(CLzmaDec *p, ISzAlloc *alloc);
 
-STATIC SRes LzmaDec_Allocate(CLzmaDec *state, const Byte *prop, unsigned propsSize, ISzAlloc *alloc);
-STATIC void LzmaDec_Free(CLzmaDec *state, ISzAlloc *alloc);
-
 /* ---------- Dictionary Interface ---------- */
 
 /* You can use it, if you want to eliminate the overhead for data copying from
@@ -195,10 +192,6 @@ finishMode:
   LZMA_FINISH_END - Stream must be finished after (*destLen).
 */
 
-STATIC SRes LzmaDec_DecodeToBuf(CLzmaDec *p, Byte *dest, SizeT *destLen,
-    const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
-
-
 /* ---------- One Call Interface ---------- */
 
 /* LzmaDecode
@@ -219,10 +212,6 @@ Returns:
   SZ_ERROR_UNSUPPORTED - Unsupported properties
   SZ_ERROR_INPUT_EOF - It needs more bytes in input buffer (src).
 */
-
-STATIC SRes LzmaDecode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
-    const Byte *propData, unsigned propSize, ELzmaFinishMode finishMode,
-    ELzmaStatus *status, ISzAlloc *alloc);
 
 #ifdef __cplusplus
 }

@@ -249,58 +249,6 @@ STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UI
     p->PackStreamStartPositions[p->FolderStartPackStreamIndex[folderIndex] + indexInFolder];
 }
 
-STATIC int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize)
-{
-  UInt32 packStreamIndex = p->FolderStartPackStreamIndex[folderIndex];
-  CSzFolder *folder = p->db.Folders + folderIndex;
-  UInt64 size = 0;
-  UInt32 i;
-  for (i = 0; i < folder->NumPackStreams; i++)
-  {
-    UInt64 t = size + p->db.PackSizes[packStreamIndex + i];
-    if (t < size) /* check it */
-      return SZ_ERROR_FAIL;
-    size = t;
-  }
-  *resSize = size;
-  return SZ_OK;
-}
-
-
-/*
-SRes SzReadTime(const CObjectVector<CBuf> &dataVector,
-    CObjectVector<CSzFileItem> &files, UInt64 type)
-{
-  CBoolVector boolVector;
-  RINOK(ReadBoolVector2(files.Size(), boolVector))
-
-  CStreamSwitch streamSwitch;
-  RINOK(streamSwitch.Set(this, &dataVector));
-
-  for (int i = 0; i < files.Size(); i++)
-  {
-    CSzFileItem &file = files[i];
-    CArchiveFileTime fileTime;
-    bool defined = boolVector[i];
-    if (defined)
-    {
-      UInt32 low, high;
-      RINOK(SzReadUInt32(low));
-      RINOK(SzReadUInt32(high));
-      fileTime.dwLowDateTime = low;
-      fileTime.dwHighDateTime = high;
-    }
-    switch(type)
-    {
-      case k7zIdCTime: file.IsCTimeDefined = defined; if (defined) file.CTime = fileTime; break;
-      case k7zIdATime: file.IsATimeDefined = defined; if (defined) file.ATime = fileTime; break;
-      case k7zIdMTime: file.IsMTimeDefined = defined; if (defined) file.MTime = fileTime; break;
-    }
-  }
-  return SZ_OK;
-}
-*/
-
 typedef struct _CSzState
 {
   Byte *Data;

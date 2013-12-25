@@ -145,11 +145,6 @@ typedef struct
        (output(*size) < input(*size)) is allowed */
 } ISeqInStream;
 
-/* it can return SZ_ERROR_INPUT_EOF */
-STATIC SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size);
-STATIC SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
-STATIC SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf);
-
 typedef struct
 {
   size_t (*Write)(void *p, const void *buf, size_t size);
@@ -184,7 +179,6 @@ typedef struct
   SRes (*Seek)(void *p, Int64 *pos, ESzSeek origin);
 } ILookInStream;
 
-STATIC SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size);
 STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);
 
 /* reads via ILookInStream::Read */
@@ -211,15 +205,12 @@ typedef struct
   ILookInStream *realStream;
 } CSecToLook;
 
-STATIC void SecToLook_CreateVTable(CSecToLook *p);
 
 typedef struct
 {
   ISeqInStream s;
   ILookInStream *realStream;
 } CSecToRead;
-
-STATIC void SecToRead_CreateVTable(CSecToRead *p);
 
 typedef struct
 {

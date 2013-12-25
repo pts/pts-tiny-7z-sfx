@@ -156,13 +156,4 @@ static Bool CPU_Sys_Is_SSE_Supported()
 #define CHECK_SYS_SSE_SUPPORT
 #endif
 
-STATIC Bool CPU_Is_Aes_Supported()
-{
-  Cx86cpuid p;
-  CHECK_SYS_SSE_SUPPORT
-  if (!x86cpuid_CheckAndRead(&p))
-    return False;
-  return (p.c >> 25) & 1;
-}
-
 #endif

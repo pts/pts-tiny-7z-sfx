@@ -29,7 +29,6 @@ typedef struct
   #endif
 } CSzFile;
 
-STATIC void File_Construct(CSzFile *p);
 #if !defined(UNDER_CE) || !defined(USE_WINDOWS_FILE)
 STATIC WRes InFile_Open(CSzFile *p, const char *name);
 STATIC WRes OutFile_Open(CSzFile *p, const char *name);
@@ -47,7 +46,6 @@ STATIC WRes File_Read(CSzFile *p, void *data, size_t *size);
 STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size);
 
 STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin);
-STATIC WRes File_GetLength(CSzFile *p, UInt64 *length);
 
 
 /* ---------- FileInStream ---------- */
@@ -57,9 +55,6 @@ typedef struct
   ISeqInStream s;
   CSzFile file;
 } CFileSeqInStream;
-
-STATIC void FileSeqInStream_CreateVTable(CFileSeqInStream *p);
-
 
 typedef struct
 {
@@ -75,8 +70,6 @@ typedef struct
   ISeqOutStream s;
   CSzFile file;
 } CFileOutStream;
-
-STATIC void FileOutStream_CreateVTable(CFileOutStream *p);
 
 EXTERN_C_END
 

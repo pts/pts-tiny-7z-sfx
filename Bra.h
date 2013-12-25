@@ -56,10 +56,6 @@ in CALL instructions to increase the compression ratio.
 #define x86_Convert_Init(state) { state = 0; }
 STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int encoding);
 STATIC SizeT ARM_Convert(Byte *data, SizeT size, UInt32 ip, int encoding);
-STATIC SizeT ARMT_Convert(Byte *data, SizeT size, UInt32 ip, int encoding);
-STATIC SizeT PPC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding);
-STATIC SizeT SPARC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding);
-STATIC SizeT IA64_Convert(Byte *data, SizeT size, UInt32 ip, int encoding);
 
 #ifdef __cplusplus
 }

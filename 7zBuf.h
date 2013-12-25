@@ -27,11 +27,6 @@ typedef struct
   size_t pos;
 } CDynBuf;
 
-STATIC void DynBuf_Construct(CDynBuf *p);
-STATIC void DynBuf_SeekToBeg(CDynBuf *p);
-STATIC int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc);
-STATIC void DynBuf_Free(CDynBuf *p, ISzAlloc *alloc);
-
 #ifdef __cplusplus
 }
 #endif

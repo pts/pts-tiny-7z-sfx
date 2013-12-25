@@ -165,7 +165,6 @@ typedef struct
 STATIC void SzArEx_Init(CSzArEx *p);
 STATIC void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc);
 STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
-STATIC int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize);
 
 /*
 if dest == NULL, the return value specifies the required size of the buffer,

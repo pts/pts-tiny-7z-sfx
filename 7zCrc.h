@@ -8,8 +8,6 @@
 
 EXTERN_C_BEGIN
 
-extern UInt32 g_CrcTable[];
-
 /* Call CrcGenerateTable one time before other CRC functions */
 STATIC void MY_FAST_CALL CrcGenerateTable(void);
 
@@ -17,7 +15,6 @@ STATIC void MY_FAST_CALL CrcGenerateTable(void);
 #define CRC_GET_DIGEST(crc) ((crc) ^ CRC_INIT_VAL)
 #define CRC_UPDATE_BYTE(crc, b) (g_CrcTable[((crc) ^ (b)) & 0xFF] ^ ((crc) >> 8))
 
-STATIC UInt32 MY_FAST_CALL CrcUpdate(UInt32 crc, const void *data, size_t size);
 STATIC UInt32 MY_FAST_CALL CrcCalc(const void *data, size_t size);
 
 EXTERN_C_END

@@ -79,13 +79,6 @@ STATIC SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
   return LzmaDec_AllocateProbs(&p->decoder, props, LZMA_PROPS_SIZE, alloc);
 }
 
-STATIC SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
-{
-  Byte props[LZMA_PROPS_SIZE];
-  RINOK(Lzma2Dec_GetOldProps(prop, props));
-  return LzmaDec_Allocate(&p->decoder, props, LZMA_PROPS_SIZE, alloc);
-}
-
 STATIC void Lzma2Dec_Init(CLzma2Dec *p)
 {
   p->state = LZMA2_STATE_CONTROL;
@@ -286,65 +279,4 @@ STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
   }
   *status = LZMA_STATUS_FINISHED_WITH_MARK;
   return SZ_OK;
-}
-
-STATIC SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
-{
-  SizeT outSize = *destLen, inSize = *srcLen;
-  *srcLen = *destLen = 0;
-  for (;;)
-  {
-    SizeT srcSizeCur = inSize, outSizeCur, dicPos;
-    ELzmaFinishMode curFinishMode;
-    SRes res;
-    if (p->decoder.dicPos == p->decoder.dicBufSize)
-      p->decoder.dicPos = 0;
-    dicPos = p->decoder.dicPos;
-    if (outSize > p->decoder.dicBufSize - dicPos)
-    {
-      outSizeCur = p->decoder.dicBufSize;
-      curFinishMode = LZMA_FINISH_ANY;
-    }
-    else
-    {
-      outSizeCur = dicPos + outSize;
-      curFinishMode = finishMode;
-    }
-
-    res = Lzma2Dec_DecodeToDic(p, outSizeCur, src, &srcSizeCur, curFinishMode, status);
-    src += srcSizeCur;
-    inSize -= srcSizeCur;
-    *srcLen += srcSizeCur;
-    outSizeCur = p->decoder.dicPos - dicPos;
-    memcpy(dest, p->decoder.dic + dicPos, outSizeCur);
-    dest += outSizeCur;
-    outSize -= outSizeCur;
-    *destLen += outSizeCur;
-    if (res != 0)
-      return res;
-    if (outSizeCur == 0 || outSize == 0)
-      return SZ_OK;
-  }
-}
-
-STATIC SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
-    Byte prop, ELzmaFinishMode finishMode, ELzmaStatus *status, ISzAlloc *alloc)
-{
-  CLzma2Dec p;
-  SRes res;
-  SizeT outSize = *destLen, inSize = *srcLen;
-  *destLen = *srcLen = 0;
-  *status = LZMA_STATUS_NOT_SPECIFIED;
-  Lzma2Dec_Construct(&p);
-  RINOK(Lzma2Dec_AllocateProbs(&p, prop, alloc));
-  p.decoder.dic = dest;
-  p.decoder.dicBufSize = outSize;
-  Lzma2Dec_Init(&p);
-  *srcLen = inSize;
-  res = Lzma2Dec_DecodeToDic(&p, outSize, src, srcLen, finishMode, status);
-  *destLen = p.decoder.dicPos;
-  if (res == SZ_OK && *status == LZMA_STATUS_NEEDS_MORE_INPUT)
-    res = SZ_ERROR_INPUT_EOF;
-  Lzma2Dec_FreeProbs(&p, alloc);
-  return res;
 }

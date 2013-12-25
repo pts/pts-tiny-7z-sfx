@@ -25,15 +25,6 @@
 
 #endif
 
-STATIC void File_Construct(CSzFile *p)
-{
-  #ifdef USE_WINDOWS_FILE
-  p->handle = INVALID_HANDLE_VALUE;
-  #else
-  p->file = NULL;
-  #endif
-}
-
 #if !defined(UNDER_CE) || !defined(USE_WINDOWS_FILE)
 static WRes File_Open(CSzFile *p, const char *name, int writeMode)
 {
@@ -207,46 +198,7 @@ STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
   #endif
 }
 
-STATIC WRes File_GetLength(CSzFile *p, UInt64 *length)
-{
-  #ifdef USE_WINDOWS_FILE
-
-  DWORD sizeHigh;
-  DWORD sizeLow = GetFileSize(p->handle, &sizeHigh);
-  if (sizeLow == 0xFFFFFFFF)
-  {
-    DWORD res = GetLastError();
-    if (res != NO_ERROR)
-      return res;
-  }
-  *length = (((UInt64)sizeHigh) << 32) + sizeLow;
-  return 0;
-
-  #else
-
-  long pos = ftell(p->file);
-  int res = fseek(p->file, 0, SEEK_END);
-  *length = ftell(p->file);
-  fseek(p->file, pos, SEEK_SET);
-  return res;
-
-  #endif
-}
-
-
 /* ---------- FileSeqInStream ---------- */
-
-static SRes FileSeqInStream_Read(void *pp, void *buf, size_t *size)
-{
-  CFileSeqInStream *p = (CFileSeqInStream *)pp;
-  return File_Read(&p->file, buf, size) == 0 ? SZ_OK : SZ_ERROR_READ;
-}
-
-STATIC void FileSeqInStream_CreateVTable(CFileSeqInStream *p)
-{
-  p->s.Read = FileSeqInStream_Read;
-}
-
 
 /* ---------- FileInStream ---------- */
 
@@ -270,15 +222,3 @@ STATIC void FileInStream_CreateVTable(CFileInStream *p)
 
 
 /* ---------- FileOutStream ---------- */
-
-static size_t FileOutStream_Write(void *pp, const void *data, size_t size)
-{
-  CFileOutStream *p = (CFileOutStream *)pp;
-  File_Write(&p->file, data, &size);
-  return size;
-}
-
-STATIC void FileOutStream_CreateVTable(CFileOutStream *p)
-{
-  p->s.Write = FileOutStream_Write;
-}

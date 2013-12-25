@@ -1,6 +1,5 @@
 #include "7zAlloc.c"
 #include "7zBuf.c"
-#include "7zBuf2.c"
 #include "7zCrc.c"
 #include "7zCrcOpt.c"
 #include "7zDec.c"
@@ -14,5 +13,3 @@
 #include "CpuArch.c"
 #include "Lzma2Dec.c"
 #include "LzmaDec.c"
-#include "Ppmd7.c"
-#include "Ppmd7Dec.c"

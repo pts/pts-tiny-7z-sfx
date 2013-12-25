@@ -5,46 +5,10 @@
 
 #include "Types.h"
 
-STATIC SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType)
-{
-  while (size != 0)
-  {
-    size_t processed = size;
-    RINOK(stream->Read(stream, buf, &processed));
-    if (processed == 0)
-      return errorType;
-    buf = (void *)((Byte *)buf + processed);
-    size -= processed;
-  }
-  return SZ_OK;
-}
-
-STATIC SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size)
-{
-  return SeqInStream_Read2(stream, buf, size, SZ_ERROR_INPUT_EOF);
-}
-
-STATIC SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf)
-{
-  size_t processed = 1;
-  RINOK(stream->Read(stream, buf, &processed));
-  return (processed == 1) ? SZ_OK : SZ_ERROR_INPUT_EOF;
-}
-
 STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
 {
   Int64 t = offset;
   return stream->Seek(stream, &t, SZ_SEEK_SET);
-}
-
-STATIC SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size)
-{
-  const void *lookBuf;
-  if (*size == 0)
-    return SZ_OK;
-  RINOK(stream->Look(stream, &lookBuf, size));
-  memcpy(buf, lookBuf, *size);
-  return stream->Skip(stream, *size);
 }
 
 STATIC SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType)
@@ -144,26 +108,4 @@ STATIC void LookToRead_CreateVTable(CLookToRead *p, int lookahead)
 STATIC void LookToRead_Init(CLookToRead *p)
 {
   p->pos = p->size = 0;
-}
-
-static SRes SecToLook_Read(void *pp, void *buf, size_t *size)
-{
-  CSecToLook *p = (CSecToLook *)pp;
-  return LookInStream_LookRead(p->realStream, buf, size);
-}
-
-STATIC void SecToLook_CreateVTable(CSecToLook *p)
-{
-  p->s.Read = SecToLook_Read;
-}
-
-static SRes SecToRead_Read(void *pp, void *buf, size_t *size)
-{
-  CSecToRead *p = (CSecToRead *)pp;
-  return p->realStream->Read(p->realStream, buf, size);
-}
-
-STATIC void SecToRead_CreateVTable(CSecToRead *p)
-{
-  p->s.Read = SecToRead_Read;
 }

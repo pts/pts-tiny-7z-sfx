@@ -24,12 +24,7 @@
 typedef UInt32 (MY_FAST_CALL *CRC_FUNC)(UInt32 v, const void *data, size_t size, const UInt32 *table);
 
 static CRC_FUNC g_CrcUpdate;
-UInt32 g_CrcTable[256 * CRC_NUM_TABLES];
-
-STATIC UInt32 MY_FAST_CALL CrcUpdate(UInt32 v, const void *data, size_t size)
-{
-  return g_CrcUpdate(v, data, size, g_CrcTable);
-}
+STATIC UInt32 g_CrcTable[256 * CRC_NUM_TABLES];
 
 STATIC UInt32 MY_FAST_CALL CrcCalc(const void *data, size_t size)
 {
