@@ -27,6 +27,7 @@ http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.tar.bz2/download
 TODOs:
 
 * TODO(pts): Add SFX support (scan for 7-Zip header).
+* TODO(pts): Prevent file overwrites without -y in SFX mode.
 * TODO(pts): Make it smaller with fastcall.
 
 __EOF__
