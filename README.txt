@@ -17,6 +17,8 @@ Limitations:
   So user that calls SFX installer must have free RAM of size of largest
   solid 7z block (size of 7z archive at simplest case).
 * It overwrites files without asking.
+* It always extracts to the current directory.
+* It does not support (and may misbehave for) encryption in archives.
 
 See http://sourceforge.net/p/sevenzip/discussion/45797/thread/233f5efd
 about 7zS2con.sfx, a similar software for Win32.
