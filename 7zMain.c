@@ -181,7 +181,8 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   #ifdef _WIN32
   res = _mkdir((const char *)buf.data) == 0;
   #else
-  mode = GetUnixMode(umaskv, attribDefined ? attrib : 0);
+  mode = GetUnixMode(umaskv, attribDefined ? attrib :
+      FILE_ATTRIBUTE_UNIX_EXTENSION | 0755 << 16);
   res = mkdir((const char *)buf.data, mode) == 0;
   if (!res && errno == EEXIST) res = 1;  /* Already exists. */
   if (res && attribDefined) {
