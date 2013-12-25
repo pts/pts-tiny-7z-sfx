@@ -7,7 +7,10 @@
 #include "7zCrc.h"
 #include "CpuArch.h"
 
-Byte k7zSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C};
+/* Using 'S' instead of '7' in the beginning so that the 7-Zip signature
+ * won't be detected with the SFX binary. Will replace it with '7' later.
+ */
+Byte k7zSignature[k7zSignatureSize] = {'S', 'z', 0xBC, 0xAF, 0x27, 0x1C};
 
 #define RINOM(x) { if ((x) == 0) return SZ_ERROR_MEM; }
 
@@ -1250,6 +1253,7 @@ static SRes SzArEx_Open2(
   CBuf buffer;
   SRes res;
 
+  k7zSignature[0] = '7';
   startArcPos = FindStartArcPos(inStream);
   RINOK(inStream->Seek(inStream, &startArcPos, SZ_SEEK_SET));
 
