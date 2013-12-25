@@ -30,7 +30,6 @@ http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.tar.bz2/download
 
 TODOs:
 
-* TODO(pts): Add symlink support.
 * TODO(pts): Make it smaller with fastcall.
 
 __EOF__

@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <utime.h>
+#include <unistd.h>  /* symlink() */
 #endif
 #endif
 
@@ -570,11 +571,48 @@ int MY_CDECL main(int numargs, char *args[])
               PrintMyCreateDirError(dres);
               break;
             }
-            printf("\n");
-            continue;
+            goto next_file;
           }
+          #ifndef USE_WINDOWS_FILE
+          else if (f->AttribDefined &&
+                   (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
+                   S_ISLNK(f->Attrib >> 16)) {
+            char *target;
+            CBuf buf;
+            Buf_Init(&buf);
+            WRes sres;
+            if ((sres = Utf16_To_Char(&buf, name, 1))) {
+              PrintError("symlink malloc");
+              res = sres;
+              break;
+            }
+            target = (char*)IAlloc_Alloc(&allocImp, outSizeProcessed + 1);
+            memcpy(target, outBuffer + offset, outSizeProcessed);
+            target[outSizeProcessed] = '\0';
+            if (0 != symlink(target, (const char *)buf.data)) {
+              if (errno == EEXIST) {
+                if (!doYes) {
+                  res = SZ_ERROR_WRITE;
+                  goto overw;
+                }
+                unlink((const char *)buf.data);
+                if (0 == symlink(target, (const char *)buf.data)) goto reok;
+              }
+              PrintError("can not create symlink");
+              res = SZ_ERROR_FAIL;
+              IAlloc_Free(&allocImp, target);
+              Buf_Free(&buf, &g_Alloc);
+              break;
+            }
+           reok:
+            IAlloc_Free(&allocImp, target);
+            Buf_Free(&buf, &g_Alloc);
+            goto next_file;
+          }
+          #endif
           else if ((res = OutFile_OpenUtf16(&outFile, destPath, doYes)))
           {
+           overw:
             PrintError(res == SZ_ERROR_WRITE ?
                        "already exists, specify -y to overwrite" :
                        "can not open output file");
@@ -617,6 +655,7 @@ int MY_CDECL main(int numargs, char *args[])
           }
           #endif
         }
+       next_file:
         printf("\n");
       }
       IAlloc_Free(&allocImp, outBuffer);
