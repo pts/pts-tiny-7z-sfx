@@ -241,9 +241,9 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
     usec += 1000000;
     --sec;
   }
-  tv[0].tv_sec = sec;
-  tv[0].tv_usec = usec;
-  tv[1] = tv[0];
+  gettimeofday(&tv[0], NULL);
+  tv[1].tv_sec = sec;
+  tv[1].tv_usec = usec;
   got = MyUtimes((const char *)buf.data, tv);
   Buf_Free(&buf, &g_Alloc);
   return got != 0;
