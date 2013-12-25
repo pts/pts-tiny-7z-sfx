@@ -104,6 +104,9 @@ typedef struct
   Byte MTimeDefined;
   Byte AttribDefined;
 } CSzFileItem;
+#define FILE_ATTRIBUTE_READONLY             1
+#define FILE_ATTRIBUTE_DIRECTORY           16
+#define FILE_ATTRIBUTE_UNIX_EXTENSION   0x8000
 
 void SzFile_Init(CSzFileItem *p);
 

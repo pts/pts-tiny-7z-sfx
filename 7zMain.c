@@ -131,29 +131,68 @@ static SRes Utf16_To_Char(CBuf *buf, const UInt16 *s, int fileMode)
   #endif
 }
 
-static WRes MyCreateDir(const UInt16 *name)
+#ifndef USE_WINDOWS_FILE
+static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
+  unsigned mode;
+  if (*umaskv + 1U == 0U) {
+    unsigned default_umask = 022;
+    *umaskv = umask(default_umask);
+    if (*umaskv != default_umask) umask(*umaskv);
+  }
+  /* !! chmod directory after its contents */
+  if (attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) {
+    mode = attrib >> 16;
+  } else {
+    mode = (attrib & FILE_ATTRIBUTE_READONLY ? 0444 : 0666) |
+        (attrib & FILE_ATTRIBUTE_DIRECTORY ? 0111 : 0);
+  }
+  return mode & ~*umaskv & 07777;
+}
+#endif
+
+void PrintError(char *sz)
+{
+  printf("\nERROR: %s\n", sz);
+}
+
+static void PrintMyCreateDirError(int res) {
+  if (res == 1) {
+    PrintError("can not create output dir");
+  } else if (res == 2) {
+    PrintError("can not chmod output dir");
+  }
+}
+
+static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined, UInt32 attrib)
 {
   #ifdef USE_WINDOWS_FILE
   
+  /* TODO(pts): It's OK if already exists. */
+  /* TODO(pts): Respect attrib. */
   return CreateDirectoryW(name, NULL) ? 0 : GetLastError();
   
   #else
-
+  unsigned mode;
   CBuf buf;
-  WRes res;
+  Bool res;
   Buf_Init(&buf);
   RINOK(Utf16_To_Char(&buf, name, 1));
 
-  res =
   #ifdef _WIN32
-  _mkdir((const char *)buf.data)
+  res = _mkdir((const char *)buf.data) == 0;
   #else
-  mkdir((const char *)buf.data, 0777)
+  mode = GetUnixMode(umaskv, attribDefined ? attrib : 0);
+  res = mkdir((const char *)buf.data, mode) == 0;
+  if (!res && errno == EEXIST) res = 1;  /* Already exists. */
+  if (res && attribDefined) {
+    if (0 != chmod((const char *)buf.data, GetUnixMode(umaskv, attrib))) {
+      Buf_Free(&buf, &g_Alloc);
+      return 2;
+    }
+  }
   #endif
-  == 0 ? 0 : errno;
   Buf_Free(&buf, &g_Alloc);
-  return res;
-  
+  return res ? 0 : 1;
   #endif
 }
 
@@ -258,11 +297,6 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   s = UIntToStr(s, sec, 2);
 }
 
-void PrintError(char *sz)
-{
-  printf("\nERROR: %s\n", sz);
-}
-
 #ifdef USE_WINDOWS_FILE
 #define kEmptyAttribChar '.'
 static void GetAttribString(UInt32 wa, Bool isDir, char *s)
@@ -293,6 +327,7 @@ int MY_CDECL main(int numargs, char *args[])
   ISzAlloc allocTempImp;
   UInt16 *temp = NULL;
   size_t tempSize = 0;
+  unsigned umaskv = -1;
 
   printf("Tiny 7z extractor " MY_VERSION "\n\n");
   if (numargs == 1)
@@ -439,9 +474,11 @@ int MY_CDECL main(int numargs, char *args[])
             {
               if (fullPaths)
               {
+                WRes dres;
                 name[j] = 0;
-                MyCreateDir(name);
+                dres = MyCreateDir(name, &umaskv, 0, 0);
                 name[j] = CHAR_PATH_SEPARATOR;
+                if (dres) break;
               }
               else
                 destPath = name + j + 1;
@@ -449,7 +486,14 @@ int MY_CDECL main(int numargs, char *args[])
     
           if (f->IsDir)
           {
-            MyCreateDir(destPath);
+            /* 7-Zip stores the directory after its contents, so it's safe to
+             * make the directory read-only now.
+             */
+            WRes dres = MyCreateDir(destPath, &umaskv, f->AttribDefined, f->Attrib);
+            if (dres) {
+              PrintMyCreateDirError(dres);
+              break;
+            }
             printf("\n");
             continue;
           }
@@ -459,6 +503,16 @@ int MY_CDECL main(int numargs, char *args[])
             res = SZ_ERROR_FAIL;
             break;
           }
+          #ifdef USE_WINDOWS_FILE
+          #else
+          if (f->AttribDefined) {
+            if (0 != fchmod(fileno(outFile.file), GetUnixMode(&umaskv, f->Attrib))) {
+              File_Close(&outFile);
+              PrintError("can not chmod output file");
+              break;
+            }
+          }
+          #endif
           processedSize = outSizeProcessed;
           if (File_Write(&outFile, outBuffer + offset, &processedSize) != 0 || processedSize != outSizeProcessed)
           {
