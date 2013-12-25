@@ -17,6 +17,7 @@
 #else
 #include <sys/stat.h>
 #include <errno.h>
+#include <utime.h>
 #endif
 #endif
 
@@ -196,6 +197,40 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   return res ? 0 : 1;
   #endif
 }
+
+#ifndef USE_WINDOWS_FILE
+/* Fallback which can't do subsecond precision. */
+static int MyUtimes(const char *filename, struct timeval tv[2]) {
+  struct utimbuf times;
+  times.actime = tv[0].tv_sec;
+  times.modtime = tv[1].tv_sec;
+  return utime(filename, &times);
+}
+static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
+  /* mtime is 10 * number of microseconds since 1601 (+ 89 days). */
+  const UInt64 q =
+      (Int64)((UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low) / 10 -
+      (369 * 365 + 89) * (Int64)(24 * 60 * 60) * 1000000;
+  Int32 usec = q % 1000000;
+  Int32 sec =  q / 1000000;
+  int got;
+  struct timeval tv[2];
+  CBuf buf;
+  Buf_Init(&buf);
+  RINOK(Utf16_To_Char(&buf, name, 1));
+  if (usec < 0) {
+    usec += 1000000;
+    --sec;
+  }
+  tv[0].tv_sec = sec;
+  tv[0].tv_usec = usec;
+  tv[1] = tv[0];
+  got = MyUtimes((const char *)buf.data, tv);
+  Buf_Free(&buf, &g_Alloc);
+  return got != 0;
+}
+#endif
+
 
 static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name)
 {
@@ -532,6 +567,16 @@ int MY_CDECL main(int numargs, char *args[])
           #ifdef USE_WINDOWS_FILE
           if (f->AttribDefined)
             SetFileAttributesW(destPath, f->Attrib);
+          #endif
+          #ifdef USE_WINDOWS_FILE
+          #else
+          if (f->MTimeDefined) {
+            if (SetMTime(destPath, &f->MTime)) {
+              res = SZ_ERROR_FAIL;
+              PrintError("can not set mtime");
+              /* Don't break, it's not a big problem. */
+            }
+          }
           #endif
         }
         printf("\n");
