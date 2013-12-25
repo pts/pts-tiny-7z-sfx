@@ -298,15 +298,6 @@ SRes SzReadTime(const CObjectVector<CBuf> &dataVector,
 }
 */
 
-static int TestSignatureCandidate(Byte *testBytes)
-{
-  size_t i;
-  for (i = 0; i < k7zSignatureSize; i++)
-    if (testBytes[i] != k7zSignature[i])
-      return 0;
-  return 1;
-}
-
 typedef struct _CSzState
 {
   Byte *Data;
@@ -1215,33 +1206,26 @@ static SRes SzReadAndDecodePackedStreams(
 /* TODO(pts): Make this fast. */
 static Int64 FindStartArcPos(ILookInStream *inStream) {
   Byte prev[k7zSignatureSize - 1];
-  /* This works even if size is 64-bit and prevc is 32-bit. */
-  unsigned prevc = 0, i, j;
   Int64 ofs = 0;
   Byte *buf;
-  size_t size;
+  /* 0 <= prevc < 7zSignatureSize. */
+  size_t size, i, prevc = 0;
   /* Find k7zSignature in the beginning. */
   while (ofs < (2 << 20)) {  /* 2 MB. */
     size = LookToRead_BUF_SIZE;
-    if (inStream->Look(inStream, (const void**)&buf, &size) || size == 0) {
+    if (inStream->Look(inStream, (const void**)&buf, &size) ||
+        size + prevc < k7zSignatureSize) {
       return 0;
     }
     for (i = 0; i < prevc; ++i) {
-      for (j = 0; j < k7zSignatureSize; ++j) {
-        if (i + j >= prevc) {
-          if (i + j - prevc >= size ||
-              buf[i + j - prevc] != k7zSignature[j]) break;
-        } else {
-          if (prev[i + j] != k7zSignature[j]) break;
-        }
+      if (0 == memcmp(prev + i, k7zSignature, prevc - i) &&
+          0 == memcmp(buf, k7zSignature + prevc - i,
+                      k7zSignatureSize - (prevc - i))) {
+        return ofs - (prevc - i);
       }
-      if (j == k7zSignatureSize) return ofs - (prevc - i);
     }
     for (i = 0; i + k7zSignatureSize <= size; ++i) {
-      for (j = 0; j < k7zSignatureSize; ++j) {
-        if (buf[i + j] != k7zSignature[j]) break;
-      }
-      if (j == k7zSignatureSize) return ofs + i;
+      if (0 == memcmp(buf + i, k7zSignature, k7zSignatureSize)) return ofs + i;
     }
     prevc = size < k7zSignatureSize - 1 ? size : k7zSignatureSize - 1;
     memcpy(prev, buf + size - prevc, prevc);
@@ -1271,7 +1255,7 @@ static SRes SzArEx_Open2(
 
   RINOK(LookInStream_Read2(inStream, header, k7zStartHeaderSize, SZ_ERROR_NO_ARCHIVE));
 
-  if (!TestSignatureCandidate(header))
+  if (0 != memcmp(header, k7zSignature, k7zSignatureSize))
     return SZ_ERROR_NO_ARCHIVE;
   if (header[6] != k7zMajorVersion)
     return SZ_ERROR_UNSUPPORTED;
