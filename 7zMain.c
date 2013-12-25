@@ -615,6 +615,8 @@ int MY_CDECL main(int numargs, char *args[])
     PrintError("can not allocate memory");
   else if (res == SZ_ERROR_CRC)
     PrintError("CRC error");
+  else if (res == SZ_ERROR_NO_ARCHIVE)
+    PrintError("input file is not a .7z archive");
   else
     printf("\nERROR #%d\n", res);
   return 1;
