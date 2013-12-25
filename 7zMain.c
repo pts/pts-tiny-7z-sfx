@@ -166,11 +166,11 @@ static void PrintMyCreateDirError(int res) {
 static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined, UInt32 attrib)
 {
   #ifdef USE_WINDOWS_FILE
-  
+
   /* TODO(pts): It's OK if already exists. */
   /* TODO(pts): Respect attrib. */
   return CreateDirectoryW(name, NULL) ? 0 : GetLastError();
-  
+
   #else
   unsigned mode;
   CBuf buf;
@@ -361,7 +361,7 @@ int MY_CDECL main(int numargs, char *args[])
 
   FileInStream_CreateVTable(&archiveStream);
   LookToRead_CreateVTable(&lookStream, False);
-  
+
   lookStream.realStream = &archiveStream.s;
   LookToRead_Init(&lookStream);
 
@@ -434,7 +434,7 @@ int MY_CDECL main(int numargs, char *args[])
               t[j] = ' ';
             t[j] = '\0';
           }
-          
+
           printf("%s %s %10s  ", t, attr, s);
           res = PrintString(temp);
           if (res != SZ_OK)
@@ -483,7 +483,7 @@ int MY_CDECL main(int numargs, char *args[])
               else
                 destPath = name + j + 1;
             }
-    
+
           if (f->IsDir)
           {
             /* 7-Zip stores the directory after its contents, so it's safe to

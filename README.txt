@@ -14,7 +14,7 @@ Limitations:
 * It supports only: LZMA, LZMA2, BCJ, BCJ2, COPY.
 * It keeps an uncompressed version of each file to RAM.
 * It decompresses solid 7z blocks (it can be whole 7z archive) to RAM.
-  So user that calls SFX installer must have free RAM of size of largest 
+  So user that calls SFX installer must have free RAM of size of largest
   solid 7z block (size of 7z archive at simplest case).
 * It overwrites files without asking.
 
