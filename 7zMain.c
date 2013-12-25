@@ -1,6 +1,18 @@
 /* 7zMain.c - Test application for 7z Decoder
 2010-10-28 : Igor Pavlov : Public domain */
 
+#ifndef _WIN32
+#ifdef __linux
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE  /* For futimesat() */
+#endif
+#ifndef _ATFILE_SOURCE
+#define _ATFILE_SOURCE  /* For AT_FDCWD */
+#endif
+#include <sys/time.h>
+#endif
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -15,6 +27,7 @@
 #ifdef _WIN32
 #include <direct.h>
 #else
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <utime.h>
@@ -199,13 +212,19 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
 }
 
 #ifndef USE_WINDOWS_FILE
+#ifdef __linux
+static int MyUtimes(const char *filename, const struct timeval tv[2]) {
+  return futimesat(AT_FDCWD, filename, tv);
+}
+#else
 /* Fallback which can't do subsecond precision. */
-static int MyUtimes(const char *filename, struct timeval tv[2]) {
+static int MyUtimes(const char *filename, const struct timeval tv[2]) {
   struct utimbuf times;
   times.actime = tv[0].tv_sec;
   times.modtime = tv[1].tv_sec;
   return utime(filename, &times);
 }
+#endif
 static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   /* mtime is 10 * number of microseconds since 1601 (+ 89 days). */
   const UInt64 q =
@@ -539,8 +558,7 @@ int MY_CDECL main(int numargs, char *args[])
             res = SZ_ERROR_FAIL;
             break;
           }
-          #ifdef USE_WINDOWS_FILE
-          #else
+          #ifndef USE_WINDOWS_FILE
           if (f->AttribDefined) {
             if (0 != fchmod(fileno(outFile.file), GetUnixMode(&umaskv, f->Attrib))) {
               File_Close(&outFile);
@@ -567,8 +585,6 @@ int MY_CDECL main(int numargs, char *args[])
           #ifdef USE_WINDOWS_FILE
           if (f->AttribDefined)
             SetFileAttributesW(destPath, f->Attrib);
-          #endif
-          #ifdef USE_WINDOWS_FILE
           #else
           if (f->MTimeDefined) {
             if (SetMTime(destPath, &f->MTime)) {
