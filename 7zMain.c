@@ -390,10 +390,9 @@ int MY_CDECL main(int numargs, char *args[])
     printf(
       "Usage: %s <command> <archive_name>\n\n"
       "<Commands>\n"
-      "  e: Extract files from archive (without using directory names)\n"
       "  l: List contents of archive\n"
       "  t: Test integrity of archive\n"
-      "  x: eXtract files with full paths\n", args[0]);
+      "  x: eXtract files with full pathname (default)\n", args[0]);
     return 0;
   }
   if (numargs < 3)
@@ -427,11 +426,10 @@ int MY_CDECL main(int numargs, char *args[])
   if (res == SZ_OK)
   {
     char *command = args[1];
-    int listCommand = 0, testCommand = 0, fullPaths = 0;
+    int listCommand = 0, testCommand = 0;
     if (strcmp(command, "l") == 0) listCommand = 1;
     else if (strcmp(command, "t") == 0) testCommand = 1;
-    else if (strcmp(command, "e") == 0) {}  /* extractCommand = 1; */
-    else if (strcmp(command, "x") == 0) fullPaths = 1;
+    else if (strcmp(command, "x") == 0) {}  /* extractCommand = 1; */
     else
     {
       PrintError("incorrect command");
@@ -456,8 +454,6 @@ int MY_CDECL main(int numargs, char *args[])
         size_t outSizeProcessed = 0;
         const CSzFileItem *f = db.db.Files + i;
         size_t len;
-        if (listCommand == 0 && f->IsDir && !fullPaths)
-          continue;
         len = SzArEx_GetFileNameUtf16(&db, i, NULL);
 
         if (len > tempSize)
@@ -527,16 +523,11 @@ int MY_CDECL main(int numargs, char *args[])
           for (j = 0; name[j] != 0; j++)
             if (name[j] == '/')
             {
-              if (fullPaths)
-              {
-                WRes dres;
-                name[j] = 0;
-                dres = MyCreateDir(name, &umaskv, 0, 0);
-                name[j] = CHAR_PATH_SEPARATOR;
-                if (dres) break;
-              }
-              else
-                destPath = name + j + 1;
+              WRes dres;
+              name[j] = 0;
+              dres = MyCreateDir(name, &umaskv, 0, 0);
+              name[j] = CHAR_PATH_SEPARATOR;
+              if (dres) break;
             }
 
           if (f->IsDir)
