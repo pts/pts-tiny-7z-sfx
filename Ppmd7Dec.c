@@ -4,7 +4,7 @@ This code is based on PPMd var.H (2001): Dmitry Shkarin : Public domain */
 
 #include "Ppmd7.h"
 
-#define kTopValue (1 << 24)
+#define kTopValuePpmd7 (1 << 24)
 
 Bool Ppmd7z_RangeDec_Init(CPpmd7z_RangeDec *p)
 {
@@ -26,11 +26,11 @@ static UInt32 Range_GetThreshold(void *pp, UInt32 total)
 
 static void Range_Normalize(CPpmd7z_RangeDec *p)
 {
-  if (p->Range < kTopValue)
+  if (p->Range < kTopValuePpmd7)
   {
     p->Code = (p->Code << 8) | p->Stream->Read((void *)p->Stream);
     p->Range <<= 8;
-    if (p->Range < kTopValue)
+    if (p->Range < kTopValuePpmd7)
     {
       p->Code = (p->Code << 8) | p->Stream->Read((void *)p->Stream);
       p->Range <<= 8;
