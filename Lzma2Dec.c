@@ -72,21 +72,21 @@ static SRes Lzma2Dec_GetOldProps(Byte prop, Byte *props)
   return SZ_OK;
 }
 
-SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
+STATIC SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
 {
   Byte props[LZMA_PROPS_SIZE];
   RINOK(Lzma2Dec_GetOldProps(prop, props));
   return LzmaDec_AllocateProbs(&p->decoder, props, LZMA_PROPS_SIZE, alloc);
 }
 
-SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
+STATIC SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
 {
   Byte props[LZMA_PROPS_SIZE];
   RINOK(Lzma2Dec_GetOldProps(prop, props));
   return LzmaDec_Allocate(&p->decoder, props, LZMA_PROPS_SIZE, alloc);
 }
 
-void Lzma2Dec_Init(CLzma2Dec *p)
+STATIC void Lzma2Dec_Init(CLzma2Dec *p)
 {
   p->state = LZMA2_STATE_CONTROL;
   p->needInitDic = True;
@@ -165,9 +165,9 @@ static void LzmaDec_UpdateWithUncompressed(CLzmaDec *p, const Byte *src, SizeT s
   p->processedPos += (UInt32)size;
 }
 
-void LzmaDec_InitDicAndState(CLzmaDec *p, Bool initDic, Bool initState);
+STATIC void LzmaDec_InitDicAndState(CLzmaDec *p, Bool initDic, Bool initState);
 
-SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
+STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
     const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
 {
   SizeT inSize = *srcLen;
@@ -288,7 +288,7 @@ SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
   return SZ_OK;
 }
 
-SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
+STATIC SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
 {
   SizeT outSize = *destLen, inSize = *srcLen;
   *srcLen = *destLen = 0;
@@ -327,7 +327,7 @@ SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen, const Byte *
   }
 }
 
-SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
+STATIC SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
     Byte prop, ELzmaFinishMode finishMode, ELzmaStatus *status, ISzAlloc *alloc)
 {
   CLzma2Dec p;

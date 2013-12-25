@@ -20,6 +20,10 @@
 #endif
 #endif
 
+#ifndef STATIC
+#define STATIC
+#endif
+
 EXTERN_C_BEGIN
 
 #define SZ_OK 0
@@ -142,9 +146,9 @@ typedef struct
 } ISeqInStream;
 
 /* it can return SZ_ERROR_INPUT_EOF */
-SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size);
-SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
-SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf);
+STATIC SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size);
+STATIC SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
+STATIC SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf);
 
 typedef struct
 {
@@ -180,12 +184,12 @@ typedef struct
   SRes (*Seek)(void *p, Int64 *pos, ESzSeek origin);
 } ILookInStream;
 
-SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size);
-SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);
+STATIC SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size);
+STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);
 
 /* reads via ILookInStream::Read */
-SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType);
-SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size);
+STATIC SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType);
+STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size);
 
 #define LookToRead_BUF_SIZE (1 << 14)
 
@@ -198,8 +202,8 @@ typedef struct
   Byte buf[LookToRead_BUF_SIZE];
 } CLookToRead;
 
-void LookToRead_CreateVTable(CLookToRead *p, int lookahead);
-void LookToRead_Init(CLookToRead *p);
+STATIC void LookToRead_CreateVTable(CLookToRead *p, int lookahead);
+STATIC void LookToRead_Init(CLookToRead *p);
 
 typedef struct
 {
@@ -207,7 +211,7 @@ typedef struct
   ILookInStream *realStream;
 } CSecToLook;
 
-void SecToLook_CreateVTable(CSecToLook *p);
+STATIC void SecToLook_CreateVTable(CSecToLook *p);
 
 typedef struct
 {
@@ -215,7 +219,7 @@ typedef struct
   ILookInStream *realStream;
 } CSecToRead;
 
-void SecToRead_CreateVTable(CSecToRead *p);
+STATIC void SecToRead_CreateVTable(CSecToRead *p);
 
 typedef struct
 {

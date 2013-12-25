@@ -3,7 +3,7 @@
 
 #include "Bra.h"
 
-SizeT ARM_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
+STATIC SizeT ARM_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
 {
   SizeT i;
   if (size < 4)
@@ -30,7 +30,7 @@ SizeT ARM_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
   return i;
 }
 
-SizeT ARMT_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
+STATIC SizeT ARMT_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
 {
   SizeT i;
   if (size < 4)
@@ -66,7 +66,7 @@ SizeT ARMT_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
   return i;
 }
 
-SizeT PPC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
+STATIC SizeT PPC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
 {
   SizeT i;
   if (size < 4)
@@ -96,7 +96,7 @@ SizeT PPC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
   return i;
 }
 
-SizeT SPARC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
+STATIC SizeT SPARC_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
 {
   UInt32 i;
   if (size < 4)

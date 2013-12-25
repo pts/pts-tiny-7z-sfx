@@ -17,18 +17,18 @@ Byte k7zSignature[k7zSignatureSize] = {'S', 'z', 0xBC, 0xAF, 0x27, 0x1C};
 #define NUM_FOLDER_CODERS_MAX 32
 #define NUM_CODER_STREAMS_MAX 32
 
-void SzCoderInfo_Init(CSzCoderInfo *p)
+STATIC void SzCoderInfo_Init(CSzCoderInfo *p)
 {
   Buf_Init(&p->Props);
 }
 
-void SzCoderInfo_Free(CSzCoderInfo *p, ISzAlloc *alloc)
+STATIC void SzCoderInfo_Free(CSzCoderInfo *p, ISzAlloc *alloc)
 {
   Buf_Free(&p->Props, alloc);
   SzCoderInfo_Init(p);
 }
 
-void SzFolder_Init(CSzFolder *p)
+STATIC void SzFolder_Init(CSzFolder *p)
 {
   p->Coders = 0;
   p->BindPairs = 0;
@@ -42,7 +42,7 @@ void SzFolder_Init(CSzFolder *p)
   p->NumUnpackStreams = 0;
 }
 
-void SzFolder_Free(CSzFolder *p, ISzAlloc *alloc)
+STATIC void SzFolder_Free(CSzFolder *p, ISzAlloc *alloc)
 {
   UInt32 i;
   if (p->Coders)
@@ -55,7 +55,7 @@ void SzFolder_Free(CSzFolder *p, ISzAlloc *alloc)
   SzFolder_Init(p);
 }
 
-UInt32 SzFolder_GetNumOutStreams(CSzFolder *p)
+STATIC UInt32 SzFolder_GetNumOutStreams(CSzFolder *p)
 {
   UInt32 result = 0;
   UInt32 i;
@@ -64,7 +64,7 @@ UInt32 SzFolder_GetNumOutStreams(CSzFolder *p)
   return result;
 }
 
-int SzFolder_FindBindPairForInStream(CSzFolder *p, UInt32 inStreamIndex)
+STATIC int SzFolder_FindBindPairForInStream(CSzFolder *p, UInt32 inStreamIndex)
 {
   UInt32 i;
   for (i = 0; i < p->NumBindPairs; i++)
@@ -74,7 +74,7 @@ int SzFolder_FindBindPairForInStream(CSzFolder *p, UInt32 inStreamIndex)
 }
 
 
-int SzFolder_FindBindPairForOutStream(CSzFolder *p, UInt32 outStreamIndex)
+STATIC int SzFolder_FindBindPairForOutStream(CSzFolder *p, UInt32 outStreamIndex)
 {
   UInt32 i;
   for (i = 0; i < p->NumBindPairs; i++)
@@ -83,7 +83,7 @@ int SzFolder_FindBindPairForOutStream(CSzFolder *p, UInt32 outStreamIndex)
   return -1;
 }
 
-UInt64 SzFolder_GetUnpackSize(CSzFolder *p)
+STATIC UInt64 SzFolder_GetUnpackSize(CSzFolder *p)
 {
   int i = (int)SzFolder_GetNumOutStreams(p);
   if (i == 0)
@@ -95,7 +95,7 @@ UInt64 SzFolder_GetUnpackSize(CSzFolder *p)
   return 0;
 }
 
-void SzFile_Init(CSzFileItem *p)
+STATIC void SzFile_Init(CSzFileItem *p)
 {
   p->HasStream = 1;
   p->IsDir = 0;
@@ -104,7 +104,7 @@ void SzFile_Init(CSzFileItem *p)
   p->MTimeDefined = 0;
 }
 
-void SzAr_Init(CSzAr *p)
+STATIC void SzAr_Init(CSzAr *p)
 {
   p->PackSizes = 0;
   p->PackCRCsDefined = 0;
@@ -116,7 +116,7 @@ void SzAr_Init(CSzAr *p)
   p->NumFiles = 0;
 }
 
-void SzAr_Free(CSzAr *p, ISzAlloc *alloc)
+STATIC void SzAr_Free(CSzAr *p, ISzAlloc *alloc)
 {
   UInt32 i;
   if (p->Folders)
@@ -132,7 +132,7 @@ void SzAr_Free(CSzAr *p, ISzAlloc *alloc)
 }
 
 
-void SzArEx_Init(CSzArEx *p)
+STATIC void SzArEx_Init(CSzArEx *p)
 {
   SzAr_Init(&p->db);
   p->FolderStartPackStreamIndex = 0;
@@ -143,7 +143,7 @@ void SzArEx_Init(CSzArEx *p)
   Buf_Init(&p->FileNames);
 }
 
-void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc)
+STATIC void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc)
 {
   IAlloc_Free(alloc, p->FolderStartPackStreamIndex);
   IAlloc_Free(alloc, p->PackStreamStartPositions);
@@ -243,13 +243,13 @@ static SRes SzArEx_Fill(CSzArEx *p, ISzAlloc *alloc)
 }
 
 
-UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder)
+STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder)
 {
   return p->dataPos +
     p->PackStreamStartPositions[p->FolderStartPackStreamIndex[folderIndex] + indexInFolder];
 }
 
-int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize)
+STATIC int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize)
 {
   UInt32 packStreamIndex = p->FolderStartPackStreamIndex[folderIndex];
   CSzFolder *folder = p->db.Folders + folderIndex;
@@ -897,7 +897,7 @@ static SRes SzReadStreamsInfo(
   }
 }
 
-size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16 *dest)
+STATIC size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16 *dest)
 {
   size_t len = p->FileNameOffsets[fileIndex + 1] - p->FileNameOffsets[fileIndex];
   if (dest != 0)
@@ -1340,7 +1340,7 @@ static SRes SzArEx_Open2(
   return res;
 }
 
-SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream, ISzAlloc *allocMain, ISzAlloc *allocTemp)
+STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream, ISzAlloc *allocMain, ISzAlloc *allocTemp)
 {
   SRes res = SzArEx_Open2(p, inStream, allocMain, allocTemp);
   if (res != SZ_OK)
@@ -1348,7 +1348,7 @@ SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream, ISzAlloc *allocMain, ISzAl
   return res;
 }
 
-SRes SzArEx_Extract(
+STATIC SRes SzArEx_Extract(
     const CSzArEx *p,
     ILookInStream *inStream,
     UInt32 fileIndex,

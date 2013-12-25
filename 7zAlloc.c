@@ -18,7 +18,7 @@ int g_allocCountTemp = 0;
 
 #endif
 
-void *SzAlloc(void *p, size_t size)
+STATIC void *SzAlloc(void *p, size_t size)
 {
   p = p;
   if (size == 0)
@@ -30,7 +30,7 @@ void *SzAlloc(void *p, size_t size)
   return malloc(size);
 }
 
-void SzFree(void *p, void *address)
+STATIC void SzFree(void *p, void *address)
 {
   p = p;
   #ifdef _SZ_ALLOC_DEBUG
@@ -43,7 +43,7 @@ void SzFree(void *p, void *address)
   free(address);
 }
 
-void *SzAllocTemp(void *p, size_t size)
+STATIC void *SzAllocTemp(void *p, size_t size)
 {
   p = p;
   if (size == 0)
@@ -58,7 +58,7 @@ void *SzAllocTemp(void *p, size_t size)
   return malloc(size);
 }
 
-void SzFreeTemp(void *p, void *address)
+STATIC void SzFreeTemp(void *p, void *address)
 {
   p = p;
   #ifdef _SZ_ALLOC_DEBUG

@@ -456,7 +456,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
   return SZ_OK;
 }
 
-SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
+STATIC SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
     ILookInStream *inStream, UInt64 startPos,
     Byte *outBuffer, size_t outSize, ISzAlloc *allocMain)
 {

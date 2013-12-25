@@ -24,7 +24,7 @@ Returns:
   SZ_ERROR_DATA - Data error
 */
 
-int Bcj2_Decode(
+STATIC int Bcj2_Decode(
     const Byte *buf0, SizeT size0,
     const Byte *buf1, SizeT size1,
     const Byte *buf2, SizeT size2,

@@ -6,7 +6,7 @@ This code is based on PPMd var.H (2001): Dmitry Shkarin : Public domain */
 
 #define kTopValuePpmd7 (1 << 24)
 
-Bool Ppmd7z_RangeDec_Init(CPpmd7z_RangeDec *p)
+STATIC Bool Ppmd7z_RangeDec_Init(CPpmd7z_RangeDec *p)
 {
   unsigned i;
   p->Code = 0;
@@ -66,7 +66,7 @@ static UInt32 Range_DecodeBit(void *pp, UInt32 size0)
   return symbol;
 }
 
-void Ppmd7z_RangeDec_CreateVTable(CPpmd7z_RangeDec *p)
+STATIC void Ppmd7z_RangeDec_CreateVTable(CPpmd7z_RangeDec *p)
 {
   p->p.GetThreshold = Range_GetThreshold;
   p->p.Decode = Range_Decode;
@@ -76,7 +76,7 @@ void Ppmd7z_RangeDec_CreateVTable(CPpmd7z_RangeDec *p)
 
 #define MASK(sym) ((signed char *)charMask)[sym]
 
-int Ppmd7_DecodeSymbol(CPpmd7 *p, IPpmd7_RangeDec *rc)
+STATIC int Ppmd7_DecodeSymbol(CPpmd7 *p, IPpmd7_RangeDec *rc)
 {
   size_t charMask[256 / sizeof(size_t)];
   if (p->MinContext->NumStats != 1)

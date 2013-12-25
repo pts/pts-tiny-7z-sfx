@@ -4,12 +4,14 @@
 #ifndef __7Z_ALLOC_H
 #define __7Z_ALLOC_H
 
+#include "Types.h"
+
 #include <stdlib.h>
 
-void *SzAlloc(void *p, size_t size);
-void SzFree(void *p, void *address);
+STATIC void *SzAlloc(void *p, size_t size);
+STATIC void SzFree(void *p, void *address);
 
-void *SzAllocTemp(void *p, size_t size);
-void SzFreeTemp(void *p, void *address);
+STATIC void *SzAllocTemp(void *p, size_t size);
+STATIC void SzFreeTemp(void *p, void *address);
 
 #endif

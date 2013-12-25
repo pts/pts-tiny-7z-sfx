@@ -4,19 +4,19 @@
 #include <string.h>
 #include "7zBuf.h"
 
-void DynBuf_Construct(CDynBuf *p)
+STATIC void DynBuf_Construct(CDynBuf *p)
 {
   p->data = 0;
   p->size = 0;
   p->pos = 0;
 }
 
-void DynBuf_SeekToBeg(CDynBuf *p)
+STATIC void DynBuf_SeekToBeg(CDynBuf *p)
 {
   p->pos = 0;
 }
 
-int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc)
+STATIC int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc)
 {
   if (size > p->size - p->pos)
   {
@@ -36,7 +36,7 @@ int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc)
   return 1;
 }
 
-void DynBuf_Free(CDynBuf *p, ISzAlloc *alloc)
+STATIC void DynBuf_Free(CDynBuf *p, ISzAlloc *alloc)
 {
   alloc->Free(alloc, p->data);
   p->data = 0;

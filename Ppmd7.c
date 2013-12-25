@@ -55,7 +55,7 @@ typedef struct CPpmd7_Node_
   #define NODE(offs) ((CPpmd7_Node *)(p->Base + (offs)))
 #endif
 
-void Ppmd7_Construct(CPpmd7 *p)
+STATIC void Ppmd7_Construct(CPpmd7 *p)
 {
   unsigned i, k, m;
 
@@ -86,14 +86,14 @@ void Ppmd7_Construct(CPpmd7 *p)
   memset(p->HB2Flag + 0x40, 8, 0x100 - 0x40);
 }
 
-void Ppmd7_Free(CPpmd7 *p, ISzAlloc *alloc)
+STATIC void Ppmd7_Free(CPpmd7 *p, ISzAlloc *alloc)
 {
   alloc->Free(alloc, p->Base);
   p->Size = 0;
   p->Base = 0;
 }
 
-Bool Ppmd7_Alloc(CPpmd7 *p, UInt32 size, ISzAlloc *alloc)
+STATIC Bool Ppmd7_Alloc(CPpmd7 *p, UInt32 size, ISzAlloc *alloc)
 {
   if (p->Base == 0 || p->Size != size)
   {
@@ -329,7 +329,7 @@ static void RestartModel(CPpmd7 *p)
     }
 }
 
-void Ppmd7_Init(CPpmd7 *p, unsigned maxOrder)
+STATIC void Ppmd7_Init(CPpmd7 *p, unsigned maxOrder)
 {
   p->MaxOrder = maxOrder;
   RestartModel(p);
@@ -631,7 +631,7 @@ static void Rescale(CPpmd7 *p)
   p->FoundState = STATS(p->MinContext);
 }
 
-CPpmd_See *Ppmd7_MakeEscFreq(CPpmd7 *p, unsigned numMasked, UInt32 *escFreq)
+STATIC CPpmd_See *Ppmd7_MakeEscFreq(CPpmd7 *p, unsigned numMasked, UInt32 *escFreq)
 {
   CPpmd_See *see;
   unsigned nonMasked = p->MinContext->NumStats - numMasked;
@@ -665,7 +665,7 @@ static void NextContext(CPpmd7 *p)
     UpdateModel(p);
 }
 
-void Ppmd7_Update1(CPpmd7 *p)
+STATIC void Ppmd7_Update1(CPpmd7 *p)
 {
   CPpmd_State *s = p->FoundState;
   s->Freq += 4;
@@ -680,7 +680,7 @@ void Ppmd7_Update1(CPpmd7 *p)
   NextContext(p);
 }
 
-void Ppmd7_Update1_0(CPpmd7 *p)
+STATIC void Ppmd7_Update1_0(CPpmd7 *p)
 {
   p->PrevSuccess = (2 * p->FoundState->Freq > p->MinContext->SummFreq);
   p->RunLength += p->PrevSuccess;
@@ -690,7 +690,7 @@ void Ppmd7_Update1_0(CPpmd7 *p)
   NextContext(p);
 }
 
-void Ppmd7_UpdateBin(CPpmd7 *p)
+STATIC void Ppmd7_UpdateBin(CPpmd7 *p)
 {
   p->FoundState->Freq = (Byte)(p->FoundState->Freq + (p->FoundState->Freq < 128 ? 1: 0));
   p->PrevSuccess = 1;
@@ -698,7 +698,7 @@ void Ppmd7_UpdateBin(CPpmd7 *p)
   NextContext(p);
 }
 
-void Ppmd7_Update2(CPpmd7 *p)
+STATIC void Ppmd7_Update2(CPpmd7 *p)
 {
   p->MinContext->SummFreq += 4;
   if ((p->FoundState->Freq += 4) > MAX_FREQ)

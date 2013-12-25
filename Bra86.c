@@ -8,7 +8,7 @@
 const Byte kMaskToAllowedStatus[8] = {1, 1, 1, 0, 1, 0, 0, 0};
 const Byte kMaskToBitNumber[8] = {0, 1, 2, 2, 3, 3, 3, 3};
 
-SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int encoding)
+STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int encoding)
 {
   SizeT bufferPos = 0, prevPosT;
   UInt32 prevMask = *state & 0x7;

@@ -16,9 +16,9 @@ typedef struct
   size_t size;
 } CBuf;
 
-void Buf_Init(CBuf *p);
-int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc);
-void Buf_Free(CBuf *p, ISzAlloc *alloc);
+STATIC void Buf_Init(CBuf *p);
+STATIC int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc);
+STATIC void Buf_Free(CBuf *p, ISzAlloc *alloc);
 
 typedef struct
 {
@@ -27,10 +27,10 @@ typedef struct
   size_t pos;
 } CDynBuf;
 
-void DynBuf_Construct(CDynBuf *p);
-void DynBuf_SeekToBeg(CDynBuf *p);
-int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc);
-void DynBuf_Free(CDynBuf *p, ISzAlloc *alloc);
+STATIC void DynBuf_Construct(CDynBuf *p);
+STATIC void DynBuf_SeekToBeg(CDynBuf *p);
+STATIC int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc);
+STATIC void DynBuf_Free(CDynBuf *p, ISzAlloc *alloc);
 
 #ifdef __cplusplus
 }

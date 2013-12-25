@@ -25,7 +25,7 @@
 
 #endif
 
-void File_Construct(CSzFile *p)
+STATIC void File_Construct(CSzFile *p)
 {
   #ifdef USE_WINDOWS_FILE
   p->handle = INVALID_HANDLE_VALUE;
@@ -55,8 +55,8 @@ static WRes File_Open(CSzFile *p, const char *name, int writeMode)
   #endif
 }
 
-WRes InFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 0); }
-WRes OutFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 1); }
+STATIC WRes InFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 0); }
+STATIC WRes OutFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 1); }
 #endif
 
 #ifdef USE_WINDOWS_FILE
@@ -69,11 +69,11 @@ static WRes File_OpenW(CSzFile *p, const WCHAR *name, int writeMode)
       FILE_ATTRIBUTE_NORMAL, NULL);
   return (p->handle != INVALID_HANDLE_VALUE) ? 0 : GetLastError();
 }
-WRes InFile_OpenW(CSzFile *p, const WCHAR *name) { return File_OpenW(p, name, 0); }
-WRes OutFile_OpenW(CSzFile *p, const WCHAR *name) { return File_OpenW(p, name, 1); }
+STATIC WRes InFile_OpenW(CSzFile *p, const WCHAR *name) { return File_OpenW(p, name, 0); }
+STATIC WRes OutFile_OpenW(CSzFile *p, const WCHAR *name) { return File_OpenW(p, name, 1); }
 #endif
 
-WRes File_Close(CSzFile *p)
+STATIC WRes File_Close(CSzFile *p)
 {
   #ifdef USE_WINDOWS_FILE
   if (p->handle != INVALID_HANDLE_VALUE)
@@ -94,7 +94,7 @@ WRes File_Close(CSzFile *p)
   return 0;
 }
 
-WRes File_Read(CSzFile *p, void *data, size_t *size)
+STATIC WRes File_Read(CSzFile *p, void *data, size_t *size)
 {
   size_t originalSize = *size;
   if (originalSize == 0)
@@ -129,7 +129,7 @@ WRes File_Read(CSzFile *p, void *data, size_t *size)
   #endif
 }
 
-WRes File_Write(CSzFile *p, const void *data, size_t *size)
+STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
 {
   size_t originalSize = *size;
   if (originalSize == 0)
@@ -164,7 +164,7 @@ WRes File_Write(CSzFile *p, const void *data, size_t *size)
   #endif
 }
 
-WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
+STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
 {
   #ifdef USE_WINDOWS_FILE
 
@@ -207,7 +207,7 @@ WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
   #endif
 }
 
-WRes File_GetLength(CSzFile *p, UInt64 *length)
+STATIC WRes File_GetLength(CSzFile *p, UInt64 *length)
 {
   #ifdef USE_WINDOWS_FILE
 
@@ -242,7 +242,7 @@ static SRes FileSeqInStream_Read(void *pp, void *buf, size_t *size)
   return File_Read(&p->file, buf, size) == 0 ? SZ_OK : SZ_ERROR_READ;
 }
 
-void FileSeqInStream_CreateVTable(CFileSeqInStream *p)
+STATIC void FileSeqInStream_CreateVTable(CFileSeqInStream *p)
 {
   p->s.Read = FileSeqInStream_Read;
 }
@@ -262,7 +262,7 @@ static SRes FileInStream_Seek(void *pp, Int64 *pos, ESzSeek origin)
   return File_Seek(&p->file, pos, origin);
 }
 
-void FileInStream_CreateVTable(CFileInStream *p)
+STATIC void FileInStream_CreateVTable(CFileInStream *p)
 {
   p->s.Read = FileInStream_Read;
   p->s.Seek = FileInStream_Seek;
@@ -278,7 +278,7 @@ static size_t FileOutStream_Write(void *pp, const void *data, size_t size)
   return size;
 }
 
-void FileOutStream_CreateVTable(CFileOutStream *p)
+STATIC void FileOutStream_CreateVTable(CFileOutStream *p)
 {
   p->s.Write = FileOutStream_Write;
 }

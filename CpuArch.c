@@ -94,7 +94,7 @@ static void MyCPUID(UInt32 function, UInt32 *a, UInt32 *b, UInt32 *c, UInt32 *d)
   #endif
 }
 
-Bool x86cpuid_CheckAndRead(Cx86cpuid *p)
+STATIC Bool x86cpuid_CheckAndRead(Cx86cpuid *p)
 {
   CHECK_CPUID_IS_SUPPORTED
   MyCPUID(0, &p->maxFunc, &p->vendor[0], &p->vendor[2], &p->vendor[1]);
@@ -109,7 +109,7 @@ static UInt32 kVendors[][3] =
   { 0x746E6543, 0x48727561, 0x736C7561}
 };
 
-int x86cpuid_GetFirm(const Cx86cpuid *p)
+STATIC int x86cpuid_GetFirm(const Cx86cpuid *p)
 {
   unsigned i;
   for (i = 0; i < sizeof(kVendors) / sizeof(kVendors[i]); i++)
@@ -123,7 +123,7 @@ int x86cpuid_GetFirm(const Cx86cpuid *p)
   return -1;
 }
 
-Bool CPU_Is_InOrder()
+STATIC Bool CPU_Is_InOrder()
 {
   Cx86cpuid p;
   int firm;
@@ -156,7 +156,7 @@ static Bool CPU_Sys_Is_SSE_Supported()
 #define CHECK_SYS_SSE_SUPPORT
 #endif
 
-Bool CPU_Is_Aes_Supported()
+STATIC Bool CPU_Is_Aes_Supported()
 {
   Cx86cpuid p;
   CHECK_SYS_SSE_SUPPORT

@@ -28,9 +28,9 @@ typedef struct
 #define Lzma2Dec_FreeProbs(p, alloc) LzmaDec_FreeProbs(&(p)->decoder, alloc);
 #define Lzma2Dec_Free(p, alloc) LzmaDec_Free(&(p)->decoder, alloc);
 
-SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
-SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
-void Lzma2Dec_Init(CLzma2Dec *p);
+STATIC SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
+STATIC SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
+STATIC void Lzma2Dec_Init(CLzma2Dec *p);
 
 
 /*
@@ -48,10 +48,10 @@ Returns:
   SZ_ERROR_DATA - Data error
 */
 
-SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
+STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
     const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
 
-SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen,
+STATIC SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen,
     const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
 
 
@@ -74,7 +74,7 @@ Returns:
   SZ_ERROR_INPUT_EOF - It needs more bytes in input buffer (src).
 */
 
-SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
+STATIC SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
     Byte prop, ELzmaFinishMode finishMode, ELzmaStatus *status, ISzAlloc *alloc);
 
 #ifdef __cplusplus

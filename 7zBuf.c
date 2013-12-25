@@ -5,13 +5,13 @@ Public domain */
 
 #include "7zBuf.h"
 
-void Buf_Init(CBuf *p)
+STATIC void Buf_Init(CBuf *p)
 {
   p->data = 0;
   p->size = 0;
 }
 
-int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc)
+STATIC int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc)
 {
   p->size = 0;
   if (size == 0)
@@ -28,7 +28,7 @@ int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc)
   return 0;
 }
 
-void Buf_Free(CBuf *p, ISzAlloc *alloc)
+STATIC void Buf_Free(CBuf *p, ISzAlloc *alloc)
 {
   alloc->Free(alloc, p->data);
   p->data = 0;

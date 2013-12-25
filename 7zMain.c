@@ -163,7 +163,7 @@ static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
 }
 #endif
 
-void PrintError(char *sz)
+STATIC void PrintError(char *sz)
 {
   printf("\nERROR: %s\n", sz);
 }

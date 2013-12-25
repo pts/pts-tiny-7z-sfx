@@ -5,7 +5,7 @@
 
 #include "Types.h"
 
-SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType)
+STATIC SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType)
 {
   while (size != 0)
   {
@@ -19,25 +19,25 @@ SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorT
   return SZ_OK;
 }
 
-SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size)
+STATIC SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size)
 {
   return SeqInStream_Read2(stream, buf, size, SZ_ERROR_INPUT_EOF);
 }
 
-SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf)
+STATIC SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf)
 {
   size_t processed = 1;
   RINOK(stream->Read(stream, buf, &processed));
   return (processed == 1) ? SZ_OK : SZ_ERROR_INPUT_EOF;
 }
 
-SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
+STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
 {
   Int64 t = offset;
   return stream->Seek(stream, &t, SZ_SEEK_SET);
 }
 
-SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size)
+STATIC SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size)
 {
   const void *lookBuf;
   if (*size == 0)
@@ -47,7 +47,7 @@ SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size)
   return stream->Skip(stream, *size);
 }
 
-SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType)
+STATIC SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType)
 {
   while (size != 0)
   {
@@ -61,7 +61,7 @@ SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes erro
   return SZ_OK;
 }
 
-SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
+STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
 {
   return LookInStream_Read2(stream, buf, size, SZ_ERROR_INPUT_EOF);
 }
@@ -131,7 +131,7 @@ static SRes LookToRead_Seek(void *pp, Int64 *pos, ESzSeek origin)
   return p->realStream->Seek(p->realStream, pos, origin);
 }
 
-void LookToRead_CreateVTable(CLookToRead *p, int lookahead)
+STATIC void LookToRead_CreateVTable(CLookToRead *p, int lookahead)
 {
   p->s.Look = lookahead ?
       LookToRead_Look_Lookahead :
@@ -141,7 +141,7 @@ void LookToRead_CreateVTable(CLookToRead *p, int lookahead)
   p->s.Seek = LookToRead_Seek;
 }
 
-void LookToRead_Init(CLookToRead *p)
+STATIC void LookToRead_Init(CLookToRead *p)
 {
   p->pos = p->size = 0;
 }
@@ -152,7 +152,7 @@ static SRes SecToLook_Read(void *pp, void *buf, size_t *size)
   return LookInStream_LookRead(p->realStream, buf, size);
 }
 
-void SecToLook_CreateVTable(CSecToLook *p)
+STATIC void SecToLook_CreateVTable(CSecToLook *p)
 {
   p->s.Read = SecToLook_Read;
 }
@@ -163,7 +163,7 @@ static SRes SecToRead_Read(void *pp, void *buf, size_t *size)
   return p->realStream->Read(p->realStream, buf, size);
 }
 
-void SecToRead_CreateVTable(CSecToRead *p)
+STATIC void SecToRead_CreateVTable(CSecToRead *p)
 {
   p->s.Read = SecToRead_Read;
 }

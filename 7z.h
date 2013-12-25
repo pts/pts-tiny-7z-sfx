@@ -51,8 +51,8 @@ typedef struct
   CBuf Props;
 } CSzCoderInfo;
 
-void SzCoderInfo_Init(CSzCoderInfo *p);
-void SzCoderInfo_Free(CSzCoderInfo *p, ISzAlloc *alloc);
+STATIC void SzCoderInfo_Init(CSzCoderInfo *p);
+STATIC void SzCoderInfo_Free(CSzCoderInfo *p, ISzAlloc *alloc);
 
 typedef struct
 {
@@ -75,13 +75,13 @@ typedef struct
   UInt32 NumUnpackStreams;
 } CSzFolder;
 
-void SzFolder_Init(CSzFolder *p);
-UInt64 SzFolder_GetUnpackSize(CSzFolder *p);
-int SzFolder_FindBindPairForInStream(CSzFolder *p, UInt32 inStreamIndex);
-UInt32 SzFolder_GetNumOutStreams(CSzFolder *p);
-UInt64 SzFolder_GetUnpackSize(CSzFolder *p);
+STATIC void SzFolder_Init(CSzFolder *p);
+STATIC UInt64 SzFolder_GetUnpackSize(CSzFolder *p);
+STATIC int SzFolder_FindBindPairForInStream(CSzFolder *p, UInt32 inStreamIndex);
+STATIC UInt32 SzFolder_GetNumOutStreams(CSzFolder *p);
+STATIC UInt64 SzFolder_GetUnpackSize(CSzFolder *p);
 
-SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
+STATIC SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
     ILookInStream *stream, UInt64 startPos,
     Byte *outBuffer, size_t outSize, ISzAlloc *allocMain);
 
@@ -108,7 +108,7 @@ typedef struct
 #define FILE_ATTRIBUTE_DIRECTORY           16
 #define FILE_ATTRIBUTE_UNIX_EXTENSION   0x8000
 
-void SzFile_Init(CSzFileItem *p);
+STATIC void SzFile_Init(CSzFileItem *p);
 
 typedef struct
 {
@@ -122,8 +122,8 @@ typedef struct
   UInt32 NumFiles;
 } CSzAr;
 
-void SzAr_Init(CSzAr *p);
-void SzAr_Free(CSzAr *p, ISzAlloc *alloc);
+STATIC void SzAr_Init(CSzAr *p);
+STATIC void SzAr_Free(CSzAr *p, ISzAlloc *alloc);
 
 
 /*
@@ -162,10 +162,10 @@ typedef struct
   CBuf FileNames;  /* UTF-16-LE */
 } CSzArEx;
 
-void SzArEx_Init(CSzArEx *p);
-void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc);
-UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
-int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize);
+STATIC void SzArEx_Init(CSzArEx *p);
+STATIC void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc);
+STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
+STATIC int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize);
 
 /*
 if dest == NULL, the return value specifies the required size of the buffer,
@@ -173,9 +173,9 @@ if dest == NULL, the return value specifies the required size of the buffer,
 if dest != NULL, the return value specifies the number of 16-bit characters that
   are written to the dest, including the null-terminating character. */
 
-size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16 *dest);
+STATIC size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16 *dest);
 
-SRes SzArEx_Extract(
+STATIC SRes SzArEx_Extract(
     const CSzArEx *db,
     ILookInStream *inStream,
     UInt32 fileIndex,         /* index of file */
@@ -199,7 +199,7 @@ SZ_ERROR_INPUT_EOF
 SZ_ERROR_FAIL
 */
 
-SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream, ISzAlloc *allocMain, ISzAlloc *allocTemp);
+STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream, ISzAlloc *allocMain, ISzAlloc *allocTemp);
 
 EXTERN_C_END
 
