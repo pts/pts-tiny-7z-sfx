@@ -462,6 +462,7 @@ int MY_CDECL main(int numargs, char *args[])
           processedSize = outSizeProcessed;
           if (File_Write(&outFile, outBuffer + offset, &processedSize) != 0 || processedSize != outSizeProcessed)
           {
+            File_Close(&outFile);
             PrintError("can not write output file");
             res = SZ_ERROR_FAIL;
             break;
