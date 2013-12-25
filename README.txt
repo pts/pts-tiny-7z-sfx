@@ -6,6 +6,8 @@ in ANSI C. It's Unix-only.
 Features:
 
 * Small (the Linux statically linked binary is less than 40 kB).
+* Can be used to create a SFX (self-extract) binary by prepending to a .7z
+  archive. (Same as the `7z -sfx' flag.)
 * It supports file and directory attributes (i.e. it calls chmod(2)).
 * It sets the mtime (i.e. it calls utimes(2)).
 
@@ -28,7 +30,6 @@ http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.tar.bz2/download
 
 TODOs:
 
-* TODO(pts): Add SFX support (scan for 7-Zip header).
 * TODO(pts): Prevent file overwrites without -y in SFX mode.
 * TODO(pts): Make it smaller with fastcall.
 

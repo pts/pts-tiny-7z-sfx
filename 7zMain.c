@@ -383,22 +383,48 @@ int MY_CDECL main(int numargs, char *args[])
   UInt16 *temp = NULL;
   size_t tempSize = 0;
   unsigned umaskv = -1;
+  const char *archive = args[0];
+  int listCommand = 0, testCommand = 0, argi = 2;
 
   printf("Tiny 7z extractor " MY_VERSION "\n\n");
-  if (numargs == 1)
-  {
+  if (numargs >= 2 &&
+      (0 == strcmp(args[1], "-h") || 0 == strcmp(args[1], "--help"))) {
     printf(
-      "Usage: %s <command> <archive_name>\n\n"
+      "Usage: %s <command> [<switches>...]\n\n"
       "<Commands>\n"
       "  l: List contents of archive\n"
       "  t: Test integrity of archive\n"
-      "  x: eXtract files with full pathname (default)\n", args[0]);
-    return 0;
+      "  x: eXtract files with full pathname (default)\n"
+      "<Switches>\n"
+      "  -e{Archive}: archive to Extract (default is self, argv[0])\n",
+      args[0]);
+     return 0;
   }
-  if (numargs < 3)
-  {
-    PrintError("incorrect command");
-    return 1;
+  if (numargs >= 2) {
+    if (args[1][0] == '-') {
+      argi = 1;  /* Interpret args[1] as a switch. */
+    } else if (strcmp(args[1], "l") == 0) {
+      listCommand = 1;
+    } else if (strcmp(args[1], "t") == 0) {
+      testCommand = 1;
+    } else if (strcmp(args[1], "x") == 0) {
+      /* extractCommand = 1; */
+    } else {
+      PrintError("unknown command");
+      res = SZ_ERROR_FAIL;
+    }
+  }
+  for (; argi < numargs; ++argi) {
+    const char *arg = args[argi];
+    if (arg[0] != '-') { incorrect_switch:
+      PrintError("incorrect switch");
+      return 1;
+    }
+    if (arg[1] == 'e') {
+      archive = arg + 2;
+    } else {
+      goto incorrect_switch;
+    }
   }
 
   allocImp.Alloc = SzAlloc;
@@ -407,7 +433,8 @@ int MY_CDECL main(int numargs, char *args[])
   allocTempImp.Alloc = SzAllocTemp;
   allocTempImp.Free = SzFreeTemp;
 
-  if (InFile_Open(&archiveStream.file, args[2]))
+  printf("Processing archive: %s\n\n", archive);
+  if (InFile_Open(&archiveStream.file, archive))
   {
     PrintError("can not open input file");
     return 1;
@@ -425,17 +452,6 @@ int MY_CDECL main(int numargs, char *args[])
   res = SzArEx_Open(&db, &lookStream.s, &allocImp, &allocTempImp);
   if (res == SZ_OK)
   {
-    char *command = args[1];
-    int listCommand = 0, testCommand = 0;
-    if (strcmp(command, "l") == 0) listCommand = 1;
-    else if (strcmp(command, "t") == 0) testCommand = 1;
-    else if (strcmp(command, "x") == 0) {}  /* extractCommand = 1; */
-    else
-    {
-      PrintError("incorrect command");
-      res = SZ_ERROR_FAIL;
-    }
-
     if (res == SZ_OK)
     {
       UInt32 i;
