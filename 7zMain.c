@@ -294,16 +294,16 @@ int MY_CDECL main(int numargs, char *args[])
   UInt16 *temp = NULL;
   size_t tempSize = 0;
 
-  printf("\n7z ANSI-C Decoder " MY_VERSION_COPYRIGHT_DATE "\n\n");
+  printf("Tiny 7z extractor " MY_VERSION "\n\n");
   if (numargs == 1)
   {
     printf(
-      "Usage: 7zDec <command> <archive_name>\n\n"
+      "Usage: %s <command> <archive_name>\n\n"
       "<Commands>\n"
       "  e: Extract files from archive (without using directory names)\n"
       "  l: List contents of archive\n"
       "  t: Test integrity of archive\n"
-      "  x: eXtract files with full paths\n");
+      "  x: eXtract files with full paths\n", args[0]);
     return 0;
   }
   if (numargs < 3)
