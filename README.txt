@@ -1,4 +1,4 @@
-README for pts-mini-7z-sfx
+ README for pts-mini-7z-sfx
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 pts-mini-7z-sfx is a mini 7-Zip extractor and self-extractor (sfx) written
 in ANSI C. It's Unix-only.
@@ -27,9 +27,5 @@ about 7zS2con.sfx, a similar software for Win32.
 
 Forked from 7z922.tar.bz2 from
 http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.tar.bz2/download
-
-TODOs:
-
-* TODO(pts): Make it smaller with fastcall.
 
 __EOF__
