@@ -509,6 +509,7 @@ int MY_CDECL main(int numargs, char *args[])
             if (0 != fchmod(fileno(outFile.file), GetUnixMode(&umaskv, f->Attrib))) {
               File_Close(&outFile);
               PrintError("can not chmod output file");
+              res = SZ_ERROR_FAIL;
               break;
             }
           }
