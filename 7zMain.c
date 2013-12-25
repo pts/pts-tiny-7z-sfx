@@ -6,9 +6,6 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE  /* For futimesat() */
 #endif
-#ifndef _ATFILE_SOURCE
-#define _ATFILE_SOURCE  /* For AT_FDCWD */
-#endif
 #include <sys/time.h>
 #endif
 #endif
@@ -32,6 +29,7 @@
 #include <errno.h>
 #include <utime.h>
 #include <unistd.h>  /* symlink() */
+#include <sys/time.h>  /* futimes() for uClibc */
 #endif
 #endif
 
@@ -214,9 +212,7 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
 
 #ifndef USE_WINDOWS_FILE
 #ifdef __linux
-static int MyUtimes(const char *filename, const struct timeval tv[2]) {
-  return futimesat(AT_FDCWD, filename, tv);
-}
+#define MyUtimes utimes
 #else
 /* Fallback which can't do subsecond precision. */
 static int MyUtimes(const char *filename, const struct timeval tv[2]) {
