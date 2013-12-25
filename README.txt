@@ -1,7 +1,7 @@
- README for pts-mini-7z-sfx
+README for pts-mini-7z-sfx
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-pts-mini-7z-sfx is a mini 7-Zip extractor and self-extractor (sfx) written
-in ANSI C. It's Unix-only.
+pts-mini-7z-sfx is a mini 7-Zip extractor and self-extractor (SFX) written
+in ANSI C. It's Unix-only, actively tested on Linux.
 
 Features:
 
