@@ -1211,6 +1211,47 @@ static SRes SzReadAndDecodePackedStreams(
   return res;
 }
 
+#ifndef USE_WINDOWS_FILE
+/* TODO(pts): Make this fast. */
+static Int64 FindStartArcPos(ILookInStream *inStream) {
+  Byte prev[k7zSignatureSize - 1];
+  /* This works even if size is 64-bit and prevc is 32-bit. */
+  unsigned prevc = 0, i, j;
+  Int64 ofs = 0;
+  Byte *buf;
+  size_t size;
+  /* Find k7zSignature in the beginning. */
+  while (ofs < (2 << 20)) {  /* 2 MB. */
+    size = LookToRead_BUF_SIZE;
+    if (inStream->Look(inStream, (const void**)&buf, &size) || size == 0) {
+      return 0;
+    }
+    for (i = 0; i < prevc; ++i) {
+      for (j = 0; j < k7zSignatureSize; ++j) {
+        if (i + j >= prevc) {
+          if (i + j - prevc >= size ||
+              buf[i + j - prevc] != k7zSignature[j]) break;
+        } else {
+          if (prev[i + j] != k7zSignature[j]) break;
+        }
+      }
+      if (j == k7zSignatureSize) return ofs - (prevc - i);
+    }
+    for (i = 0; i + k7zSignatureSize <= size; ++i) {
+      for (j = 0; j < k7zSignatureSize; ++j) {
+        if (buf[i + j] != k7zSignature[j]) break;
+      }
+      if (j == k7zSignatureSize) return ofs + i;
+    }
+    prevc = size < k7zSignatureSize - 1 ? size : k7zSignatureSize - 1;
+    memcpy(prev, buf + size - prevc, prevc);
+    inStream->Skip(inStream, size);
+    ofs += size;
+  }
+  return ofs;
+}
+#endif
+
 static SRes SzArEx_Open2(
     CSzArEx *p,
     ILookInStream *inStream,
@@ -1225,8 +1266,8 @@ static SRes SzArEx_Open2(
   CBuf buffer;
   SRes res;
 
-  startArcPos = 0;
-  RINOK(inStream->Seek(inStream, &startArcPos, SZ_SEEK_CUR));
+  startArcPos = FindStartArcPos(inStream);
+  RINOK(inStream->Seek(inStream, &startArcPos, SZ_SEEK_SET));
 
   RINOK(LookInStream_Read2(inStream, header, k7zStartHeaderSize, SZ_ERROR_NO_ARCHIVE));
 
