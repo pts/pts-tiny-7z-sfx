@@ -6,6 +6,9 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE  /* For futimesat() */
 #endif
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE  /* For utimes() in diet libc. */
+#endif
 #include <sys/time.h>
 #endif
 #endif
