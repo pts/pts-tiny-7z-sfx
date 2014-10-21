@@ -35,7 +35,7 @@ Returns:
 
 typedef void * CLzma2EncHandle;
 
-CLzma2EncHandle Lzma2Enc_Create(ISzAlloc *alloc, ISzAlloc *allocBig);
+CLzma2EncHandle Lzma2Enc_Create(void);
 void Lzma2Enc_Destroy(CLzma2EncHandle p);
 SRes Lzma2Enc_SetProps(CLzma2EncHandle p, const CLzma2EncProps *props);
 Byte Lzma2Enc_WriteProperties(CLzma2EncHandle p);
@@ -56,7 +56,7 @@ Return code:
 /*
 SRes Lzma2Encode(Byte *dest, SizeT *destLen, const Byte *src, SizeT srcLen,
     const CLzmaEncProps *props, Byte *propsEncoded, int writeEndMark,
-    ICompressProgress *progress, ISzAlloc *alloc, ISzAlloc *allocBig);
+    ICompressProgress *progress);
 */
 
 #ifdef __cplusplus

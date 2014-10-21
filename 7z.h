@@ -52,7 +52,7 @@ typedef struct
 } CSzCoderInfo;
 
 STATIC void SzCoderInfo_Init(CSzCoderInfo *p);
-STATIC void SzCoderInfo_Free(CSzCoderInfo *p, ISzAlloc *alloc);
+STATIC void SzCoderInfo_Free(CSzCoderInfo *p);
 
 typedef struct
 {
@@ -83,7 +83,7 @@ STATIC UInt64 SzFolder_GetUnpackSize(CSzFolder *p);
 
 STATIC SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
     ILookInStream *stream, UInt64 startPos,
-    Byte *outBuffer, size_t outSize, ISzAlloc *allocMain);
+    Byte *outBuffer, size_t outSize);
 
 typedef struct
 {
@@ -123,7 +123,7 @@ typedef struct
 } CSzAr;
 
 STATIC void SzAr_Init(CSzAr *p);
-STATIC void SzAr_Free(CSzAr *p, ISzAlloc *alloc);
+STATIC void SzAr_Free(CSzAr *p);
 
 
 /*
@@ -163,7 +163,7 @@ typedef struct
 } CSzArEx;
 
 STATIC void SzArEx_Init(CSzArEx *p);
-STATIC void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc);
+STATIC void SzArEx_Free(CSzArEx *p);
 STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
 
 /*
@@ -182,9 +182,7 @@ STATIC SRes SzArEx_Extract(
     Byte **outBuffer,         /* pointer to pointer to output buffer (allocated with allocMain) */
     size_t *outBufferSize,    /* buffer size for output buffer */
     size_t *offset,           /* offset of stream for required file in *outBuffer */
-    size_t *outSizeProcessed, /* size of file in *outBuffer */
-    ISzAlloc *allocMain,
-    ISzAlloc *allocTemp);
+    size_t *outSizeProcessed); /* size of file in *outBuffer */
 
 
 /*
@@ -198,7 +196,7 @@ SZ_ERROR_INPUT_EOF
 SZ_ERROR_FAIL
 */
 
-STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream, ISzAlloc *allocMain, ISzAlloc *allocTemp);
+STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream);
 
 EXTERN_C_END
 

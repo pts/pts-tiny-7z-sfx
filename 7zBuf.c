@@ -11,7 +11,7 @@ STATIC void Buf_Init(CBuf *p)
   p->size = 0;
 }
 
-STATIC int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc)
+STATIC int Buf_Create(CBuf *p, size_t size)
 {
   p->size = 0;
   if (size == 0)
@@ -19,7 +19,7 @@ STATIC int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc)
     p->data = 0;
     return 1;
   }
-  p->data = (Byte *)alloc->Alloc(alloc, size);
+  p->data = (Byte *)SzAlloc(size);
   if (p->data != 0)
   {
     p->size = size;
@@ -28,9 +28,9 @@ STATIC int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc)
   return 0;
 }
 
-STATIC void Buf_Free(CBuf *p, ISzAlloc *alloc)
+STATIC void Buf_Free(CBuf *p)
 {
-  alloc->Free(alloc, p->data);
+  SzFree(p->data);
   p->data = 0;
   p->size = 0;
 }

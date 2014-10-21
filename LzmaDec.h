@@ -131,8 +131,8 @@ LzmaDec_Allocate* can return:
   SZ_ERROR_UNSUPPORTED - Unsupported properties
 */
 
-STATIC SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned propsSize, ISzAlloc *alloc);
-STATIC void LzmaDec_FreeProbs(CLzmaDec *p, ISzAlloc *alloc);
+STATIC SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned propsSize);
+STATIC void LzmaDec_FreeProbs(CLzmaDec *p);
 
 /* ---------- Dictionary Interface ---------- */
 

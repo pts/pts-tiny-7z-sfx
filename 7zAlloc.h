@@ -8,10 +8,7 @@
 
 #include <stdlib.h>
 
-STATIC void *SzAlloc(void *p, size_t size);
-STATIC void SzFree(void *p, void *address);
-
-STATIC void *SzAllocTemp(void *p, size_t size);
-STATIC void SzFreeTemp(void *p, void *address);
+STATIC void *SzAlloc(size_t size);
+STATIC void SzFree(void *address);
 
 #endif

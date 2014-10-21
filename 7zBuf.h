@@ -17,8 +17,8 @@ typedef struct
 } CBuf;
 
 STATIC void Buf_Init(CBuf *p);
-STATIC int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc);
-STATIC void Buf_Free(CBuf *p, ISzAlloc *alloc);
+STATIC int Buf_Create(CBuf *p, size_t size);
+STATIC void Buf_Free(CBuf *p);
 
 typedef struct
 {

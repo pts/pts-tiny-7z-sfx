@@ -79,7 +79,6 @@ typedef struct _CMtCoder
   ISeqInStream *inStream;
   ISeqOutStream *outStream;
   ICompressProgress *progress;
-  ISzAlloc *alloc;
 
   IMtCoderCallback *mtCallback;
   CCriticalSection cs;

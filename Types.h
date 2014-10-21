@@ -219,15 +219,6 @@ typedef struct
        Value (UInt64)(Int64)-1 for size means unknown value. */
 } ICompressProgress;
 
-typedef struct
-{
-  void *(*Alloc)(void *p, size_t size);
-  void (*Free)(void *p, void *address); /* address can be 0 */
-} ISzAlloc;
-
-#define IAlloc_Alloc(p, size) (p)->Alloc((p), size)
-#define IAlloc_Free(p, a) (p)->Free((p), a)
-
 #ifdef _WIN32
 
 #define CHAR_PATH_SEPARATOR '\\'

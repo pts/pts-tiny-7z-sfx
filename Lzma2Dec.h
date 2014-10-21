@@ -25,10 +25,10 @@ typedef struct
 } CLzma2Dec;
 
 #define Lzma2Dec_Construct(p) LzmaDec_Construct(&(p)->decoder)
-#define Lzma2Dec_FreeProbs(p, alloc) LzmaDec_FreeProbs(&(p)->decoder, alloc);
-#define Lzma2Dec_Free(p, alloc) LzmaDec_Free(&(p)->decoder, alloc);
+#define Lzma2Dec_FreeProbs(p) LzmaDec_FreeProbs(&(p)->decoder);
+#define Lzma2Dec_Free(p) LzmaDec_Free(&(p)->decoder);
 
-STATIC SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
+STATIC SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop);
 STATIC void Lzma2Dec_Init(CLzma2Dec *p);
 
 

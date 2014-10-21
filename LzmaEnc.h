@@ -49,14 +49,14 @@ Returns:
 
 typedef void * CLzmaEncHandle;
 
-CLzmaEncHandle LzmaEnc_Create(ISzAlloc *alloc);
-void LzmaEnc_Destroy(CLzmaEncHandle p, ISzAlloc *alloc, ISzAlloc *allocBig);
+CLzmaEncHandle LzmaEnc_Create(void);
+void LzmaEnc_Destroy(CLzmaEncHandle p);
 SRes LzmaEnc_SetProps(CLzmaEncHandle p, const CLzmaEncProps *props);
 SRes LzmaEnc_WriteProperties(CLzmaEncHandle p, Byte *properties, SizeT *size);
 SRes LzmaEnc_Encode(CLzmaEncHandle p, ISeqOutStream *outStream, ISeqInStream *inStream,
-    ICompressProgress *progress, ISzAlloc *alloc, ISzAlloc *allocBig);
+    ICompressProgress *progress);
 SRes LzmaEnc_MemEncode(CLzmaEncHandle p, Byte *dest, SizeT *destLen, const Byte *src, SizeT srcLen,
-    int writeEndMark, ICompressProgress *progress, ISzAlloc *alloc, ISzAlloc *allocBig);
+    int writeEndMark, ICompressProgress *progress);
 
 /* ---------- One Call Interface ---------- */
 
@@ -71,7 +71,7 @@ Return code:
 
 SRes LzmaEncode(Byte *dest, SizeT *destLen, const Byte *src, SizeT srcLen,
     const CLzmaEncProps *props, Byte *propsEncoded, SizeT *propsSize, int writeEndMark,
-    ICompressProgress *progress, ISzAlloc *alloc, ISzAlloc *allocBig);
+    ICompressProgress *progress);
 
 EXTERN_C_END
 

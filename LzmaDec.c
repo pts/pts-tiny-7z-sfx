@@ -838,9 +838,9 @@ STATIC SRes LzmaDec_DecodeToDic(CLzmaDec *p, SizeT dicLimit, const Byte *src, Si
   return (p->code == 0) ? SZ_OK : SZ_ERROR_DATA;
 }
 
-STATIC void LzmaDec_FreeProbs(CLzmaDec *p, ISzAlloc *alloc)
+STATIC void LzmaDec_FreeProbs(CLzmaDec *p)
 {
-  alloc->Free(alloc, p->probs);
+  SzFree(p->probs);
   p->probs = 0;
 }
 
@@ -870,13 +870,13 @@ STATIC SRes LzmaProps_Decode(CLzmaProps *p, const Byte *data, unsigned size)
   return SZ_OK;
 }
 
-static SRes LzmaDec_AllocateProbs2(CLzmaDec *p, const CLzmaProps *propNew, ISzAlloc *alloc)
+static SRes LzmaDec_AllocateProbs2(CLzmaDec *p, const CLzmaProps *propNew)
 {
   UInt32 numProbs = LzmaProps_GetNumProbs(propNew);
   if (p->probs == 0 || numProbs != p->numProbs)
   {
-    LzmaDec_FreeProbs(p, alloc);
-    p->probs = (CLzmaProb *)alloc->Alloc(alloc, numProbs * sizeof(CLzmaProb));
+    LzmaDec_FreeProbs(p);
+    p->probs = (CLzmaProb *)SzAlloc(numProbs * sizeof(CLzmaProb));
     p->numProbs = numProbs;
     if (p->probs == 0)
       return SZ_ERROR_MEM;
@@ -884,11 +884,11 @@ static SRes LzmaDec_AllocateProbs2(CLzmaDec *p, const CLzmaProps *propNew, ISzAl
   return SZ_OK;
 }
 
-STATIC SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned propsSize, ISzAlloc *alloc)
+STATIC SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned propsSize)
 {
   CLzmaProps propNew;
   RINOK(LzmaProps_Decode(&propNew, props, propsSize));
-  RINOK(LzmaDec_AllocateProbs2(p, &propNew, alloc));
+  RINOK(LzmaDec_AllocateProbs2(p, &propNew));
   p->prop = propNew;
   return SZ_OK;
 }

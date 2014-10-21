@@ -36,14 +36,12 @@
 #endif
 #endif
 
-static ISzAlloc g_Alloc = { SzAlloc, SzFree };
-
 static int Buf_EnsureSize(CBuf *dest, size_t size)
 {
   if (dest->size >= size)
     return 1;
-  Buf_Free(dest, &g_Alloc);
-  return Buf_Create(dest, size, &g_Alloc);
+  Buf_Free(dest);
+  return Buf_Create(dest, size);
 }
 
 #ifndef _WIN32
@@ -205,12 +203,12 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   if (res && attribDefined) {
     /* !! TODO(pts): chmod directory after its contents */
     if (0 != chmod((const char *)buf.data, GetUnixMode(umaskv, attrib))) {
-      Buf_Free(&buf, &g_Alloc);
+      Buf_Free(&buf);
       return 2;
     }
   }
   #endif
-  Buf_Free(&buf, &g_Alloc);
+  Buf_Free(&buf);
   return res ? 0 : 1;
   #endif
 }
@@ -247,7 +245,7 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   tv[1].tv_sec = sec;
   tv[1].tv_usec = usec;
   got = MyUtimes((const char *)buf.data, tv);
-  Buf_Free(&buf, &g_Alloc);
+  Buf_Free(&buf);
   return got != 0;
 }
 #endif
@@ -269,7 +267,7 @@ static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name, Bool doYes)
   } else {
     res = OutFile_Open(p, (const char *)buf.data);
   }
-  Buf_Free(&buf, &g_Alloc);
+  Buf_Free(&buf);
   return res;
   #endif
 }
@@ -282,7 +280,7 @@ static SRes PrintString(const UInt16 *s)
   res = Utf16_To_Char(&buf, s, 0);
   if (res == SZ_OK)
     fputs((const char *)buf.data, stdout);
-  Buf_Free(&buf, &g_Alloc);
+  Buf_Free(&buf);
   return res;
 }
 
@@ -382,8 +380,6 @@ int MY_CDECL main(int numargs, char *args[])
   CLookToRead lookStream;
   CSzArEx db;
   SRes res;
-  ISzAlloc allocImp;
-  ISzAlloc allocTempImp;
   UInt16 *temp = NULL;
   size_t tempSize = 0;
   unsigned umaskv = -1;
@@ -440,12 +436,6 @@ int MY_CDECL main(int numargs, char *args[])
     }
   }
 
-  allocImp.Alloc = SzAlloc;
-  allocImp.Free = SzFree;
-
-  allocTempImp.Alloc = SzAllocTemp;
-  allocTempImp.Free = SzFreeTemp;
-
   fputs("Processing archive: ", stdout);
   fputs(archive, stdout);
   putchar('\n');
@@ -465,7 +455,7 @@ int MY_CDECL main(int numargs, char *args[])
   CrcGenerateTable();
 
   SzArEx_Init(&db);
-  res = SzArEx_Open(&db, &lookStream.s, &allocImp, &allocTempImp);
+  res = SzArEx_Open(&db, &lookStream.s);
   if (res == SZ_OK)
   {
     if (res == SZ_OK)
@@ -490,9 +480,9 @@ int MY_CDECL main(int numargs, char *args[])
 
         if (len > tempSize)
         {
-          SzFree(NULL, temp);
+          SzFree(temp);
           tempSize = len;
-          temp = (UInt16 *)SzAlloc(NULL, tempSize * sizeof(temp[0]));
+          temp = (UInt16 *)SzAlloc(tempSize * sizeof(temp[0]));
           if (temp == 0)
           {
             res = SZ_ERROR_MEM;
@@ -554,8 +544,7 @@ int MY_CDECL main(int numargs, char *args[])
         {
           res = SzArEx_Extract(&db, &lookStream.s, i,
               &blockIndex, &outBuffer, &outBufferSize,
-              &offset, &outSizeProcessed,
-              &allocImp, &allocTempImp);
+              &offset, &outSizeProcessed);
           if (res != SZ_OK)
             break;
         }
@@ -601,7 +590,7 @@ int MY_CDECL main(int numargs, char *args[])
               res = sres;
               break;
             }
-            target = (char*)IAlloc_Alloc(&allocImp, outSizeProcessed + 1);
+            target = (char*)SzAlloc(outSizeProcessed + 1);
             memcpy(target, outBuffer + offset, outSizeProcessed);
             target[outSizeProcessed] = '\0';
             if (0 != symlink(target, (const char *)buf.data)) {
@@ -615,13 +604,13 @@ int MY_CDECL main(int numargs, char *args[])
               }
               PrintError("can not create symlink");
               res = SZ_ERROR_FAIL;
-              IAlloc_Free(&allocImp, target);
-              Buf_Free(&buf, &g_Alloc);
+              SzFree(target);
+              Buf_Free(&buf);
               break;
             }
            reok:
-            IAlloc_Free(&allocImp, target);
-            Buf_Free(&buf, &g_Alloc);
+            SzFree(target);
+            Buf_Free(&buf);
             goto next_file;
           }
           #endif
@@ -673,11 +662,11 @@ int MY_CDECL main(int numargs, char *args[])
        next_file:
         putchar('\n');
       }
-      IAlloc_Free(&allocImp, outBuffer);
+      SzFree(outBuffer);
     }
   }
-  SzArEx_Free(&db, &allocImp);
-  SzFree(NULL, temp);
+  SzArEx_Free(&db);
+  SzFree(temp);
 
   File_Close(&archiveStream.file);
   if (res == SZ_OK)
