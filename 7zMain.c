@@ -155,7 +155,6 @@ static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
     *umaskv = umask(default_umask);
     if (*umaskv != default_umask) umask(*umaskv);
   }
-  /* !! chmod directory after its contents */
   if (attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) {
     mode = attrib >> 16;
   } else {
@@ -168,7 +167,9 @@ static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
 
 STATIC void PrintError(char *sz)
 {
-  printf("\nERROR: %s\n", sz);
+  fputs("\nERROR: ", stdout);
+  fputs(sz, stdout);
+  putchar('\n');
 }
 
 static void PrintMyCreateDirError(int res) {
@@ -202,6 +203,7 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   res = mkdir((const char *)buf.data, mode) == 0;
   if (!res && errno == EEXIST) res = 1;  /* Already exists. */
   if (res && attribDefined) {
+    /* !! TODO(pts): chmod directory after its contents */
     if (0 != chmod((const char *)buf.data, GetUnixMode(umaskv, attrib))) {
       Buf_Free(&buf, &g_Alloc);
       return 2;
@@ -284,7 +286,7 @@ static SRes PrintString(const UInt16 *s)
   return res;
 }
 
-static void UInt64ToStr(UInt64 value, char *s)
+static void UInt64ToStr(UInt64 value, char *s, int numDigits, char pad)
 {
   char temp[32];
   int pos = 0;
@@ -294,6 +296,8 @@ static void UInt64ToStr(UInt64 value, char *s)
     value /= 10;
   }
   while (value != 0);
+  for (numDigits -= pos; numDigits > 0; numDigits--)
+    *s++ = pad;  /* ' ' or '0'; */
   do
     *s++ = temp[--pos];
   while (pos);
@@ -356,6 +360,7 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   s = UIntToStr(s, hour, 2); *s++ = ':';
   s = UIntToStr(s, min, 2);  *s++ = ':';
   s = UIntToStr(s, sec, 2);
+  *s = '\0';
 }
 
 #ifdef USE_WINDOWS_FILE
@@ -368,13 +373,6 @@ static void GetAttribString(UInt32 wa, Bool isDir, char *s)
   s[3] = (char)(((wa & FILE_ATTRIBUTE_SYSTEM) != 0) ? 'S': kEmptyAttribChar);
   s[4] = (char)(((wa & FILE_ATTRIBUTE_ARCHIVE) != 0) ? 'A': kEmptyAttribChar);
   s[5] = '\0';
-}
-#else
-static void GetAttribString(UInt32 wa, Bool isDir, char *s)
-{
-  (void)wa;
-  (void)isDir;
-  s[0] = '\0';
 }
 #endif
 
@@ -393,18 +391,19 @@ int MY_CDECL main(int numargs, char *args[])
   Bool listCommand = 0, testCommand = 0, doYes = 0;
   int argi = 2;
 
-  printf("Tiny 7z extractor " MY_VERSION "\n\n");
+  fputs("Tiny 7z extractor " MY_VERSION "\n\n", stdout);
   if (numargs >= 2 &&
       (0 == strcmp(args[1], "-h") || 0 == strcmp(args[1], "--help"))) {
-    printf(
-      "Usage: %s <command> [<switches>...]\n\n"
+    fputs("Usage: ", stdout);
+    fputs(args[0], stdout);
+    fputs(" <command> [<switches>...]\n\n"
       "<Commands>\n"
       "  l: List contents of archive\n"
       "  t: Test integrity of archive\n"
       "  x: eXtract files with full pathname (default)\n"
       "<Switches>\n"
       "  -e{Archive}: archive to Extract (default is self, argv[0])\n"
-      "  -y: assume Yes on all queries\n", args[0]);
+      "  -y: assume Yes on all queries\n", stdout);
      return 0;
   }
   if (numargs >= 2) {
@@ -418,7 +417,7 @@ int MY_CDECL main(int numargs, char *args[])
       /* extractCommand = 1; */
     } else {
       PrintError("unknown command");
-      res = SZ_ERROR_FAIL;
+      return 1;
     }
   }
   for (; argi < numargs; ++argi) {
@@ -447,7 +446,10 @@ int MY_CDECL main(int numargs, char *args[])
   allocTempImp.Alloc = SzAllocTemp;
   allocTempImp.Free = SzFreeTemp;
 
-  printf("Processing archive: %s\n\n", archive);
+  fputs("Processing archive: ", stdout);
+  fputs(archive, stdout);
+  putchar('\n');
+  putchar('\n');
   if (InFile_Open(&archiveStream.file, archive))
   {
     PrintError("can not open input file");
@@ -501,11 +503,16 @@ int MY_CDECL main(int numargs, char *args[])
         SzArEx_GetFileNameUtf16(&db, i, temp);
         if (listCommand)
         {
-          char attr[8], s[32], t[32];
+          char s[32], t[32];
+#ifdef USE_WINDOWS_FILE
+          char attr[8];
+#endif
 
+#ifdef USE_WINDOWS_FILE
           GetAttribString(f->AttribDefined ? f->Attrib : 0, f->IsDir, attr);
+#endif
 
-          UInt64ToStr(f->Size, s);
+          UInt64ToStr(f->Size, s, 10, ' ');
           if (f->MTimeDefined)
             ConvertFileTimeToString(&f->MTime, t);
           else
@@ -516,13 +523,22 @@ int MY_CDECL main(int numargs, char *args[])
             t[j] = '\0';
           }
 
-          printf("%s %s %10s  ", t, attr, s);
+          fputs(t, stdout);
+#ifdef USE_WINDOWS_FILE
+          putchar(' ');
+          fputs(attr, stdout);
+#else
+          fputs(" . ", stdout);
+#endif
+          fputs(s, stdout);
+          putchar(' ');
+          putchar(' ');
           res = PrintString(temp);
           if (res != SZ_OK)
             break;
           if (f->IsDir)
-            printf("/");
-          printf("\n");
+            putchar('/');
+          putchar('\n');
           continue;
         }
         fputs(testCommand ?
@@ -533,7 +549,7 @@ int MY_CDECL main(int numargs, char *args[])
         if (res != SZ_OK)
           break;
         if (f->IsDir)
-          printf("/");
+          putchar('/');
         else
         {
           res = SzArEx_Extract(&db, &lookStream.s, i,
@@ -655,7 +671,7 @@ int MY_CDECL main(int numargs, char *args[])
           #endif
         }
        next_file:
-        printf("\n");
+        putchar('\n');
       }
       IAlloc_Free(&allocImp, outBuffer);
     }
@@ -666,7 +682,7 @@ int MY_CDECL main(int numargs, char *args[])
   File_Close(&archiveStream.file);
   if (res == SZ_OK)
   {
-    printf("\nEverything is Ok\n");
+    fputs("\nEverything is Ok\n", stdout);
     return 0;
   }
   if (res == SZ_ERROR_UNSUPPORTED)
@@ -677,7 +693,12 @@ int MY_CDECL main(int numargs, char *args[])
     PrintError("CRC error");
   else if (res == SZ_ERROR_NO_ARCHIVE)
     PrintError("input file is not a .7z archive");
-  else
-    printf("\nERROR #%d\n", res);
+  else {
+    char s[12];
+    UIntToStr(s, res, 0);
+    fputs("\nERROR #", stdout);
+    fputs(s, stdout);
+    putchar('\n');
+  }
   return 1;
 }
