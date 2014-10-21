@@ -1,31 +1,45 @@
-# 
+# gcc -m32 -U_FORTIFY_SOURCE -fno-stack-protector -s -Os -c -DSTATIC=static -W -Wall all.c
 # nm all.o | grep '^ *U ' | sort | uniq >syms.txt.out
 
-__divdi3
-__errno_location
-__udivdi3
-__umoddi3
-chmod
-fchmod
-fclose
-ferror
-fileno
-fopen
-fputs
-fread
-free
-fseek
-ftell
-fwrite
-gettimeofday
-lstat
-malloc
-memcmp
-mkdir
-putchar
-stdout
-strcmp
-symlink
-umask
-unlink
-utimes
+libgcc:
+
+* __divdi3
+* __udivdi3
+* __umoddi3
+
+string:
+
+* memcmp
+* strcmp
+
+syscall:
+
+* errno
+* chmod
+* fchmod
+* gettimeofday
+* lstat
+* mkdir
+* symlink
+* umask
+* unlink
+* utimes
+
+memory:
+
+* free
+* malloc
+
+stdio:
+
+* fclose
+* ferror
+* fileno
+* fopen (for both input and output)
+* fputs
+* fread
+* fseek
+* ftell
+* fwrite
+* putchar
+* stdout
