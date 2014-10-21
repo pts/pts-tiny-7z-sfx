@@ -4,12 +4,6 @@
 #ifndef __7Z_TYPES_H
 #define __7Z_TYPES_H
 
-#include <stddef.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #ifndef EXTERN_C_BEGIN
 #ifdef __cplusplus
 #define EXTERN_C_BEGIN extern "C" {

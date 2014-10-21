@@ -6,7 +6,9 @@
 
 #ifdef _MSC_VER
 
-#include <stdlib.h>
+#include "7zSys.h"
+
+/* _rotl and _rotr in stdlib.h */
 #define rotlFixed(x, n) _rotl((x), (n))
 #define rotrFixed(x, n) _rotr((x), (n))
 

@@ -3,11 +3,7 @@
 
 /* #define SHOW_DEBUG_INFO */
 
-#ifdef SHOW_DEBUG_INFO
-#include <stdio.h>
-#endif
-
-#include <string.h>
+#include "7zSys.h"
 
 #include "Lzma2Dec.h"
 

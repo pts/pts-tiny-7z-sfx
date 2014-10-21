@@ -1,15 +1,13 @@
 /* 7zAlloc.c -- Allocation functions
 2010-10-29 : Igor Pavlov : Public domain */
 
+#include "7zSys.h"
+
 #include "7zAlloc.h"
 
 /* #define _SZ_ALLOC_DEBUG */
 /* use _SZ_ALLOC_DEBUG to debug alloc/free operations */
 
-
-#ifdef _SZ_ALLOC_DEBUG
-#include <stdio.h>
-#endif
 
 STATIC void *SzAlloc(size_t size)
 {

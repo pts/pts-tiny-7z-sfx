@@ -4,7 +4,7 @@
 #ifndef __COMMON_ALLOC_H
 #define __COMMON_ALLOC_H
 
-#include <stddef.h>
+#include "7zSysTypes.h"
 
 #ifdef __cplusplus
 extern "C" {

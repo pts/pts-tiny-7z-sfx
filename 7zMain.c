@@ -1,40 +1,13 @@
 /* 7zMain.c - Test application for 7z Decoder
 2010-10-28 : Igor Pavlov : Public domain */
 
-#ifndef _WIN32
-#ifdef __linux
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE  /* For futimesat() */
-#endif
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE  /* For utimes() in diet libc. */
-#endif
-#include <sys/time.h>
-#endif
-#endif
-
-#include <stdio.h>
-#include <string.h>
+#include "7zSys.h"
 
 #include "7z.h"
 #include "7zAlloc.h"
 #include "7zCrc.h"
 #include "7zFile.h"
 #include "7zVersion.h"
-
-#ifndef USE_WINDOWS_FILE
-/* for mkdir */
-#ifdef _WIN32
-#include <direct.h>
-#else
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <utime.h>
-#include <unistd.h>  /* symlink() */
-#include <sys/time.h>  /* futimes() for uClibc */
-#endif
-#endif
 
 static int Buf_EnsureSize(CBuf *dest, size_t size)
 {

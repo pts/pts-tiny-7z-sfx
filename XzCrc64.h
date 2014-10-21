@@ -4,7 +4,7 @@
 #ifndef __XZ_CRC64_H
 #define __XZ_CRC64_H
 
-#include <stddef.h>
+#include "7zSysTypes.h"
 
 #include "Types.h"
 

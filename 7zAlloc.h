@@ -6,7 +6,7 @@
 
 #include "Types.h"
 
-#include <stdlib.h>
+#include "7zSysTypes.h"
 
 STATIC void *SzAlloc(size_t size);
 STATIC void SzFree(void *address);

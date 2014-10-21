@@ -1,7 +1,7 @@
 /* 7zIn.c -- 7z Input functions
 2010-10-29 : Igor Pavlov : Public domain */
 
-#include <string.h>
+#include "7zSys.h"
 
 #include "7z.h"
 #include "7zCrc.h"
