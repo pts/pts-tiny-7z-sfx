@@ -2,6 +2,7 @@
 #
 # See the explanation why these flags are useful for small output here:
 # http://ptspts.blogspot.hu/2013/12/how-to-make-smaller-c-and-c-binaries.html
+#
 
 set -ex
 # The warning ``main: warning: the use of LEGACY `utimes' is discouraged,
@@ -27,4 +28,4 @@ strip -s --strip-unneeded --remove-section=.note.gnu.gold-version \
 ./sstrip tiny7zx
 upx.pts --ultra-brute tiny7zx
 
-: c-xstatic.sh OK.
+: c-diet.sh OK.
