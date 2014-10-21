@@ -1,6 +1,10 @@
 #ifndef __7Z_SYS_H
 #define __7Z_SYS_H
 
+#ifdef USE_MINIINC1
+#include <miniinc1.h>
+#else
+
 #ifdef _WIN32
 #define USE_WINDOWS_FILE
 #endif
@@ -45,5 +49,6 @@
 #include <errno.h>
 #endif
 
+#endif  /* USE_MINIINC1 */
 
 #endif
