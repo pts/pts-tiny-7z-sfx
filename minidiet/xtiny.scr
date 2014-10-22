@@ -1,0 +1,92 @@
+/*
+ * xtiny.scr -- a GNU ld(1) linker script for emitting small ELF binaries for C programs
+ * by pts@fazekas.hu at Sun Oct 19 13:06:04 CEST 2014
+ *
+ * * GNU ld(1) and a Linux i386 system is required
+ * * Usage: gcc -m32 -Os -nostdlib -W,-T,tiny.scr src*.c
+ * * C++ not supported (because of constructor etc. sections)
+ * * You need to define your own _start function (not a _main).
+ * * Code execution will be much faster if you replace the 1 in the ALIGN(1)
+ *   and SUBALIGN(1) calls below with 4. But it may add a couple of \0 bytes
+ *   to the output file.
+ */
+
+OUTPUT_FORMAT(binary)
+TARGET(elf32-little)
+ENTRY(_start)  /* Without this _start won't be loaded from an .a file. */
+
+SECTIONS {
+  __myorg = 0x08048000;  /* Moves only relocation offsets. */
+  . = __myorg;
+  .text . : ALIGN(1) SUBALIGN(1) {
+    /* ABSOLUTE(.) is necessary instead of . inside a section for ld. */
+    __ehdr = ABSOLUTE(.); /* __ehdr: ; Elf32_Ehdr */
+    BYTE(0x7F) BYTE(69) BYTE(76) BYTE(70) BYTE(1) BYTE(1) BYTE(1)
+    /* ^^^    db      0x7F, "ELF", 1, 1, 1            ;   0 e_ident */
+    BYTE(3) /* 0=SYSV 3=GNU/Linux */
+    LONG(0) LONG(0)
+    /* ^^^   times 8 db      0 */
+    SHORT(2) SHORT(3)
+    /* ^^^    dw      2, 3                            ;   16 e_type, e_machine */
+    LONG(1)
+    /* ^^^    dd      1                               ;   20 e_version */
+    LONG(_start)
+    /* ^^^    dd      _start                          ;   24 e_entry */
+    LONG(__phdr - __myorg)
+    /* ^^^    dd      __phdr - $$                     ;   28 e_phoff */
+    LONG(0) LONG(0)
+    /* ^^^    dd      0, 0                            ;   32 e_shoff, e_flags */
+    SHORT(__ehdrsize) SHORT(__phdrsize)
+    /* ^^^    dw      __ehdrsize, __phdrsize          ;   40 e_ehsize, e_phentsize */
+    SHORT(1) SHORT(0) SHORT(0) SHORT(0)
+    /* ^^^    dw      1, 0, 0, 0                      ;   e_phnum, e_shentsize, e_shnum, e_shstrndx */
+    __ehdrsize = ABSOLUTE(.) - __ehdr; /* __ehdrsize equ $ - __ehdr; */
+    __phdr = ABSOLUTE(.); /* ; Elf32_Phdr */
+    LONG(1) LONG(0) LONG(__myorg) LONG(__myorg)
+    /* ^^^    dd      1, 0, $$, $$                    ;   p_type, p_offset, p_vaddr, p_paddr */
+    LONG(__p_filesz - __myorg)
+    /* ^^^    dd      __p_filesz - __myorg            ;   p_filesz */
+    LONG(__p_memsz - __myorg)
+    /* ^^^    dd      __p_memsz - __myorg             ;   p_memsz */
+    LONG(7) LONG(0x1000)
+    /* ^^^    dd      7, 0x1000                       ;   p_flags (1=executable 2=writable 4=readable), p_align */
+    __phdrsize = ABSOLUTE(.) - __phdr; /* __phdrsize equ $ - __phdr */
+    /* _start is defined in _start.o (compiled from _start.s) in lib__xtiny.a */
+    /* No need to specify here: . = ALIGN(4), because SUBALIGN(4) above for
+     * .text.startup and .text takes care of this here.
+     */
+    *(.text)  /* Contains all other functions. */
+    *(.text.*)  /* text.startup contains main(). */
+  }
+  /* TODO(pts): Add other sections (e.g. initializers) as well? */
+  /* We align .data, .rodata and .bss to 4-byte boundary for faster loads on
+   * the data bus.
+   */
+  .data : ALIGN(4) SUBALIGN(4) {
+    *(.data)
+  }
+  .rodata : ALIGN(4) SUBALIGN(4) {
+    *(.rodata) *(.rodata.*)
+  }
+  .ctors : ALIGN(4) SUBALIGN(4) {
+    *(.ctors)
+    /* This doesn't trigger if there are no .ctors in the input. */
+    ASSERT(0, "Constructors are not supported.");
+  }
+  .dtors : ALIGN(4) SUBALIGN(4) {
+    *(.dtors)
+    ASSERT(0, "Destructors are not supported.");
+  }
+  __p_filesz = .;
+  /* For some reason the contents of this secion will be omitted from the
+   * file. Probably because do real data bytes are added here.
+   */
+  .bss : ALIGN(4) SUBALIGN(4) {
+    /* errno is defined in __xtiny_errno.o in lib__xtiny.a. We could define it
+     * here: `__xtiny_errno = ABSOLUTE(.); . += 4;', but that would make the
+     * symbol unavailable when linking with gcc. Similarly for environ.
+     */
+    *(.bss)
+  }
+  __p_memsz = .;
+}
