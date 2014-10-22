@@ -18,6 +18,7 @@ LDFLAGS1='-nostdlib -m elf_i386 -static -s minidiet/start.o'
 LDFLAGS2='minidiet/lib1.a minidiet/libgcc1.a'
 STRIP='strip -s --strip-unneeded --remove-section=.note.gnu.gold-version --remove-section=.comment --remove-section=.note --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag --remove-section=.eh_frame --remove-section=.eh_frame_ptr --remove-section=.jcr --remove-section=.got.plt'
 
+# strip -g --remove-section=.eh_frame --remove-section=.comment *.o
 # perl -ne 'print"$1\n" if m@^(?:free|__errno_location|mremap|__unified_syscall|errno|mmap|munmap|exit|stackgap|__libc_initary|strstr|getenv|__guard|memcmp|environ|close|read|open|close|set_thread_area|fputs|stdout|utimes|gettimeofday|fchmod|fileno|fflush|fwrite_unlocked|lstat|symlink|unlink|strcmp|ferror|ftell|fseek|fwrite|fputc_unlocked|isatty|__libc_write|lseek|__stdin_is_tty|__stack_chk_fail|ioctl|fread|fclose|fopen|chmod|mkdir|umask|__write2|fgetc_unlocked|__stdio_init_file|__stdio_parse_mode|__stdio_init_file_nothreads|fstat|feof_unlocked) (\S+)$@ ' smap | sort | uniq | tee olist && ar cr ../minidiet/lib1.a `cat olist`
 
 set -ex
