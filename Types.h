@@ -4,6 +4,8 @@
 #ifndef __7Z_TYPES_H
 #define __7Z_TYPES_H
 
+#include "7zSysTypes.h"
+
 #ifndef EXTERN_C_BEGIN
 #ifdef __cplusplus
 #define EXTERN_C_BEGIN extern "C" {
@@ -60,28 +62,6 @@ typedef unsigned long UInt32;
 #else
 typedef int Int32;
 typedef unsigned int UInt32;
-#endif
-
-#ifdef _SZ_NO_INT_64
-
-/* define _SZ_NO_INT_64, if your compiler doesn't support 64-bit integers.
-   NOTES: Some code will work incorrectly in that case! */
-
-typedef long Int64;
-typedef unsigned long UInt64;
-
-#else
-
-#if defined(_MSC_VER) || defined(__BORLANDC__)
-typedef __int64 Int64;
-typedef unsigned __int64 UInt64;
-#define UINT64_CONST(n) n
-#else
-typedef long long int Int64;
-typedef unsigned long long int UInt64;
-#define UINT64_CONST(n) n ## ULL
-#endif
-
 #endif
 
 #ifdef _LZMA_NO_SYSTEM_SIZE_T

@@ -10,7 +10,15 @@
 #error i386 is needed.  /* This fails on amd64 (__amd64__, __x86_64__). Good. */
 #endif
 
-#include <stddef.h>  /* This is a compiler-specific #include. */
+#if 0
+#include <stddef.h>  /* This is a compiler-specific #include, for size_t etc. */
+#else
+typedef unsigned size_t;
+typedef int ptrdiff_t;
+#define NULL ((void *)0)  /* For C++, it should be 0. */
+__extension__ typedef long long int64_t;
+__extension__ typedef unsigned long long uint64_t;
+#endif
 
 #define __WAIT_INT(status)    (*(__const int *) &(status))
 #define __WTERMSIG(status)    ((status) & 0x7f)

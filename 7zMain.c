@@ -556,8 +556,8 @@ int MY_CDECL main(int numargs, char *args[])
                    S_ISLNK(f->Attrib >> 16)) {
             char *target;
             CBuf buf;
-            Buf_Init(&buf);
             WRes sres;
+            Buf_Init(&buf);
             if ((sres = Utf16_To_Char(&buf, name, 1))) {
               PrintError("symlink malloc");
               res = sres;
