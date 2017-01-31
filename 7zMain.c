@@ -391,7 +391,7 @@ int MY_CDECL main(int numargs, char *args[])
   }
 
   FileInStream_CreateVTable(&archiveStream);
-  LookToRead_CreateVTable(&lookStream, False);
+  LookToRead_CreateVTable(&lookStream);
 
   lookStream.realStream = &archiveStream.s;
   LookToRead_Init(&lookStream);

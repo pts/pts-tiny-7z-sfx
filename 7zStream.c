@@ -28,24 +28,6 @@ STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
   return SZ_OK;
 }
 
-static SRes LookToRead_Look_Lookahead(void *pp, const void **buf, size_t *size)
-{
-  SRes res = SZ_OK;
-  CLookToRead *p = (CLookToRead *)pp;
-  size_t size2 = p->size - p->pos;
-  if (size2 == 0 && *size > 0)
-  {
-    p->pos = 0;
-    size2 = LookToRead_BUF_SIZE;
-    res = p->realStream->Read(p->realStream, p->buf, &size2);
-    p->size = size2;
-  }
-  if (size2 < *size)
-    *size = size2;
-  *buf = p->buf + p->pos;
-  return res;
-}
-
 static SRes LookToRead_Look_Exact(void *pp, const void **buf, size_t *size)
 {
   SRes res = SZ_OK;
@@ -96,11 +78,9 @@ static SRes LookToRead_Seek(void *pp, Int64 *pos)
   return p->realStream->Seek(p->realStream, pos);
 }
 
-STATIC void LookToRead_CreateVTable(CLookToRead *p, int lookahead)
+STATIC void LookToRead_CreateVTable(CLookToRead *p)
 {
-  p->s.Look = lookahead ?
-      LookToRead_Look_Lookahead :
-      LookToRead_Look_Exact;
+  p->s.Look = LookToRead_Look_Exact;
   p->s.Skip = LookToRead_Skip;
   p->s.Read = LookToRead_Read;
   p->s.Seek = LookToRead_Seek;

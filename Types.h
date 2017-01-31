@@ -162,7 +162,7 @@ typedef struct
   Byte buf[LookToRead_BUF_SIZE];
 } CLookToRead;
 
-STATIC void LookToRead_CreateVTable(CLookToRead *p, int lookahead);
+STATIC void LookToRead_CreateVTable(CLookToRead *p);
 STATIC void LookToRead_Init(CLookToRead *p);
 
 typedef struct
