@@ -38,14 +38,6 @@ STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
   return 1;
 }
 
-STATIC WRes File_Seek(CSzFile *p, Int64 *pos)
-{
-  /* TODO(pts): Use fseeko for 64-bit offset. */
-  int res = fseek(p->file, (long)*pos, SEEK_SET);
-  *pos = ftell(p->file);
-  return res;
-}
-
 /* ---------- FileSeqInStream ---------- */
 
 /* ---------- FileInStream ---------- */
@@ -68,7 +60,11 @@ static SRes FileInStream_Seek(void *pp, Int64 *pos)
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0\n", *pos);
 #endif
-  return File_Seek(&p->file, pos);
+  /* TODO(pts): Use fseeko for 64-bit offset. */
+  Int64 pos0 = *pos;
+  int res = fseek(p->file.file, (long)pos0, SEEK_SET);
+  *pos = ftell(p->file.file);
+  return res == 0 && *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
 }
 
 STATIC void FileInStream_CreateVTable(CFileInStream *p)

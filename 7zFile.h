@@ -24,9 +24,6 @@ STATIC WRes File_Close(CSzFile *p);
 /* writes *size bytes */
 STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size);
 
-STATIC WRes File_Seek(CSzFile *p, Int64 *pos);
-
-
 /* ---------- FileInStream ---------- */
 
 typedef struct
