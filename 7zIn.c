@@ -1152,7 +1152,7 @@ static Int64 FindStartArcPos(ILookInStream *inStream) {
     size = LookToRead_BUF_SIZE;
     if (inStream->Look(inStream, (const void**)&buf, &size) ||
         size + prevc < k7zSignatureSize) {
-      return 0;
+      return -1;
     }
     for (i = 0; i < prevc; ++i) {
       if (0 == memcmp(prev + i, k7zSignature, prevc - i) &&
@@ -1186,6 +1186,7 @@ static SRes SzArEx_Open2(
 
   k7zSignature[0] = '7';
   startArcPos = FindStartArcPos(inStream);
+  if (startArcPos < 0) return SZ_ERROR_NO_ARCHIVE;
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEKN 0\n");
 #endif
@@ -1194,8 +1195,10 @@ static SRes SzArEx_Open2(
   res = LookInStream_Read(inStream, header, k7zStartHeaderSize);
   if (res != SZ_OK) return res == SZ_ERROR_INPUT_EOF ? SZ_ERROR_NO_ARCHIVE : res;
 
+#if 0  /* No need to check, FindStartArcPos guarantees this. */
   if (0 != memcmp(header, k7zSignature, k7zSignatureSize))
     return SZ_ERROR_NO_ARCHIVE;
+#endif
   if (header[6] != k7zMajorVersion)
     return SZ_ERROR_UNSUPPORTED;
 
