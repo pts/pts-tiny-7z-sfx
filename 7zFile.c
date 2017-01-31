@@ -5,73 +5,17 @@
 
 #include "7zFile.h"
 
-#ifndef USE_WINDOWS_FILE
-
-#else
-
-/*
-   ReadFile and WriteFile functions in Windows have BUG:
-   If you Read or Write 64MB or more (probably min_failure_size = 64MB - 32KB + 1)
-   from/to Network file, it returns ERROR_NO_SYSTEM_RESOURCES
-   (Insufficient system resources exist to complete the requested service).
-   Probably in some version of Windows there are problems with other sizes:
-   for 32 MB (maybe also for 16 MB).
-   And message can be "Network connection was lost"
-*/
-
-#define kChunkSizeMax (1 << 22)
-
-#endif
-
-#if !defined(UNDER_CE) || !defined(USE_WINDOWS_FILE)
 static WRes File_Open(CSzFile *p, const char *name, int writeMode)
 {
-  #ifdef USE_WINDOWS_FILE
-  p->handle = CreateFileA(name,
-      writeMode ? GENERIC_WRITE : GENERIC_READ,
-      FILE_SHARE_READ, NULL,
-      writeMode ? CREATE_ALWAYS : OPEN_EXISTING,
-      FILE_ATTRIBUTE_NORMAL, NULL);
-  return (p->handle != INVALID_HANDLE_VALUE) ? 0 : GetLastError();
-  #else
   p->file = fopen(name, writeMode ? "wb+" : "rb");
-  return (p->file != 0) ? 0 :
-    #ifdef UNDER_CE
-    2; /* ENOENT */
-    #else
-    errno;
-    #endif
-  #endif
+  return (p->file != 0) ? 0 : errno;
 }
 
 STATIC WRes InFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 0); }
 STATIC WRes OutFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 1); }
-#endif
-
-#ifdef USE_WINDOWS_FILE
-static WRes File_OpenW(CSzFile *p, const WCHAR *name, int writeMode)
-{
-  p->handle = CreateFileW(name,
-      writeMode ? GENERIC_WRITE : GENERIC_READ,
-      FILE_SHARE_READ, NULL,
-      writeMode ? CREATE_ALWAYS : OPEN_EXISTING,
-      FILE_ATTRIBUTE_NORMAL, NULL);
-  return (p->handle != INVALID_HANDLE_VALUE) ? 0 : GetLastError();
-}
-STATIC WRes InFile_OpenW(CSzFile *p, const WCHAR *name) { return File_OpenW(p, name, 0); }
-STATIC WRes OutFile_OpenW(CSzFile *p, const WCHAR *name) { return File_OpenW(p, name, 1); }
-#endif
 
 STATIC WRes File_Close(CSzFile *p)
 {
-  #ifdef USE_WINDOWS_FILE
-  if (p->handle != INVALID_HANDLE_VALUE)
-  {
-    if (!CloseHandle(p->handle))
-      return GetLastError();
-    p->handle = INVALID_HANDLE_VALUE;
-  }
-  #else
   if (p->file != NULL)
   {
     int res = fclose(p->file);
@@ -79,7 +23,6 @@ STATIC WRes File_Close(CSzFile *p)
       return res;
     p->file = NULL;
   }
-  #endif
   return 0;
 }
 
@@ -89,33 +32,10 @@ STATIC WRes File_Read(CSzFile *p, void *data, size_t *size)
   if (originalSize == 0)
     return 0;
 
-  #ifdef USE_WINDOWS_FILE
-
-  *size = 0;
-  do
-  {
-    DWORD curSize = (originalSize > kChunkSizeMax) ? kChunkSizeMax : (DWORD)originalSize;
-    DWORD processed = 0;
-    BOOL res = ReadFile(p->handle, data, curSize, &processed, NULL);
-    data = (void *)((Byte *)data + processed);
-    originalSize -= processed;
-    *size += processed;
-    if (!res)
-      return GetLastError();
-    if (processed == 0)
-      break;
-  }
-  while (originalSize > 0);
-  return 0;
-
-  #else
-
   *size = fread(data, 1, originalSize, p->file);
   if (*size == originalSize)
     return 0;
   return ferror(p->file);
-
-  #endif
 }
 
 STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
@@ -124,61 +44,14 @@ STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
   if (originalSize == 0)
     return 0;
 
-  #ifdef USE_WINDOWS_FILE
-
-  *size = 0;
-  do
-  {
-    DWORD curSize = (originalSize > kChunkSizeMax) ? kChunkSizeMax : (DWORD)originalSize;
-    DWORD processed = 0;
-    BOOL res = WriteFile(p->handle, data, curSize, &processed, NULL);
-    data = (void *)((Byte *)data + processed);
-    originalSize -= processed;
-    *size += processed;
-    if (!res)
-      return GetLastError();
-    if (processed == 0)
-      break;
-  }
-  while (originalSize > 0);
-  return 0;
-
-  #else
-
   *size = fwrite(data, 1, originalSize, p->file);
   if (*size == originalSize)
     return 0;
   return ferror(p->file);
-
-  #endif
 }
 
 STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
 {
-  #ifdef USE_WINDOWS_FILE
-
-  LARGE_INTEGER value;
-  DWORD moveMethod;
-  value.LowPart = (DWORD)*pos;
-  value.HighPart = (LONG)((UInt64)*pos >> 16 >> 16); /* for case when UInt64 is 32-bit only */
-  switch (origin)
-  {
-    case SZ_SEEK_SET: moveMethod = FILE_BEGIN; break;
-    case SZ_SEEK_END: moveMethod = FILE_END; break;
-    default: return ERROR_INVALID_PARAMETER;
-  }
-  value.LowPart = SetFilePointer(p->handle, value.LowPart, &value.HighPart, moveMethod);
-  if (value.LowPart == 0xFFFFFFFF)
-  {
-    WRes res = GetLastError();
-    if (res != NO_ERROR)
-      return res;
-  }
-  *pos = ((Int64)value.HighPart << 32) | value.LowPart;
-  return 0;
-
-  #else
-
   int moveMethod;
   int res;
   switch (origin)
@@ -190,8 +63,6 @@ STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
   res = fseek(p->file, (long)*pos, moveMethod);
   *pos = ftell(p->file);
   return res;
-
-  #endif
 }
 
 /* ---------- FileSeqInStream ---------- */

@@ -118,7 +118,6 @@ static SRes Utf16_To_Char(CBuf *buf, const UInt16 *s, int fileMode)
   #endif
 }
 
-#ifndef USE_WINDOWS_FILE
 static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
   unsigned mode;
   if (*umaskv + 1U == 0U) {
@@ -134,7 +133,6 @@ static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
   }
   return mode & ~*umaskv & 07777;
 }
-#endif
 
 STATIC void PrintError(char *sz)
 {
@@ -153,13 +151,6 @@ static void PrintMyCreateDirError(int res) {
 
 static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined, UInt32 attrib)
 {
-  #ifdef USE_WINDOWS_FILE
-
-  /* TODO(pts): It's OK if already exists. */
-  /* TODO(pts): Respect attrib. */
-  return CreateDirectoryW(name, NULL) ? 0 : GetLastError();
-
-  #else
   unsigned mode;
   CBuf buf;
   Bool res;
@@ -183,10 +174,8 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   #endif
   Buf_Free(&buf);
   return res ? 0 : 1;
-  #endif
 }
 
-#ifndef USE_WINDOWS_FILE
 #ifdef __linux
 #define MyUtimes utimes
 #else
@@ -198,6 +187,7 @@ static int MyUtimes(const char *filename, const struct timeval tv[2]) {
   return utime(filename, &times);
 }
 #endif
+
 static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   /* mtime is 10 * number of microseconds since 1601 (+ 89 days). */
   const UInt64 q =
@@ -221,15 +211,10 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   Buf_Free(&buf);
   return got != 0;
 }
-#endif
 
 
 static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name, Bool doYes)
 {
-  #ifdef USE_WINDOWS_FILE
-  /* TODO(pts): Don't overwrite. */
-  return OutFile_OpenW(p, name);
-  #else
   struct stat st;
   CBuf buf;
   WRes res;
@@ -242,7 +227,6 @@ static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name, Bool doYes)
   }
   Buf_Free(&buf);
   return res;
-  #endif
 }
 
 static SRes PrintString(const UInt16 *s)
@@ -333,19 +317,6 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   s = UIntToStr(s, sec, 2);
   *s = '\0';
 }
-
-#ifdef USE_WINDOWS_FILE
-#define kEmptyAttribChar '.'
-static void GetAttribString(UInt32 wa, Bool isDir, char *s)
-{
-  s[0] = (char)(((wa & FILE_ATTRIBUTE_DIRECTORY) != 0 || isDir) ? 'D' : kEmptyAttribChar);
-  s[1] = (char)(((wa & FILE_ATTRIBUTE_READONLY) != 0) ? 'R': kEmptyAttribChar);
-  s[2] = (char)(((wa & FILE_ATTRIBUTE_HIDDEN) != 0) ? 'H': kEmptyAttribChar);
-  s[3] = (char)(((wa & FILE_ATTRIBUTE_SYSTEM) != 0) ? 'S': kEmptyAttribChar);
-  s[4] = (char)(((wa & FILE_ATTRIBUTE_ARCHIVE) != 0) ? 'A': kEmptyAttribChar);
-  s[5] = '\0';
-}
-#endif
 
 int MY_CDECL main(int numargs, char *args[])
 {
@@ -467,13 +438,6 @@ int MY_CDECL main(int numargs, char *args[])
         if (listCommand)
         {
           char s[32], t[32];
-#ifdef USE_WINDOWS_FILE
-          char attr[8];
-#endif
-
-#ifdef USE_WINDOWS_FILE
-          GetAttribString(f->AttribDefined ? f->Attrib : 0, f->IsDir, attr);
-#endif
 
           UInt64ToStr(f->Size, s, 10, ' ');
           if (f->MTimeDefined)
@@ -487,12 +451,7 @@ int MY_CDECL main(int numargs, char *args[])
           }
 
           fputs(t, stdout);
-#ifdef USE_WINDOWS_FILE
-          putchar(' ');
-          fputs(attr, stdout);
-#else
-          fputs(" . ", stdout);
-#endif
+          fputs(" . ", stdout);  /* attrib */
           fputs(s, stdout);
           putchar(' ');
           putchar(' ');
@@ -550,7 +509,6 @@ int MY_CDECL main(int numargs, char *args[])
             }
             goto next_file;
           }
-          #ifndef USE_WINDOWS_FILE
           else if (f->AttribDefined &&
                    (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
                    S_ISLNK(f->Attrib >> 16)) {
@@ -586,7 +544,6 @@ int MY_CDECL main(int numargs, char *args[])
             Buf_Free(&buf);
             goto next_file;
           }
-          #endif
           else if ((res = OutFile_OpenUtf16(&outFile, destPath, doYes)))
           {
            overw:
@@ -595,7 +552,6 @@ int MY_CDECL main(int numargs, char *args[])
                        "can not open output file");
             break;
           }
-          #ifndef USE_WINDOWS_FILE
           if (f->AttribDefined) {
             if (0 != fchmod(fileno(outFile.file), GetUnixMode(&umaskv, f->Attrib))) {
               File_Close(&outFile);
@@ -604,7 +560,6 @@ int MY_CDECL main(int numargs, char *args[])
               break;
             }
           }
-          #endif
           processedSize = outSizeProcessed;
           if (File_Write(&outFile, outBuffer + offset, &processedSize) != 0 || processedSize != outSizeProcessed)
           {
@@ -619,10 +574,6 @@ int MY_CDECL main(int numargs, char *args[])
             res = SZ_ERROR_FAIL;
             break;
           }
-          #ifdef USE_WINDOWS_FILE
-          if (f->AttribDefined)
-            SetFileAttributesW(destPath, f->Attrib);
-          #else
           if (f->MTimeDefined) {
             if (SetMTime(destPath, &f->MTime)) {
               res = SZ_ERROR_FAIL;
@@ -630,7 +581,6 @@ int MY_CDECL main(int numargs, char *args[])
               /* Don't break, it's not a big problem. */
             }
           }
-          #endif
         }
        next_file:
         putchar('\n');

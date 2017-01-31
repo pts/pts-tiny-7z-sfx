@@ -1137,7 +1137,6 @@ static SRes SzReadAndDecodePackedStreams(
   return res;
 }
 
-#ifndef USE_WINDOWS_FILE
 /* TODO(pts): Make this fast. */
 static Int64 FindStartArcPos(ILookInStream *inStream) {
   Byte prev[k7zSignatureSize - 1];
@@ -1169,7 +1168,6 @@ static Int64 FindStartArcPos(ILookInStream *inStream) {
   }
   return ofs;
 }
-#endif
 
 static SRes SzArEx_Open2(
     CSzArEx *p,

@@ -39,5 +39,6 @@ Ideas to reduce file size:
   The malloc(21810108) happens after the free() of 26192641. Can we optimize it?
   How much is the memory usage, who do we need the big malloc for?
   How does it change if we duplicate all files twice in the .7z?
+* Loop in LookInStream_Read2 many not be needed.
 
 __END__

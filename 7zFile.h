@@ -14,21 +14,11 @@ EXTERN_C_BEGIN
 
 typedef struct
 {
-  #ifdef USE_WINDOWS_FILE
-  HANDLE handle;
-  #else
   FILE *file;
-  #endif
 } CSzFile;
 
-#if !defined(UNDER_CE) || !defined(USE_WINDOWS_FILE)
 STATIC WRes InFile_Open(CSzFile *p, const char *name);
 STATIC WRes OutFile_Open(CSzFile *p, const char *name);
-#endif
-#ifdef USE_WINDOWS_FILE
-STATIC WRes InFile_OpenW(CSzFile *p, const WCHAR *name);
-STATIC WRes OutFile_OpenW(CSzFile *p, const WCHAR *name);
-#endif
 STATIC WRes File_Close(CSzFile *p);
 
 /* reads max(*size, remain file's size) bytes */
