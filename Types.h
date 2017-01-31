@@ -126,16 +126,10 @@ typedef struct
        (result < size) means error */
 } ISeqOutStream;
 
-typedef enum
-{
-  SZ_SEEK_SET = 0,
-  SZ_SEEK_END = 2
-} ESzSeek;
-
 typedef struct
 {
   SRes (*Read)(void *p, void *buf, size_t *size);  /* same as ISeqInStream::Read */
-  SRes (*Seek)(void *p, Int64 *pos, ESzSeek origin);
+  SRes (*Seek)(void *p, Int64 *pos);
 } ISeekInStream;
 
 typedef struct
@@ -149,7 +143,7 @@ typedef struct
 
   SRes (*Read)(void *p, void *buf, size_t *size);
     /* reads directly (without buffer). It's same as ISeqInStream::Read */
-  SRes (*Seek)(void *p, Int64 *pos, ESzSeek origin);
+  SRes (*Seek)(void *p, Int64 *pos);
 } ILookInStream;
 
 STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);

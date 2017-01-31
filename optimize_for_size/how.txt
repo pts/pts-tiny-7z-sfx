@@ -25,9 +25,6 @@ Ideas to reduce file size:
 * fopen() for reading is called only once: InFile_Open
 * FileInStream_CreateVTable can be eliminated? But there is also LookToRead.
   grep '[.>]Seek' *.c
-* We don't need SZ_SEEK_CUR.
-* Do we really need SZ_SEEK_END? It's used only in 7zIn.c for
-  SZ_ERROR_INPUT_EOF, which can be simplified or eliminated.
 * Once we use SZ_SEEK_SET only, we can eliminate ftell, use lseek, and fail
   if seeking wasn't possible.
 * malloc()+free() is used in a predictable way, only 1 malloc/free pair per
@@ -40,5 +37,6 @@ Ideas to reduce file size:
   How much is the memory usage, who do we need the big malloc for?
   How does it change if we duplicate all files twice in the .7z?
 * Loop in LookInStream_Read2 many not be needed.
+* Use fseeko instead of fseek for 64-bit offset, also use ftello.
 
 __END__

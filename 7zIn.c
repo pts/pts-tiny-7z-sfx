@@ -1183,7 +1183,7 @@ static SRes SzArEx_Open2(
 
   k7zSignature[0] = '7';
   startArcPos = FindStartArcPos(inStream);
-  RINOK(inStream->Seek(inStream, &startArcPos, SZ_SEEK_SET));
+  RINOK(inStream->Seek(inStream, &startArcPos));
 
   res = LookInStream_Read(inStream, header, k7zStartHeaderSize);
   if (res != SZ_OK) return res == SZ_ERROR_INPUT_EOF ? SZ_ERROR_NO_ARCHIVE : res;
@@ -1211,15 +1211,8 @@ static SRes SzArEx_Open2(
       nextHeaderOffset > nextHeaderOffset + nextHeaderSize + k7zStartHeaderSize)
     return SZ_ERROR_NO_ARCHIVE;
 
-  {
-    Int64 pos = 0;
-    RINOK(inStream->Seek(inStream, &pos, SZ_SEEK_END));
-    if ((UInt64)pos < startArcPos + nextHeaderOffset ||
-        (UInt64)pos < startArcPos + k7zStartHeaderSize + nextHeaderOffset ||
-        (UInt64)pos < startArcPos + k7zStartHeaderSize + nextHeaderOffset + nextHeaderSize)
-      return SZ_ERROR_INPUT_EOF;
-  }
-
+  /* If the file is not long enough, we want to return SZ_ERROR_INPUT_EOF, which LookInStream_Read will do for us, so there is no need to check the file size here. */
+  /* !! TODO(pts): Is this seek needed? Aren't we at the right position now anyway? */
   RINOK(LookInStream_SeekTo(inStream, startArcPos + k7zStartHeaderSize + nextHeaderOffset));
 
   if (!Buf_Create(&buffer, nextHeaderSizeT))

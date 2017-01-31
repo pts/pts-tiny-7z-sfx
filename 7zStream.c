@@ -8,7 +8,7 @@
 STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
 {
   Int64 t = offset;
-  return stream->Seek(stream, &t, SZ_SEEK_SET);
+  return stream->Seek(stream, &t);
 }
 
 STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
@@ -83,14 +83,14 @@ static SRes LookToRead_Read(void *pp, void *buf, size_t *size)
   return SZ_OK;
 }
 
-static SRes LookToRead_Seek(void *pp, Int64 *pos, ESzSeek origin)
+static SRes LookToRead_Seek(void *pp, Int64 *pos)
 {
   CLookToRead *p = (CLookToRead *)pp;
   p->pos = p->size = 0;
 #ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK LookToRead_Seek pos=%lld, origin=%d\n", *pos, origin);
+  fprintf(stderr, "SEEK LookToRead_Seek pos=%lld, origin=0\n", *pos);
 #endif
-  return p->realStream->Seek(p->realStream, pos, origin);
+  return p->realStream->Seek(p->realStream, pos);
 }
 
 STATIC void LookToRead_CreateVTable(CLookToRead *p, int lookahead)
