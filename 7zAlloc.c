@@ -15,7 +15,7 @@ STATIC void *SzAlloc(size_t size)
     return 0;
   #ifdef _SZ_ALLOC_DEBUG
   void *r = malloc(size);
-  fprintf(stderr, "!! ALLOC %d = %p\n", size, r);
+  fprintf(stderr, "DYNAMIC ALLOC %d = %p\n", size, r);
   return r;
   #else
   return malloc(size);
@@ -25,7 +25,7 @@ STATIC void *SzAlloc(size_t size)
 STATIC void SzFree(void *address)
 {
   #ifdef _SZ_ALLOC_DEBUG
-  fprintf(stderr, "!! FREE %p\n", address);
+  fprintf(stderr, "DYNAMIC FREE %p\n", address);
   #endif
   free(address);
 }
