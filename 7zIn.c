@@ -1141,74 +1141,65 @@ static SRes SzReadAndDecodePackedStreams(
 }
 
 /* TODO(pts): Make this fast. */
-static Int64 FindStartArcPos(ILookInStream *inStream) {
-  Byte prev[k7zSignatureSize - 1];
-  Int64 ofs = 0;
+static Int64 FindStartArcPos(ILookInStream *inStream, Byte **buf_out) {
+  Byte prev[k7zStartHeaderSize - 1];
+  Int64 ofs = k7zStartHeaderSize;
   Byte *buf;
-  /* 0 <= prevc < 7zSignatureSize. */
+  /* 0 <= prevc < 7zStartHeaderSize. */
   size_t size, i, prevc = 0;
   /* Find k7zSignature in the beginning. */
   while (ofs < (2 << 20)) {  /* 2 MB. */
     size = LookToRead_BUF_SIZE;
     if (inStream->Look(inStream, (const void**)&buf, &size) ||
-        size + prevc < k7zSignatureSize) {
-      return -1;
+        size + prevc < k7zStartHeaderSize) {
+      break;
     }
     for (i = 0; i < prevc; ++i) {
       if (0 == memcmp(prev + i, k7zSignature, prevc - i) &&
           0 == memcmp(buf, k7zSignature + prevc - i,
                       k7zSignatureSize - (prevc - i))) {
+        *buf_out = buf + k7zSignatureSize - (prevc - i);
         return ofs - (prevc - i);
       }
     }
-    for (i = 0; i + k7zSignatureSize <= size; ++i) {
-      if (0 == memcmp(buf + i, k7zSignature, k7zSignatureSize)) return ofs + i;
+    for (i = 0; i + k7zStartHeaderSize <= size; ++i) {
+      if (0 == memcmp(buf + i, k7zSignature, k7zSignatureSize)) {
+        *buf_out = buf + i + k7zSignatureSize;
+        return ofs + i;
+      }
     }
-    prevc = size < k7zSignatureSize - 1 ? size : k7zSignatureSize - 1;
+    prevc = size < k7zStartHeaderSize - 1 ? size : k7zStartHeaderSize - 1;
     memcpy(prev, buf + size - prevc, prevc);
-    inStream->Skip(inStream, size);
+    inStream->Skip(inStream, size);  /* TODO(pts): Add error checking. */
     ofs += size;
   }
-  return ofs;
+  return 0;
 }
 
 static SRes SzArEx_Open2(
     CSzArEx *p,
     ILookInStream *inStream)
 {
-  Byte header[k7zStartHeaderSize];
   Int64 startArcPos;
   UInt64 nextHeaderOffset, nextHeaderSize;
   size_t nextHeaderSizeT;
   UInt32 nextHeaderCRC;
   CBuf buffer;
   SRes res;
+  Byte *buf = 0;
 
   k7zSignature[0] = '7';
-  startArcPos = FindStartArcPos(inStream);
-  if (startArcPos < 0) return SZ_ERROR_NO_ARCHIVE;
-#ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEKN 0\n");
-#endif
-  RINOK(inStream->Seek(inStream, &startArcPos));
+  startArcPos = FindStartArcPos(inStream, &buf);
+  if (startArcPos == 0) return SZ_ERROR_NO_ARCHIVE;
+  if (buf[0] != k7zMajorVersion) return SZ_ERROR_UNSUPPORTED;
 
-  res = LookInStream_Read(inStream, header, k7zStartHeaderSize);
-  if (res != SZ_OK) return res == SZ_ERROR_INPUT_EOF ? SZ_ERROR_NO_ARCHIVE : res;
+  nextHeaderOffset = GetUi64(buf + 6);
+  nextHeaderSize = GetUi64(buf + 14);
+  nextHeaderCRC = GetUi32(buf + 22);
 
-#if 0  /* No need to check, FindStartArcPos guarantees this. */
-  if (0 != memcmp(header, k7zSignature, k7zSignatureSize))
-    return SZ_ERROR_NO_ARCHIVE;
-#endif
-  if (header[6] != k7zMajorVersion)
-    return SZ_ERROR_UNSUPPORTED;
+  p->startPosAfterHeader = startArcPos;
 
-  nextHeaderOffset = GetUi64(header + 12);
-  nextHeaderSize = GetUi64(header + 20);
-  nextHeaderCRC = GetUi32(header + 28);
-
-  p->startPosAfterHeader = startArcPos + k7zStartHeaderSize;
-
-  if (CrcCalc(header + 12, 20) != GetUi32(header + 8))
+  if (CrcCalc(buf + 6, 20) != GetUi32(buf + 2))
     return SZ_ERROR_CRC;
 
   nextHeaderSizeT = (size_t)nextHeaderSize;
@@ -1216,8 +1207,7 @@ static SRes SzArEx_Open2(
     return SZ_ERROR_MEM;
   if (nextHeaderSizeT == 0)
     return SZ_OK;
-  if (nextHeaderOffset > nextHeaderOffset + nextHeaderSize ||
-      nextHeaderOffset > nextHeaderOffset + nextHeaderSize + k7zStartHeaderSize)
+  if (nextHeaderOffset > nextHeaderOffset + startArcPos)  /* Check for overflow. */
     return SZ_ERROR_NO_ARCHIVE;
 
   /* If the file is not long enough, we want to return SZ_ERROR_INPUT_EOF, which LookInStream_Read will do for us, so there is no need to check the file size here. */
@@ -1225,7 +1215,7 @@ static SRes SzArEx_Open2(
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEKN 1\n");
 #endif
-  RINOK(LookInStream_SeekTo(inStream, startArcPos + k7zStartHeaderSize + nextHeaderOffset));
+  RINOK(LookInStream_SeekTo(inStream, startArcPos + nextHeaderOffset));
 
   if (!Buf_Create(&buffer, nextHeaderSizeT))
     return SZ_ERROR_MEM;
