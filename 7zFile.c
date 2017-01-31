@@ -35,7 +35,7 @@ STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
   *size = fwrite(data, 1, originalSize, p->file);
   if (*size == originalSize)
     return 0;
-  return ferror(p->file);
+  return 1;
 }
 
 STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)

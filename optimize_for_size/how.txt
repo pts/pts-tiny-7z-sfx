@@ -5,8 +5,8 @@ string.h: memcmp strcmp
 system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir
 dynamic memory: free malloc
 stdio.h messages: putchar (fputc) fputs stdout
-stdio.h reading files: fopen fread fseek ftell fclose ferror
-stdio.h writing files: fopen fwrite fileno fclose ferror
+stdio.h reading files: fopen fread fseek ftell fclose
+stdio.h writing files: fopen fwrite fileno fclose
 
 Ideas to reduce file size:
 
