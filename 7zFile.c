@@ -26,18 +26,6 @@ STATIC WRes File_Close(CSzFile *p)
   return 0;
 }
 
-STATIC WRes File_Read(CSzFile *p, void *data, size_t *size)
-{
-  size_t originalSize = *size;
-  if (originalSize == 0)
-    return 0;
-
-  *size = fread(data, 1, originalSize, p->file);
-  if (*size == originalSize)
-    return 0;
-  return ferror(p->file);
-}
-
 STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
 {
   size_t originalSize = *size;
@@ -69,10 +57,16 @@ STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
 
 /* ---------- FileInStream ---------- */
 
-static SRes FileInStream_Read(void *pp, void *buf, size_t *size)
+static SRes FileInStream_Read(void *pp, void *data, size_t *size)
 {
   CFileInStream *p = (CFileInStream *)pp;
-  return (File_Read(&p->file, buf, size) == 0) ? SZ_OK : SZ_ERROR_READ;
+  size_t originalSize = *size;
+  if (originalSize == 0)
+    return SZ_OK;
+  *size = fread(data, 1, originalSize, p->file.file);
+  if (*size == originalSize)
+    return SZ_OK;
+  return SZ_ERROR_READ;
 }
 
 static SRes FileInStream_Seek(void *pp, Int64 *pos, ESzSeek origin)

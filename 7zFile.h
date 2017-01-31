@@ -21,9 +21,6 @@ STATIC WRes InFile_Open(CSzFile *p, const char *name);
 STATIC WRes OutFile_Open(CSzFile *p, const char *name);
 STATIC WRes File_Close(CSzFile *p);
 
-/* reads max(*size, remain file's size) bytes */
-STATIC WRes File_Read(CSzFile *p, void *data, size_t *size);
-
 /* writes *size bytes */
 STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size);
 
