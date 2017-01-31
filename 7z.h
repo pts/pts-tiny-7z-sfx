@@ -82,7 +82,7 @@ STATIC UInt32 SzFolder_GetNumOutStreams(CSzFolder *p);
 STATIC UInt64 SzFolder_GetUnpackSize(CSzFolder *p);
 
 STATIC SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
-    ILookInStream *stream, UInt64 startPos,
+    CLookToRead *stream, UInt64 startPos,
     Byte *outBuffer, size_t outSize);
 
 typedef struct
@@ -176,7 +176,7 @@ STATIC size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16
 
 STATIC SRes SzArEx_Extract(
     const CSzArEx *db,
-    ILookInStream *inStream,
+    CLookToRead *inStream,
     UInt32 fileIndex,         /* index of file */
     UInt32 *blockIndex,       /* index of solid block */
     Byte **outBuffer,         /* pointer to pointer to output buffer (allocated with allocMain) */
@@ -196,7 +196,7 @@ SZ_ERROR_INPUT_EOF
 SZ_ERROR_FAIL
 */
 
-STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream);
+STATIC SRes SzArEx_Open(CSzArEx *p, CLookToRead *inStream);
 
 EXTERN_C_END
 

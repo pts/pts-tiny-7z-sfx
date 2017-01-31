@@ -128,7 +128,7 @@ typedef struct
 
 void Xzs_Construct(CXzs *p);
 void Xzs_Free(CXzs *p);
-SRes Xzs_ReadBackward(CXzs *p, ILookInStream *inStream, Int64 *startOffset, ICompressProgress *progress);
+SRes Xzs_ReadBackward(CXzs *p, CLookToRead *inStream, Int64 *startOffset, ICompressProgress *progress);
 
 UInt64 Xzs_GetNumBlocks(const CXzs *p);
 UInt64 Xzs_GetUnpackSize(const CXzs *p);

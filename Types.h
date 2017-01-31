@@ -132,50 +132,43 @@ typedef struct
   SRes (*Seek)(void *p, Int64 *pos);
 } ISeekInStream;
 
-typedef struct
-{
-  SRes (*Look)(void *p, const void **buf, size_t *size);
-    /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
-       (output(*size) > input(*size)) is not allowed
-       (output(*size) < input(*size)) is allowed */
-  SRes (*Skip)(void *p, size_t offset);
-    /* offset must be <= output(*size) of Look */
-
-  SRes (*Read)(void *p, void *buf, size_t *size);
-    /* reads directly (without buffer). It's same as ISeqInStream::Read */
-  SRes (*Seek)(void *p, Int64 *pos);
-} ILookInStream;
-
-STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);
-
-/* reads via ILookInStream::Read */
-STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size);
-
 #define LookToRead_BUF_SIZE (1 << 14)
 
 typedef struct
 {
-  ILookInStream s;
   ISeekInStream *realStream;
   size_t pos;
   size_t size;
   Byte buf[LookToRead_BUF_SIZE];
 } CLookToRead;
 
-STATIC void LookToRead_CreateVTable(CLookToRead *p);
+STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset);
+
+/* reads via CLookToRead::Read */
+STATIC SRes LookInStream_Read(CLookToRead *stream, void *buf, size_t size);
+
 STATIC void LookToRead_Init(CLookToRead *p);
+/* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
+   (output(*size) > input(*size)) is not allowed
+   (output(*size) < input(*size)) is allowed */
+STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size);
+/* offset must be <= output(*size) of Look */
+STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset);
+/* reads directly (without buffer). It's same as ISeqInStream::Read */
+STATIC SRes LookToRead_Read(CLookToRead *p, void *buf, size_t *size);
+STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos);
 
 typedef struct
 {
   ISeqInStream s;
-  ILookInStream *realStream;
+  CLookToRead *realStream;
 } CSecToLook;
 
 
 typedef struct
 {
   ISeqInStream s;
-  ILookInStream *realStream;
+  CLookToRead *realStream;
 } CSecToRead;
 
 typedef struct

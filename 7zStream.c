@@ -5,21 +5,21 @@
 
 #include "Types.h"
 
-STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
+STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset)
 {
   Int64 t = offset;
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEK LookInStream_SeekTo pos=%lld, origin=0\n", offset);
 #endif
-  return stream->Seek(stream, &t);
+  return LookToRead_Seek(stream, &t);
 }
 
-STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
+STATIC SRes LookInStream_Read(CLookToRead *stream, void *buf, size_t size)
 {
   while (size != 0)
   {
     size_t processed = size;
-    RINOK(stream->Read(stream, buf, &processed));
+    RINOK(LookToRead_Read(stream, buf, &processed));
     if (processed == 0)
       return SZ_ERROR_INPUT_EOF;
     buf = (void *)((Byte *)buf + processed);
@@ -28,10 +28,9 @@ STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
   return SZ_OK;
 }
 
-static SRes LookToRead_Look_Exact(void *pp, const void **buf, size_t *size)
+STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size)
 {
   SRes res = SZ_OK;
-  CLookToRead *p = (CLookToRead *)pp;
   size_t size2 = p->size - p->pos;
   if (size2 == 0 && *size > 0)
   {
@@ -47,16 +46,14 @@ static SRes LookToRead_Look_Exact(void *pp, const void **buf, size_t *size)
   return res;
 }
 
-static SRes LookToRead_Skip(void *pp, size_t offset)
+STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset)
 {
-  CLookToRead *p = (CLookToRead *)pp;
   p->pos += offset;
   return SZ_OK;
 }
 
-static SRes LookToRead_Read(void *pp, void *buf, size_t *size)
+STATIC SRes LookToRead_Read(CLookToRead *p, void *buf, size_t *size)
 {
-  CLookToRead *p = (CLookToRead *)pp;
   size_t rem = p->size - p->pos;
   if (rem == 0)
     return p->realStream->Read(p->realStream, buf, size);
@@ -68,22 +65,13 @@ static SRes LookToRead_Read(void *pp, void *buf, size_t *size)
   return SZ_OK;
 }
 
-static SRes LookToRead_Seek(void *pp, Int64 *pos)
+STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos)
 {
-  CLookToRead *p = (CLookToRead *)pp;
   p->pos = p->size = 0;
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEK LookToRead_Seek pos=%lld, origin=0\n", *pos);
 #endif
   return p->realStream->Seek(p->realStream, pos);
-}
-
-STATIC void LookToRead_CreateVTable(CLookToRead *p)
-{
-  p->s.Look = LookToRead_Look_Exact;
-  p->s.Skip = LookToRead_Skip;
-  p->s.Read = LookToRead_Read;
-  p->s.Seek = LookToRead_Seek;
 }
 
 STATIC void LookToRead_Init(CLookToRead *p)

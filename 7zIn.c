@@ -1075,7 +1075,7 @@ static SRes SzReadHeader(
 }
 
 static SRes SzReadAndDecodePackedStreams2(
-    ILookInStream *inStream,
+    CLookToRead *inStream,
     CSzData *sd,
     CBuf *outBuffer,
     UInt64 baseOffset,
@@ -1120,7 +1120,7 @@ static SRes SzReadAndDecodePackedStreams2(
 }
 
 static SRes SzReadAndDecodePackedStreams(
-    ILookInStream *inStream,
+    CLookToRead *inStream,
     CSzData *sd,
     CBuf *outBuffer,
     UInt64 baseOffset)
@@ -1141,7 +1141,7 @@ static SRes SzReadAndDecodePackedStreams(
 }
 
 /* TODO(pts): Make this fast. */
-static Int64 FindStartArcPos(ILookInStream *inStream, Byte **buf_out) {
+static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
   Byte prev[k7zStartHeaderSize - 1];
   Int64 ofs = k7zStartHeaderSize;
   Byte *buf;
@@ -1150,7 +1150,7 @@ static Int64 FindStartArcPos(ILookInStream *inStream, Byte **buf_out) {
   /* Find k7zSignature in the beginning. */
   while (ofs < (2 << 20)) {  /* 2 MB. */
     size = LookToRead_BUF_SIZE;
-    if (inStream->Look(inStream, (const void**)&buf, &size) ||
+    if (LookToRead_Look_Exact(inStream, (const void**)&buf, &size) ||
         size + prevc < k7zStartHeaderSize) {
       break;
     }
@@ -1170,7 +1170,7 @@ static Int64 FindStartArcPos(ILookInStream *inStream, Byte **buf_out) {
     }
     prevc = size < k7zStartHeaderSize - 1 ? size : k7zStartHeaderSize - 1;
     memcpy(prev, buf + size - prevc, prevc);
-    inStream->Skip(inStream, size);  /* TODO(pts): Add error checking. */
+    LookToRead_Skip(inStream, size);  /* TODO(pts): Add error checking. */
     ofs += size;
   }
   return 0;
@@ -1178,7 +1178,7 @@ static Int64 FindStartArcPos(ILookInStream *inStream, Byte **buf_out) {
 
 static SRes SzArEx_Open2(
     CSzArEx *p,
-    ILookInStream *inStream)
+    CLookToRead *inStream)
 {
   Int64 startArcPos;
   UInt64 nextHeaderOffset, nextHeaderSize;
@@ -1264,7 +1264,7 @@ static SRes SzArEx_Open2(
   return res;
 }
 
-STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream)
+STATIC SRes SzArEx_Open(CSzArEx *p, CLookToRead *inStream)
 {
   SRes res = SzArEx_Open2(p, inStream);
   if (res != SZ_OK)
@@ -1274,7 +1274,7 @@ STATIC SRes SzArEx_Open(CSzArEx *p, ILookInStream *inStream)
 
 STATIC SRes SzArEx_Extract(
     const CSzArEx *p,
-    ILookInStream *inStream,
+    CLookToRead *inStream,
     UInt32 fileIndex,
     UInt32 *blockIndex,
     Byte **outBuffer,

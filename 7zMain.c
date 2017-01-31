@@ -391,7 +391,6 @@ int MY_CDECL main(int numargs, char *args[])
   }
 
   FileInStream_CreateVTable(&archiveStream);
-  LookToRead_CreateVTable(&lookStream);
 
   lookStream.realStream = &archiveStream.s;
   LookToRead_Init(&lookStream);
@@ -399,7 +398,7 @@ int MY_CDECL main(int numargs, char *args[])
   CrcGenerateTable();
 
   SzArEx_Init(&db);
-  res = SzArEx_Open(&db, &lookStream.s);
+  res = SzArEx_Open(&db, &lookStream);
   if (res == SZ_OK)
   {
     if (res == SZ_OK)
@@ -474,7 +473,7 @@ int MY_CDECL main(int numargs, char *args[])
           putchar('/');
         else
         {
-          res = SzArEx_Extract(&db, &lookStream.s, i,
+          res = SzArEx_Extract(&db, &lookStream, i,
               &blockIndex, &outBuffer, &outBufferSize,
               &offset, &outSizeProcessed);
           if (res != SZ_OK)
