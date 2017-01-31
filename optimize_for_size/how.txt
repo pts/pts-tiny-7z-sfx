@@ -34,5 +34,10 @@ Ideas to reduce file size:
   file (probably the filename); we can optimize it by making free() a no-op
   execpt if it's free()ing the last malloc().
   See malloc.log malloc_perfile.log malloc_perfile2.log
+  input .7z file size: 10887666 bytes
+  big malloc()s: 100192, 466238, 521688, 21810108, 26192641
+  The malloc(21810108) happens after the free() of 26192641. Can we optimize it?
+  How much is the memory usage, who do we need the big malloc for?
+  How does it change if we duplicate all files twice in the .7z?
 
 __END__
