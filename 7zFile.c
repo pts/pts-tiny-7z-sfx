@@ -164,7 +164,6 @@ STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
   switch (origin)
   {
     case SZ_SEEK_SET: moveMethod = FILE_BEGIN; break;
-    case SZ_SEEK_CUR: moveMethod = FILE_CURRENT; break;
     case SZ_SEEK_END: moveMethod = FILE_END; break;
     default: return ERROR_INVALID_PARAMETER;
   }
@@ -185,7 +184,6 @@ STATIC WRes File_Seek(CSzFile *p, Int64 *pos, ESzSeek origin)
   switch (origin)
   {
     case SZ_SEEK_SET: moveMethod = SEEK_SET; break;
-    case SZ_SEEK_CUR: moveMethod = SEEK_CUR; break;
     case SZ_SEEK_END: moveMethod = SEEK_END; break;
     default: return 1;
   }
