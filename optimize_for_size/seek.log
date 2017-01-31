@@ -1,0 +1,31 @@
+SEEKN 0
+SEEK LookToRead_Seek pos=24116, origin=0
+SEEK FileInStream_Seek pos=24116, origin=0, from=32768
+SEEKN 1
+SEEK LookInStream_SeekTo pos=10887627, origin=0
+SEEK LookToRead_Seek pos=10887627, origin=0
+SEEK FileInStream_Seek pos=10887627, origin=0, from=24148
+SEEKN 4
+SEEK LookInStream_SeekTo pos=10851176, origin=0
+SEEK LookToRead_Seek pos=10851176, origin=0
+SEEK FileInStream_Seek pos=10851176, origin=0, from=10887666
+SEEKN 2
+SEEK LookInStream_SeekTo pos=10851176, origin=0
+SEEK LookToRead_Seek pos=10851176, origin=0
+SEEK FileInStream_Seek pos=10851176, origin=0, from=10851176
+SEEKN 5
+SEEK LookInStream_SeekTo pos=24148, origin=0
+SEEK LookToRead_Seek pos=24148, origin=0
+SEEK FileInStream_Seek pos=24148, origin=0, from=10887627
+SEEKN 2
+SEEK LookInStream_SeekTo pos=24148, origin=0
+SEEK LookToRead_Seek pos=24148, origin=0
+SEEK FileInStream_Seek pos=24148, origin=0, from=24148
+SEEKN 5
+SEEK LookInStream_SeekTo pos=4807996, origin=0
+SEEK LookToRead_Seek pos=4807996, origin=0
+SEEK FileInStream_Seek pos=4807996, origin=0, from=4807996
+SEEKN 2
+SEEK LookInStream_SeekTo pos=4807996, origin=0
+SEEK LookToRead_Seek pos=4807996, origin=0
+SEEK FileInStream_Seek pos=4807996, origin=0, from=4807996

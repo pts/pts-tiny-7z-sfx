@@ -1101,6 +1101,9 @@ static SRes SzReadAndDecodePackedStreams2(
   folder = p->Folders;
   unpackSize = SzFolder_GetUnpackSize(folder);
 
+#ifdef _SZ_SEEK_DEBUG
+  fprintf(stderr, "SEEKN 4\n");
+#endif
   RINOK(LookInStream_SeekTo(inStream, dataStartPos));
 
   if (!Buf_Create(outBuffer, (size_t)unpackSize))
@@ -1183,6 +1186,9 @@ static SRes SzArEx_Open2(
 
   k7zSignature[0] = '7';
   startArcPos = FindStartArcPos(inStream);
+#ifdef _SZ_SEEK_DEBUG
+  fprintf(stderr, "SEEKN 0\n");
+#endif
   RINOK(inStream->Seek(inStream, &startArcPos));
 
   res = LookInStream_Read(inStream, header, k7zStartHeaderSize);
@@ -1212,7 +1218,10 @@ static SRes SzArEx_Open2(
     return SZ_ERROR_NO_ARCHIVE;
 
   /* If the file is not long enough, we want to return SZ_ERROR_INPUT_EOF, which LookInStream_Read will do for us, so there is no need to check the file size here. */
-  /* !! TODO(pts): Is this seek needed? Aren't we at the right position now anyway? */
+  /* This is a real seek, actually changing the file offset. */
+#ifdef _SZ_SEEK_DEBUG
+  fprintf(stderr, "SEEKN 1\n");
+#endif
   RINOK(LookInStream_SeekTo(inStream, startArcPos + k7zStartHeaderSize + nextHeaderOffset));
 
   if (!Buf_Create(&buffer, nextHeaderSizeT))
@@ -1306,6 +1315,9 @@ STATIC SRes SzArEx_Extract(
     SzFree(*outBuffer);
     *outBuffer = 0;
 
+#ifdef _SZ_SEEK_DEBUG
+    fprintf(stderr, "SEEKN 5\n");
+#endif
     RINOK(LookInStream_SeekTo(inStream, startOffset));
 
     if (res == SZ_OK)

@@ -58,7 +58,7 @@ static SRes FileInStream_Seek(void *pp, Int64 *pos)
 {
   CFileInStream *p = (CFileInStream *)pp;
 #ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0\n", *pos);
+  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, ftell(p->file.file));
 #endif
   /* TODO(pts): Use fseeko for 64-bit offset. */
   Int64 pos0 = *pos;

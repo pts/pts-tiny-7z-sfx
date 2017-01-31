@@ -8,6 +8,9 @@
 STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
 {
   Int64 t = offset;
+#ifdef _SZ_SEEK_DEBUG
+  fprintf(stderr, "SEEK LookInStream_SeekTo pos=%lld, origin=0\n", offset);
+#endif
   return stream->Seek(stream, &t);
 }
 

@@ -384,6 +384,9 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       }
       offset = GetSum(packSizes, si);
       inSize = packSizes[si];
+#ifdef _SZ_SEEK_DEBUG
+      fprintf(stderr, "SEEKN 2\n");
+#endif
       RINOK(LookInStream_SeekTo(inStream, startPos + offset));
 
       if (coder->MethodID == k_Copy)
@@ -416,6 +419,9 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       SRes res;
       if (ci != 3)
         return SZ_ERROR_UNSUPPORTED;
+#ifdef _SZ_SEEK_DEBUG
+      fprintf(stderr, "SEEKN 3\n");
+#endif
       RINOK(LookInStream_SeekTo(inStream, startPos + offset));
       tempSizes[2] = (SizeT)s3Size;
       if (tempSizes[2] != s3Size)
