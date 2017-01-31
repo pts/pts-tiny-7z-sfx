@@ -1,0 +1,38 @@
+by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
+
+int64 arithmetic: __divdi3 __udivdi3 __umoddi3
+string.h: memcmp strcmp
+system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir
+dynamic memory: free malloc
+stdio.h messages: putchar (fputc) fputs stdout
+stdio.h reading files: fopen fread fseek ftell fclose ferror
+stdio.h writing files: fopen fwrite fileno fclose ferror
+
+Ideas to reduce file size:
+
+* use GCC 4.8 or later, it has better -Os support
+* use pts-xtiny, implement dynamic memory and stdio.h first
+* try some more command-line flags for gcc
+* use 64-bit system calls (e.g. for lstat) if needed
+* all system calls are available in pts-xtiny
+* memcmp is used only for k7zSignature, try to eliminate or inline it
+* strcmp is used only for argv parsing, try to eliminate or inline it
+* add output buffering for stdout (stdio.h messages)
+* eliminate __divdi3 (use __udivdi3 instead)
+* do we really need __udivdi3 and __umoddi3, can't we do without them? (There is / 10 somewhere.)
+* fwrite() is called only once per file, use write(2) instead
+* fopen() for writing is called only from one location (OutFile_OpenUtf16), use open(2) instead
+* fopen() for reading is called only once: InFile_Open
+* FileInStream_CreateVTable can be eliminated? But there is also LookToRead.
+  grep '[.>]Seek' *.c
+* We don't need SZ_SEEK_CUR.
+* Do we really need SZ_SEEK_END? It's used only in 7zIn.c for
+  SZ_ERROR_INPUT_EOF, which can be simplified or eliminated.
+* Once we use SZ_SEEK_SET only, we can eliminate ftell, use lseek, and fail
+  if seeking wasn't possible.
+* malloc()+free() is used in a predictable way, only 1 malloc/free pair per
+  file (probably the filename); we can optimize it by making free() a no-op
+  execpt if it's free()ing the last malloc().
+  See malloc.log malloc_perfile.log malloc_perfile2.log
+
+__END__

@@ -1,0 +1,65 @@
+...
+!! FREE 0x89e6be8
+Testing    pts-letsencrypt-0.5.0.2/lib/python2.7/config/
+!! FREE (nil)
+!! ALLOC 47 = 0x89e6be8
+!! FREE 0x89e6be8
+Testing    pts-letsencrypt-0.5.0.2/lib/python2.7/compiler/
+!! FREE (nil)
+!! ALLOC 44 = 0x89e6c20
+!! FREE 0x89e6c20
+Testing    pts-letsencrypt-0.5.0.2/lib/python2.7/bsddb/
+!! FREE (nil)
+!! ALLOC 38 = 0x89e6c20
+!! FREE 0x89e6c20
+Testing    pts-letsencrypt-0.5.0.2/lib/python2.7/
+!! FREE (nil)
+!! ALLOC 38 = 0x89e6c20
+!! FREE 0x89e6c20
+Testing    pts-letsencrypt-0.5.0.2/lib/pkgconfig/
+!! FREE (nil)
+!! ALLOC 36 = 0x89e6c50
+!! FREE 0x89e6c50
+Testing    pts-letsencrypt-0.5.0.2/lib/engines/
+!! FREE (nil)
+!! ALLOC 28 = 0x89c50d8
+!! FREE 0x89c50d8
+Testing    pts-letsencrypt-0.5.0.2/lib/
+!! FREE (nil)
+!! ALLOC 29 = 0x89e6c50
+!! FREE 0x89e6c50
+Testing    pts-letsencrypt-0.5.0.2/envs/
+!! FREE (nil)
+!! ALLOC 28 = 0x89c50d8
+!! FREE 0x89c50d8
+Testing    pts-letsencrypt-0.5.0.2/bin/
+!! FREE (nil)
+!! ALLOC 24 = 0x89c50d8
+!! FREE 0x89c50d8
+Testing    pts-letsencrypt-0.5.0.2/
+!! FREE (nil)
+!! FREE 0x89c5068
+!! FREE 0x89c5078
+!! FREE 0x89c50c8
+!! FREE 0x89ea8a0
+!! FREE 0x89e77a8
+!! FREE 0xb76c1008
+!! FREE 0x89c5098
+!! FREE 0x89c50f8
+!! FREE (nil)
+!! FREE 0x89c5138
+!! FREE 0x89c5200
+!! FREE 0x89c5128
+!! FREE (nil)
+!! FREE 0x89c51b8
+!! FREE 0x89c5118
+!! FREE 0x89c51f0
+!! FREE 0x89c5210
+!! FREE 0x89c5148
+!! FREE 0x89c50b8
+!! FREE 0x89c50a8
+!! FREE 0x89c5160
+!! FREE 0x89ce2e0
+!! FREE 0x89e6a48
+
+Everything is Ok
