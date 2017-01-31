@@ -92,6 +92,9 @@ static SRes LookToRead_Seek(void *pp, Int64 *pos, ESzSeek origin)
 {
   CLookToRead *p = (CLookToRead *)pp;
   p->pos = p->size = 0;
+#ifdef _SZ_SEEK_DEBUG
+  fprintf(stderr, "SEEK LookToRead_Seek pos=%lld, origin=%d\n", *pos, origin);
+#endif
   return p->realStream->Seek(p->realStream, pos, origin);
 }
 

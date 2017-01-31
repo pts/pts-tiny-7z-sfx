@@ -207,6 +207,9 @@ static SRes FileInStream_Read(void *pp, void *buf, size_t *size)
 static SRes FileInStream_Seek(void *pp, Int64 *pos, ESzSeek origin)
 {
   CFileInStream *p = (CFileInStream *)pp;
+#ifdef _SZ_SEEK_DEBUG
+  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=%d\n", *pos, origin);
+#endif
   return File_Seek(&p->file, pos, origin);
 }
 
