@@ -1185,7 +1185,8 @@ static SRes SzArEx_Open2(
   startArcPos = FindStartArcPos(inStream);
   RINOK(inStream->Seek(inStream, &startArcPos, SZ_SEEK_SET));
 
-  RINOK(LookInStream_Read2(inStream, header, k7zStartHeaderSize, SZ_ERROR_NO_ARCHIVE));
+  res = LookInStream_Read(inStream, header, k7zStartHeaderSize);
+  if (res != SZ_OK) return res == SZ_ERROR_INPUT_EOF ? SZ_ERROR_NO_ARCHIVE : res;
 
   if (0 != memcmp(header, k7zSignature, k7zSignatureSize))
     return SZ_ERROR_NO_ARCHIVE;

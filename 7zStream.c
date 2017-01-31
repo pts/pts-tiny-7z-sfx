@@ -11,23 +11,18 @@ STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
   return stream->Seek(stream, &t, SZ_SEEK_SET);
 }
 
-STATIC SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType)
+STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
 {
   while (size != 0)
   {
     size_t processed = size;
     RINOK(stream->Read(stream, buf, &processed));
     if (processed == 0)
-      return errorType;
+      return SZ_ERROR_INPUT_EOF;
     buf = (void *)((Byte *)buf + processed);
     size -= processed;
   }
   return SZ_OK;
-}
-
-STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size)
-{
-  return LookInStream_Read2(stream, buf, size, SZ_ERROR_INPUT_EOF);
 }
 
 static SRes LookToRead_Look_Lookahead(void *pp, const void **buf, size_t *size)

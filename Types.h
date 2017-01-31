@@ -155,7 +155,6 @@ typedef struct
 STATIC SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);
 
 /* reads via ILookInStream::Read */
-STATIC SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType);
 STATIC SRes LookInStream_Read(ILookInStream *stream, void *buf, size_t size);
 
 #define LookToRead_BUF_SIZE (1 << 14)
