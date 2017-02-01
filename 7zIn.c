@@ -1226,6 +1226,7 @@ static SRes SzArEx_Open2(
     res = LookToRead_Look_Exact(inStream, (const void**)&buf, &got);
     if (res != SZ_OK) break;
     if (got == 0) { res = SZ_ERROR_INPUT_EOF; break; }
+    LookToRead_Skip(inStream, got);
     memcpy(pbuf, buf, got);
     size -= got;
     pbuf += got;
