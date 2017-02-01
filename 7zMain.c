@@ -488,7 +488,7 @@ int MY_CDECL main(int numargs, char *args[])
         }
         if (!testCommand)
         {
-          int outFile;
+          int outFile = 0;  /* Initialize to 0 to pacify gcc-4.8. */
           size_t processedSize;
           size_t j;
           UInt16 *name = (UInt16 *)temp;
