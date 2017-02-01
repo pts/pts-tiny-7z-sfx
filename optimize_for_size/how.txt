@@ -16,7 +16,8 @@ Ideas to reduce file size:
 * DONE: add output buffering for stdout (stdio.h messages)
 * DONE: eliminate __divdi3 (use __udivdi3 instead) by converting signed
   divisions to unsinged
-* do we really need __udivdi3 and __umoddi3, can't we do without them? (There is / 10 somewhere.)
+* DONE: Remove soma calls to __udivdi3.
+* do we really need __udivdi3, can't we do without them?
 * DONE: fwrite() is called only once per file, use write(2) instead
 * DONE: use read() instead of fread() for reading: the file reading pattern is
   already buffered well enough: LookToRead_Look_Exact reads 16 kB most of
@@ -39,5 +40,8 @@ Ideas to reduce file size:
 * Eliminate multiple calls to Utf16_To_Char in 7zMain.c.
 * Reuse the output buffer for Utf16_To_Char.
 * DONE Remove unused CrcUpdateT8 and CpuArch.c.
+* DONE Remove redundancy between SetMTime and ConvertFileTimeToString.
+* (advanced) Don't store LZMA decompressors (once in the upx stub and one
+  in Lzma2Dec.c).
 
 __END__

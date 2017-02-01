@@ -179,22 +179,32 @@ static int MyUtimes(const char *filename, const struct timeval tv[2]) {
 }
 #endif
 
-static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
+/** Returns *a % b, and then sets *a = *a / b; */
+static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
+#if 1  /* TODO(pts): Get rid of __umoddi3. */
+  const UInt32 result = *a % b;  /* __umoddi3 */
+  *a /= b;  /* __udivdi3 */
+#endif
+  return result;
+}
+
+static void GetTimeSecAndUsec(
+    const CNtfsFileTime *mtime, UInt64 *sec_out, UInt32 *usec_out) {
   /* mtime is 10 * number of microseconds since 1601 (+ 89 days). */
-  const UInt64 q =
-      (UInt64)((UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low) / (UInt64)10 -  /* __udivdi3 */
-      (369 * 365 + 89) * (UInt64)(24 * 60 * 60) * 1000000;
-  Int32 usec = q % 1000000;  /* __umoddi3 */
-  Int32 sec =  q / 1000000;  /* __udivdi3 */
+  *sec_out = (UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low;
+  *usec_out = UInt64DivAndGetMod(sec_out, 10000000) / 10;
+}
+
+static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
+  UInt32 usec;
+  UInt64 sec;
   int got;
   struct timeval tv[2];
   CBuf buf;
+  GetTimeSecAndUsec(mtime, &sec, &usec);
+  sec -= (369 * 365 + 89) * (UInt64)(24 * 60 * 60);
   Buf_Init(&buf);
   RINOK(Utf16_To_Char(&buf, name));
-  if (usec < 0) {
-    usec += 1000000;
-    --sec;
-  }
   gettimeofday(&tv[0], NULL);
   tv[1].tv_sec = sec;
   tv[1].tv_usec = usec;
@@ -202,7 +212,6 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   Buf_Free(&buf);
   return got != 0;
 }
-
 
 static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes)
 {
@@ -240,17 +249,7 @@ static void UInt64ToStr(UInt64 value, char *s, int numDigits, char pad)
   char temp[32];
   int pos = 0;
   do
-  {
-#if 0
-    const UInt64 v0 = value;
-    value /= 10;  /* __udivdi3 */
-    /* Does this use __umoddi3? */
-    temp[pos++] = '0' + (unsigned)(v0 - value * 10);
-#else
-    temp[pos++] = (char)('0' + (unsigned)(value % 10));
-    value /= 10;
-#endif
-  }
+    temp[pos++] = (char)('0' + UInt64DivAndGetMod(&value, 10));
   while (value != 0);
   for (numDigits -= pos; numDigits > 0; numDigits--)
     *s++ = pad;  /* ' ' or '0'; */
@@ -282,16 +281,17 @@ static char *UIntToStr(char *s, unsigned value, int numDigits)
 
 static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
 {
-  unsigned year, mon, day, hour, min, sec;
-  UInt64 v64 = (ft->Low | ((UInt64)ft->High << 32)) / 10000000;  /* __udivdi3 */
+  UInt32 usec;
+  UInt64 sec;
+  unsigned year, mon, day, hour, min, ssec;
   Byte ms[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
   unsigned t;
   UInt32 v;
-  sec = (unsigned)(v64 % 60); v64 /= 60;  /* __umoddi3 */  /* __udivdi3 */
-  min = (unsigned)(v64 % 60); v64 /= 60;  /* __umoddi3 */  /* __udivdi3 */
-  hour = (unsigned)(v64 % 24); v64 /= 24;  /* __umoddi3 */  /* __udivdi3 */
-
-  v = (UInt32)v64;
+  GetTimeSecAndUsec(ft, &sec, &usec);
+  ssec = UInt64DivAndGetMod(&sec, 60);
+  min = UInt64DivAndGetMod(&sec, 60);
+  hour = UInt64DivAndGetMod(&sec, 24);
+  v = (UInt32)sec;  /* Days. */
 
   year = (unsigned)(1601 + v / PERIOD_400 * 400);
   v %= PERIOD_400;
@@ -315,7 +315,7 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   s = UIntToStr(s, day, 2);  *s++ = ' ';
   s = UIntToStr(s, hour, 2); *s++ = ':';
   s = UIntToStr(s, min, 2);  *s++ = ':';
-  s = UIntToStr(s, sec, 2);
+  s = UIntToStr(s, ssec, 2);
   *s = '\0';
 }
 
