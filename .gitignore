@@ -8,3 +8,4 @@ all.s
 a.out
 strace.out
 tags
+minidiet.o

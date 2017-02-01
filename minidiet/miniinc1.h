@@ -1,4 +1,4 @@
-/* Minimalistic macro definitions and declarations, subset of dietlibc. */
+/* Minimalistic macro definitions and declarations for a libc. */
 
 #ifndef _MINIINC1_H_
 #define _MINIINC1_H_ 1
@@ -10,22 +10,11 @@
 #error i386 is needed.  /* This fails on amd64 (__amd64__, __x86_64__). Good. */
 #endif
 
-#if 0
-#include <stddef.h>  /* This is a compiler-specific #include, for size_t etc. */
-#else
 typedef unsigned size_t;
 typedef int ptrdiff_t;
 #define NULL ((void *)0)  /* For C++, it should be 0. */
 __extension__ typedef long long int64_t;
 __extension__ typedef unsigned long long uint64_t;
-#endif
-
-#define __WAIT_INT(status)    (*(__const int *) &(status))
-#define __WTERMSIG(status)    ((status) & 0x7f)
-#define __WEXITSTATUS(status) (((status) & 0xff00) >> 8)
-#define __WIFEXITED(status)   (__WTERMSIG(status) == 0)
-#define WIFEXITED(status)     __WIFEXITED(__WAIT_INT(status))
-#define WEXITSTATUS(status)   __WEXITSTATUS(__WAIT_INT(status))
 
 #define O_RDONLY 0
 #define O_WRONLY 1
@@ -236,15 +225,6 @@ struct stat {
   unsigned long int __unused5;
 };
 
-struct utsname {
-  char sysname[65];
-  char nodename[65];
-  char release[65];
-  char version[65];
-  char machine[65];
-  char domainname[65];
-};
-
 struct timeval {
   time_t tv_sec;
   suseconds_t tv_usec;
@@ -255,57 +235,25 @@ struct timezone {
   int tz_dsttime;
 };
 
-struct __stdio_file;
-typedef struct __stdio_file FILE;
+extern int errno __asm__("__minidiet_errno");
+extern char **environ __asm__("__minidiet_environ");
 
-extern int errno;
-extern FILE *stdin, *stdout, *stderr;
-
-extern FILE *fopen(const char *path, const char *mode) ;
-extern int fclose(FILE *stream) ;
-extern int ferror(FILE *stream) ;
-extern size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) ;
-extern size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) ;
-extern int fseek(FILE *stream, long offset, int whence) ;
-extern long ftell(FILE *stream) ;
-extern int fputs(const char *s, FILE *stream) ;
-extern int utimes(const char * filename, struct timeval * tvp);
-extern int fputc(int c, FILE *stream) ;
-static __inline__ int putchar(int c) { return fputc(c, stdout); }
-extern int fileno(FILE *stream) ;
-
+extern int utimes(const char * filename, const struct timeval * tvp);
 extern int symlink(const char *oldpath, const char *newpath) ;
 extern int gettimeofday(struct timeval *tv, struct timezone *tz) ;
-extern int chmod (const char *__file, mode_t __mode) ;
-extern int fchmod (int __fd, mode_t __mode) ;
-extern int mkdir (const char *__path, mode_t __mode) ;
-extern mode_t umask (mode_t __mask);
-extern size_t strlen(__const char *__s) __attribute__((__nothrow__)) __attribute__((__pure__)) __attribute__((__nonnull__(1)));
-extern void *malloc(size_t __size) __attribute__((__nothrow__)) __attribute__((__malloc__)) ;
-extern void *realloc(void *__ptr, size_t __size) __attribute__((__nothrow__)) __attribute__((__malloc__)) __attribute__((__warn_unused_result__));
-extern void free(void *__ptr) __attribute__((__nothrow__));
-extern void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));
-extern char *strcpy(char *__restrict __dest, __const char *__restrict __src) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));
-extern ssize_t readlink(__const char *__restrict __path, char *__restrict __buf, size_t __len) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2))) ;
+extern int chmod(const char *__file, mode_t __mode) ;
+extern int fchmod(int __fd, mode_t __mode) ;
+extern int mkdir(const char *__path, mode_t __mode) ;
+extern mode_t umask(mode_t __mask);
 extern int lstat(__const char *__restrict __file, struct stat *__restrict __buf) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));
-extern char *strcat(char *__restrict __dest, __const char *__restrict __src) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));
-extern char *strdup(__const char *__s) __attribute__((__nothrow__)) __attribute__((__malloc__)) __attribute__((__nonnull__(1)));
-extern int strcmp(__const char *__s1, __const char *__s2) __attribute__((__nothrow__)) __attribute__((__pure__)) __attribute__((__nonnull__(1, 2)));
-extern int strncmp(__const char *__s1, __const char *__s2, size_t __n) __attribute__((__nothrow__)) __attribute__((__pure__)) __attribute__((__nonnull__(1, 2)));
 extern ssize_t write(int __fd, __const void *__buf, size_t __n) ;
-extern void exit(int __status) __attribute__((__nothrow__)) __attribute__((__noreturn__));
-extern char *strstr(__const char *__haystack, __const char *__needle) __attribute__((__nothrow__)) __attribute__((__pure__)) __attribute__((__nonnull__(1, 2)));
-extern int stat(__const char *__restrict __file, struct stat *__restrict __buf) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));
-extern char *getenv(__const char *__name) __attribute__((__nothrow__)) __attribute__((__nonnull__(1))) ;
-extern int execv(__const char *__path, char *__const __argv[]) __attribute__((__nothrow__)) __attribute__((__nonnull__(1)));
-extern int uname(struct utsname *__name) __attribute__((__nothrow__));
 extern int open(__const char *__file, int __oflag, ...) __attribute__((__nonnull__(1)));
 extern ssize_t read(int __fd, void *__buf, size_t __nbytes) ;
 extern int close(int __fd);
-extern int memcmp(__const void *__s1, __const void *__s2, size_t __n) __attribute__((__nothrow__)) __attribute__((__pure__)) __attribute__((__nonnull__(1, 2)));
-extern __pid_t fork(void) __attribute__((__nothrow__));
-extern __pid_t waitpid(__pid_t __pid, int *__stat_loc, int __options);
 extern int unlink(__const char *__name) __attribute__((__nothrow__)) __attribute__((__nonnull__(1)));
 extern off_t lseek(int fd, off_t offset, int whence) __attribute__((__nothrow__));
+
+/*extern void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
+#define memcpy __builtin_memcpy
 
 #endif  /* _MINIINC1_H_ */

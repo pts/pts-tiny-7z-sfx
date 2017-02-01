@@ -1,15 +1,29 @@
 by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
 
 system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir open read write lseek close
-dynamic memory: free malloc
 
 Ideas to reduce file size:
 
 * use GCC 4.8 or later, it has better -Os support
-* use pts-xtiny, implement dynamic memory first
 * try some more command-line flags for gcc
+* get rid of lstat
 * use 64-bit system calls (e.g. for lstat, _llseek) if needed
-* all system calls are available in pts-xtiny
+* Use the lseek64 library call (or _llseek system call) for 64-bit seeks in
+  the archive. minidiet doesn't support this, xtiny can.
+* Eliminate multiple calls to Utf16_To_Char in 7zMain.c.
+* Reuse the output buffer for Utf16_To_Char.
+* (advanced) Don't store LZMA decompressors (once in the upx stub and one
+  in Lzma2Dec.c).
+* Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
+  better?
+* Inline some syscall functions in minidiet/minidiet.c.
+
+Ideas already implemented:
+
+* DONE: Loop in LookInStream_Read2 many not be needed.
+* DONE Remove unused CrcUpdateT8 and CpuArch.c.
+* DONE Remove redundancy between SetMTime and ConvertFileTimeToString.
+* DONE: use a tiny libc with system calls only
 * DONE: memcmp is used only for k7zSignature, try to eliminate or inline it
 * DONE: strcmp is used only for argv parsing, try to eliminate or inline it
 * DONE: add output buffering for stdout (stdio.h messages)
@@ -26,7 +40,7 @@ Ideas to reduce file size:
 * DONE: FileInStream_CreateVTable can be eliminated
 * DONE: Once we use SZ_SEEK_SET only, we can eliminate ftell, use lseek, and
   fail if seeking wasn't possible.
-* malloc()+free() is used in a predictable way, only 1 malloc/free pair per
+* DONE: malloc()+free() is used in a predictable way, only 1 malloc/free pair per
   file (probably the filename); we can optimize it by making free() a no-op
   execpt if it's free()ing the last malloc().
   See malloc.log malloc_perfile.log malloc_perfile2.log
@@ -35,16 +49,5 @@ Ideas to reduce file size:
   The malloc(21810108) happens after the free() of 26192641. Can we optimize it?
   How much is the memory usage, who do we need the big malloc for?
   How does it change if we duplicate all files twice in the .7z?
-* DONE: Loop in LookInStream_Read2 many not be needed.
-* Use the lseek64 library call (or _llseek system call) for 64-bit seeks in
-  the archive. minidiet doesn't support this, xtiny can.
-* Eliminate multiple calls to Utf16_To_Char in 7zMain.c.
-* Reuse the output buffer for Utf16_To_Char.
-* DONE Remove unused CrcUpdateT8 and CpuArch.c.
-* DONE Remove redundancy between SetMTime and ConvertFileTimeToString.
-* (advanced) Don't store LZMA decompressors (once in the upx stub and one
-  in Lzma2Dec.c).
-* Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
-  better?
 
 __END__

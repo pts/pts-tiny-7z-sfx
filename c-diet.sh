@@ -1,5 +1,7 @@
 #! /bin/sh --
 #
+# Compiles with dietlibc.
+#
 # See the explanation why these flags are useful for small output here:
 # http://ptspts.blogspot.hu/2013/12/how-to-make-smaller-c-and-c-binaries.html
 #

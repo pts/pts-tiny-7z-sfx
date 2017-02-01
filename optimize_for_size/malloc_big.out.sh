@@ -1,0 +1,1 @@
+<t perl -ne 'our %h; if (m@^DYNAMIC FREE \(nil\)$@) {} elsif (m@^DYNAMIC ALLOC (\d+) = (0x\w+)$@) { $h{$2} = $1; print if $1 > 9999; } elsif (m@^DYNAMIC FREE (0x\w+)$@) { die "xfree!\n" if !exists($h{$1}); chomp; print "$_ was $h{$1}\n" if $h{$1} > 9999; delete $h{$1} } else { print }' >optimize_for_size/malloc_big.out

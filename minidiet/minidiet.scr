@@ -1,5 +1,5 @@
 /*
- * xtiny.scr -- a GNU ld(1) linker script for emitting small ELF binaries for C programs
+ * minidiet.scr -- a GNU ld(1) linker script for emitting small ELF binaries for C programs
  * by pts@fazekas.hu at Sun Oct 19 13:06:04 CEST 2014
  *
  * * GNU ld(1) and a Linux i386 system is required
@@ -52,7 +52,6 @@ SECTIONS {
     /* ^^^    dd      7, 0x1000                       ;   p_flags (1=executable 2=writable 4=readable), p_align */
     __phdrsize = ABSOLUTE(.) - __phdr; /* __phdrsize equ $ - __phdr */
     PROVIDE(__executable_start = ABSOLUTE(.));
-    /* _start is defined in _start.o (compiled from _start.s) in lib__xtiny.a */
     /* No need to specify here: . = ALIGN(4), because SUBALIGN(4) above for
      * .text.startup and .text takes care of this here.
      */
@@ -126,10 +125,6 @@ SECTIONS {
    * file. Probably because do real data bytes are added here.
    */
   .bss : ALIGN(4) SUBALIGN(4) {
-    /* errno is defined in __xtiny_errno.o in lib__xtiny.a. We could define it
-     * here: `__xtiny_errno = ABSOLUTE(.); . += 4;', but that would make the
-     * symbol unavailable when linking with gcc. Similarly for environ.
-     */
     *(.dynbss)
     *(.bss .bss.* .gnu.linkonce.b.*) /* Example: int a = 0; // 0 is special. */
     *(COMMON)  /* Example: int a; */
