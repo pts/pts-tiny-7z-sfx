@@ -12,36 +12,12 @@ EXTERN_C_BEGIN
 
 /* ---------- File ---------- */
 
-typedef struct
-{
-  FILE *file;
-} CSzFile;
-
 STATIC WRes InFile_Open(CSzFile *p, const char *name);
 STATIC WRes OutFile_Open(CSzFile *p, const char *name);
 STATIC WRes File_Close(CSzFile *p);
 
 /* writes *size bytes */
 STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size);
-
-/* ---------- FileInStream ---------- */
-
-typedef struct
-{
-  ISeqInStream s;
-  CSzFile file;
-} CFileSeqInStream;
-
-typedef struct CFileInStream
-{
-  CSzFile file;
-} CFileInStream;
-
-typedef struct
-{
-  ISeqOutStream s;
-  CSzFile file;
-} CFileOutStream;
 
 EXTERN_C_END
 

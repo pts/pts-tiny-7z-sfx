@@ -320,7 +320,6 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
 
 int MY_CDECL main(int numargs, char *args[])
 {
-  CFileInStream archiveStream;
   CLookToRead lookStream;
   CSzArEx db;
   SRes res;
@@ -384,13 +383,12 @@ int MY_CDECL main(int numargs, char *args[])
   fputs(archive, stdout);
   putchar('\n');
   putchar('\n');
-  if (InFile_Open(&archiveStream.file, archive))
+  if (InFile_Open(&lookStream.file, archive))
   {
     PrintError("can not open input file");
     return 1;
   }
 
-  lookStream.realStream = &archiveStream;
   LookToRead_Init(&lookStream);
 
   CrcGenerateTable();
@@ -588,7 +586,7 @@ int MY_CDECL main(int numargs, char *args[])
   SzArEx_Free(&db);
   SzFree(temp);
 
-  File_Close(&archiveStream.file);
+  File_Close(&lookStream.file);
   if (res == SZ_OK)
   {
     fputs("\nEverything is Ok\n", stdout);
