@@ -1210,6 +1210,10 @@ static SRes SzArEx_Open2(
   if (!Buf_Create(&buffer, nextHeaderSizeT))
     return SZ_ERROR_MEM;
 
+#ifdef _SZ_HEADER_DEBUG
+  /* Typically only 36..39 bytes */
+  fprintf(stderr, "HEADER read_next size=%ld\n", (long)nextHeaderSizeT);
+#endif
   res = LookInStream_Read(inStream, buffer.data, nextHeaderSizeT);
   if (res == SZ_OK)
   {
@@ -1227,6 +1231,10 @@ static SRes SzArEx_Open2(
         {
           CBuf outBuffer;
           Buf_Init(&outBuffer);
+#ifdef _SZ_HEADER_DEBUG
+          /* Typically happens. */
+          fprintf(stderr, "HEADER found_encoded_header\n");
+#endif
           res = SzReadAndDecodePackedStreams(inStream, &sd, &outBuffer, p->startPosAfterHeader);
           if (res != SZ_OK)
             Buf_Free(&outBuffer);
@@ -1243,10 +1251,14 @@ static SRes SzArEx_Open2(
       }
       if (res == SZ_OK)
       {
-        if (type == k7zIdHeader)
+        if (type == k7zIdHeader) {
+#ifdef _SZ_HEADER_DEBUG
+          fprintf(stderr, "HEADER found_header\n");
+#endif
           res = SzReadHeader(p, &sd);
-        else
+        } else {
           res = SZ_ERROR_UNSUPPORTED;
+        }
       }
     }
   }
