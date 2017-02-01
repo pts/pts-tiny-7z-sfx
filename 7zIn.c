@@ -10,7 +10,7 @@
 /* Using 'S' instead of '7' in the beginning so that the 7-Zip signature
  * won't be detected with the SFX binary. Will replace it with '7' later.
  */
-Byte k7zSignature[k7zSignatureSize] = {'S', 'z', 0xBC, 0xAF, 0x27, 0x1C};
+const Byte k7zSignature[k7zSignatureSize] = {'S', 'z', 0xBC, 0xAF, 0x27, 0x1C};
 
 #define RINOM(x) { if ((x) == 0) return SZ_ERROR_MEM; }
 
@@ -1142,35 +1142,26 @@ static SRes SzReadAndDecodePackedStreams(
 
 /* TODO(pts): Make this fast. */
 static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
-  Byte prev[k7zStartHeaderSize - 1];
   Int64 ofs = k7zStartHeaderSize;
-  Byte *buf;
-  /* 0 <= prevc < 7zStartHeaderSize. */
-  size_t size, i, prevc = 0;
+  Byte *buf, *p, *pend;
+  size_t size;
   /* Find k7zSignature in the beginning. */
   while (ofs < (2 << 20)) {  /* 2 MB. */
     size = LookToRead_BUF_SIZE;
-    if (LookToRead_Look_Exact(inStream, (const void**)&buf, &size) ||
-        size + prevc < k7zStartHeaderSize) {
+    if (LookToRead_Look_Exact(inStream, (const void**)&buf, &size) != SZ_OK ||
+        size < k7zStartHeaderSize) {
       break;
     }
-    for (i = 0; i < prevc; ++i) {
-      if (0 == memcmp(prev + i, k7zSignature, prevc - i) &&
-          0 == memcmp(buf, k7zSignature + prevc - i,
-                      k7zSignatureSize - (prevc - i))) {
-        *buf_out = buf + k7zSignatureSize - (prevc - i);
-        return ofs - (prevc - i);
-      }
+    size -= k7zStartHeaderSize - 1;
+    for (p = buf, pend = buf + size;
+         p != pend && (*p != '7' ||
+             0 != memcmp(p + 1, k7zSignature + 1, k7zSignatureSize -1));
+         ++p) {}
+    if (p != pend) {
+      *buf_out = p + k7zSignatureSize;
+      return ofs + (p - buf);
     }
-    for (i = 0; i + k7zStartHeaderSize <= size; ++i) {
-      if (0 == memcmp(buf + i, k7zSignature, k7zSignatureSize)) {
-        *buf_out = buf + i + k7zSignatureSize;
-        return ofs + i;
-      }
-    }
-    prevc = size < k7zStartHeaderSize - 1 ? size : k7zStartHeaderSize - 1;
-    memcpy(prev, buf + size - prevc, prevc);
-    LookToRead_Skip(inStream, size);  /* TODO(pts): Add error checking. */
+    LookToRead_Skip(inStream, size);  /* No need for error checking. */
     ofs += size;
   }
   return 0;
@@ -1188,7 +1179,6 @@ static SRes SzArEx_Open2(
   SRes res;
   Byte *buf = 0;
 
-  k7zSignature[0] = '7';
   startArcPos = FindStartArcPos(inStream, &buf);
   if (startArcPos == 0) return SZ_ERROR_NO_ARCHIVE;
   if (buf[0] != k7zMajorVersion) return SZ_ERROR_UNSUPPORTED;

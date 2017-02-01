@@ -47,7 +47,7 @@ STATIC SRes FileInStream_Read(CFileInStream *p, void *data, size_t *size)
   size_t originalSize = *size;
   if (originalSize == 0)
     return SZ_OK;
-  *size = fread(data, 1, originalSize, p->file.file);
+  *size = fread(data, 1, originalSize, p->file.file);  /* 0 on error */
   if (*size == originalSize)
     return SZ_OK;
   return SZ_ERROR_READ;

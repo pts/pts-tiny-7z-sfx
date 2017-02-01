@@ -32,16 +32,20 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
 {
   SRes res = SZ_OK;
   size_t size2 = p->size - p->pos;
-  if (size2 == 0 && *size > 0)
-  {
+  if (*size == 0) return size2;
+  if (*size > LookToRead_BUF_SIZE) *size = LookToRead_BUF_SIZE;
+
+  /* Checking size2 <= p->pos is needed to avoid overlap in memcpy. */
+  /* TODO(pts): Do we need memmove instead? */
+  if (size2 < *size && size2 <= p->pos) {
+    memcpy(p->buf, p->buf + p->pos, size2);
     p->pos = 0;
-    if (*size > LookToRead_BUF_SIZE)
-      *size = LookToRead_BUF_SIZE;
-    res = FileInStream_Read(p->realStream, p->buf, size);
-    size2 = p->size = *size;
+    /* True but we can do it later: p->size = size2; */
+    *size -= size2;
+    res = FileInStream_Read(p->realStream, p->buf + size2, size);
+    size2 = p->size = *size += size2;
   }
-  if (size2 < *size)
-    *size = size2;
+  if (size2 < *size) *size = size2;
   *buf = p->buf + p->pos;
   return res;
 }
