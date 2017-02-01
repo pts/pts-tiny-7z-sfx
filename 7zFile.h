@@ -32,14 +32,13 @@ typedef struct
   CSzFile file;
 } CFileSeqInStream;
 
-typedef struct
+typedef struct CFileInStream
 {
-  ISeekInStream s;
   CSzFile file;
 } CFileInStream;
 
-STATIC void FileInStream_CreateVTable(CFileInStream *p);
-
+STATIC SRes FileInStream_Read(CFileInStream *p, void *data, size_t *size);
+STATIC SRes FileInStream_Seek(CFileInStream *p, Int64 *pos);
 
 typedef struct
 {

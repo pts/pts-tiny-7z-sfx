@@ -37,7 +37,7 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
     p->pos = 0;
     if (*size > LookToRead_BUF_SIZE)
       *size = LookToRead_BUF_SIZE;
-    res = p->realStream->Read(p->realStream, p->buf, size);
+    res = FileInStream_Read(p->realStream, p->buf, size);
     size2 = p->size = *size;
   }
   if (size2 < *size)
@@ -56,7 +56,7 @@ STATIC SRes LookToRead_Read(CLookToRead *p, void *buf, size_t *size)
 {
   size_t rem = p->size - p->pos;
   if (rem == 0)
-    return p->realStream->Read(p->realStream, buf, size);
+    return FileInStream_Read(p->realStream, buf, size);
   if (rem > *size)
     rem = *size;
   memcpy(buf, p->buf + p->pos, rem);
@@ -71,7 +71,7 @@ STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos)
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEK LookToRead_Seek pos=%lld, origin=0\n", *pos);
 #endif
-  return p->realStream->Seek(p->realStream, pos);
+  return FileInStream_Seek(p->realStream, pos);
 }
 
 STATIC void LookToRead_Init(CLookToRead *p)

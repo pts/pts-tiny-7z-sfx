@@ -42,9 +42,8 @@ STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
 
 /* ---------- FileInStream ---------- */
 
-static SRes FileInStream_Read(void *pp, void *data, size_t *size)
+STATIC SRes FileInStream_Read(CFileInStream *p, void *data, size_t *size)
 {
-  CFileInStream *p = (CFileInStream *)pp;
   size_t originalSize = *size;
   if (originalSize == 0)
     return SZ_OK;
@@ -54,9 +53,8 @@ static SRes FileInStream_Read(void *pp, void *data, size_t *size)
   return SZ_ERROR_READ;
 }
 
-static SRes FileInStream_Seek(void *pp, Int64 *pos)
+STATIC SRes FileInStream_Seek(CFileInStream *p, Int64 *pos)
 {
-  CFileInStream *p = (CFileInStream *)pp;
 #ifdef _SZ_SEEK_DEBUG
   fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, ftell(p->file.file));
 #endif
@@ -67,11 +65,9 @@ static SRes FileInStream_Seek(void *pp, Int64 *pos)
   return res == 0 && *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
 }
 
-STATIC void FileInStream_CreateVTable(CFileInStream *p)
-{
+#if 0
   p->s.Read = FileInStream_Read;
   p->s.Seek = FileInStream_Seek;
-}
-
+#endif
 
 /* ---------- FileOutStream ---------- */

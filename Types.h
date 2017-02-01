@@ -126,17 +126,13 @@ typedef struct
        (result < size) means error */
 } ISeqOutStream;
 
-typedef struct
-{
-  SRes (*Read)(void *p, void *buf, size_t *size);  /* same as ISeqInStream::Read */
-  SRes (*Seek)(void *p, Int64 *pos);
-} ISeekInStream;
+struct CFileInStream;
 
 #define LookToRead_BUF_SIZE (1 << 14)
 
 typedef struct
 {
-  ISeekInStream *realStream;
+  struct CFileInStream *realStream;
   size_t pos;
   size_t size;
   Byte buf[LookToRead_BUF_SIZE];
