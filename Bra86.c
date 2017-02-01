@@ -7,7 +7,8 @@
 
 /*static const Byte kMaskToAllowedStatus[8] = {1, 1, 1, 0, 1, 0, 0, 0};*/
 static const Byte kMaskToAllowedStatus = 0x17;
-static const Byte kMaskToBitNumber[8] = {0, 1, 2, 2, 3, 3, 3, 3};
+/*static const Byte kMaskToBitNumber[8] = {0, 1, 2, 2, 3, 3, 3, 3};*/
+static const UInt16 kMaskToBitNumber = 0xffa4;
 
 STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int encoding)
 {
@@ -36,7 +37,7 @@ STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int e
       prevMask = (prevMask << ((int)prevPosT - 1)) & 0x7;
       if (prevMask != 0)
       {
-        Byte b = p[4 - kMaskToBitNumber[prevMask]];
+        Byte b = p[4 - ((kMaskToBitNumber >> (prevMask * 2)) & 3)];
         if (!((kMaskToAllowedStatus >> prevMask) & 1) || Test86MSByte(b))
         {
           prevPosT = bufferPos;
@@ -62,7 +63,7 @@ STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int e
           dest = src - (ip + (UInt32)bufferPos);
         if (prevMask == 0)
           break;
-        index = kMaskToBitNumber[prevMask] * 8;
+        index = ((kMaskToBitNumber >> (prevMask * 2)) & 3) * 8;
         b = (Byte)(dest >> (24 - index));
         if (!Test86MSByte(b))
           break;
