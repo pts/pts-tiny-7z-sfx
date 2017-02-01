@@ -34,6 +34,9 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
     if (originalSize == 0) {
       res = SZ_OK;
     } else {
+#ifdef _SZ_READ_DEBUG
+      fprintf(stderr, "READ size=%ld\n", (long)originalSize);
+#endif
       *size = fread(p->buf + size2, 1, originalSize, p->file.file);  /* 0 on error */
       res = (*size == originalSize) ? SZ_OK : SZ_ERROR_READ;
     }
