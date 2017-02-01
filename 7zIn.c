@@ -7,10 +7,32 @@
 #include "7zCrc.h"
 #include "CpuArch.h"
 
+#if 0
 /* Using 'S' instead of '7' in the beginning so that the 7-Zip signature
  * won't be detected with the SFX binary. Will replace it with '7' later.
  */
-const Byte k7zSignature[k7zSignatureSize] = {'S', 'z', 0xBC, 0xAF, 0x27, 0x1C};
+STATIC const Byte k7zSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C};
+#endif
+
+#if 0
+/* This is a nice trick, but unfortunately it's not a const expression.
+ * http://stackoverflow.com/questions/4286671/endianness-conversion-in-arm
+ */
+STATIC const char isBigEndian = (*(UInt16*)"\0\xff" < 0x100);
+#endif
+
+/* gcc -m64 -dM -E - </dev/null defines: i386 __i386 __i386__ __x86_64
+ * __x86_64__ __amd64 __amd64__
+ */
+#if defined(__i386__) || defined(__amd64__)  /* Any little endian architecture with arbitrary (odd) pointer addressing will do. */
+#define IS_7Z_SIGNATURE(p) (*(const UInt16*)(p) == ('z' << 8 | '7') && *(const UInt32*)((const UInt16*)(p) + 1) == 0x1C27AFBC)
+#else
+STATIC const Byte k57zSignature[k7zSignatureSize - 1] = {'z', 0xBC, 0xAF, 0x27, 0x1C};
+/* We check the 1st byte separately to avoid having k7ZSignature in the
+ * executable .rodata, thus detecting our signature instea of the .7z file in an sfx.
+ */
+#define IS_7Z_SIGNATURE(p) (((const Byte*)(p))[0] == '7' && 0 == memcmp((const Byte*)(p) + 1, k57zSignature, 5))
+#endif
 
 #define RINOM(x) { if ((x) == 0) return SZ_ERROR_MEM; }
 
@@ -1154,8 +1176,7 @@ static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
     }
     size -= k7zStartHeaderSize - 1;
     for (p = buf, pend = buf + size;
-         p != pend && (*p != '7' ||
-             0 != memcmp(p + 1, k7zSignature + 1, k7zSignatureSize -1));
+         p != pend && !IS_7Z_SIGNATURE(p);
          ++p) {}
     if (p != pend) {
       *buf_out = p + k7zSignatureSize;

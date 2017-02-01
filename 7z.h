@@ -11,7 +11,7 @@ EXTERN_C_BEGIN
 #define k7zStartHeaderSize 0x20
 #define k7zSignatureSize 6
 /* The first byte is deliberately wrong, it should be '7' */
-extern const Byte k7zSignature[k7zSignatureSize];
+/* extern const Byte k7zSignature[k7zSignatureSize]; */
 #define k7zMajorVersion 0
 
 enum EIdEnum
