@@ -5,13 +5,16 @@
 
 #include "Types.h"
 
-STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset)
+STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset)
 {
-  Int64 t = offset;
 #ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK LookInStream_SeekTo pos=%lld, origin=0\n", offset);
+  fprintf(stderr, "SEEK LookInStream_SeekTo pos=%lld, origin=0, from=%ld\n", offset, (long)lseek(p->fd, 0, SEEK_CUR));
 #endif
-  return LookToRead_Seek(stream, &t);
+  /* TODO(pts): Use 64-bit offset. */
+  const UInt64 offset0 = offset;
+  offset = lseek(p->fd, (off_t)offset0, SEEK_SET);
+  p->pos = p->size = 0;
+  return offset == offset0 ? SZ_OK : SZ_ERROR_READ;
 }
 
 STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size)
@@ -49,18 +52,6 @@ STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset)
 {
   p->pos += offset;
   return SZ_OK;
-}
-
-STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos)
-{
-#ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, (long)lseek(p->fd, 0, SEEK_CUR));
-#endif
-  /* TODO(pts): Use 64-bit offset. */
-  const Int64 pos0 = *pos;
-  *pos = lseek(p->fd, (off_t)pos0, SEEK_SET);
-  p->pos = p->size = 0;
-  return *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
 }
 
 STATIC void LookToRead_Init(CLookToRead *p)

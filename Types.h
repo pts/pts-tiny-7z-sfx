@@ -138,7 +138,7 @@ typedef struct
   Byte buf[LookToRead_BUF_SIZE];
 } CLookToRead;
 
-STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset);
+STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset);
 
 STATIC void LookToRead_Init(CLookToRead *p);
 /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
@@ -147,7 +147,6 @@ STATIC void LookToRead_Init(CLookToRead *p);
 STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size);
 /* offset must be <= output(*size) of Look */
 STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset);
-STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos);
 
 typedef struct
 {
