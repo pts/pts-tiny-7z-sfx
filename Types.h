@@ -141,6 +141,7 @@ typedef struct
 STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset);
 
 /* reads via CLookToRead::Read */
+/* reads directly (without buffer). It's same as ISeqInStream::Read */
 STATIC SRes LookInStream_Read(CLookToRead *stream, void *buf, size_t size);
 
 STATIC void LookToRead_Init(CLookToRead *p);
@@ -150,8 +151,6 @@ STATIC void LookToRead_Init(CLookToRead *p);
 STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size);
 /* offset must be <= output(*size) of Look */
 STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset);
-/* reads directly (without buffer). It's same as ISeqInStream::Read */
-STATIC SRes LookToRead_Read(CLookToRead *p, void *buf, size_t *size);
 STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos);
 
 typedef struct
