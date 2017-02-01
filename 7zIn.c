@@ -24,7 +24,7 @@ STATIC const char isBigEndian = (*(UInt16*)"\0\xff" < 0x100);
 /* gcc -m64 -dM -E - </dev/null defines: i386 __i386 __i386__ __x86_64
  * __x86_64__ __amd64 __amd64__
  */
-#if defined(__i386__) || defined(__amd64__)  /* Any little endian architecture with arbitrary (odd) pointer addressing will do. */
+#ifdef MY_CPU_LE_UNALIGN
 #define IS_7Z_SIGNATURE(p) (*(const UInt16*)(p) == ('z' << 8 | '7') && *(const UInt32*)((const UInt16*)(p) + 1) == 0x1C27AFBC)
 #else
 STATIC const Byte k57zSignature[k7zSignatureSize - 1] = {'z', 0xBC, 0xAF, 0x27, 0x1C};

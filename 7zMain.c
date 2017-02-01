@@ -292,7 +292,7 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   *s = '\0';
 }
 
-#if defined(__i386__) || defined(__amd64__)  /* Any little endian architecture with arbitrary (odd) pointer addressing will do. */
+#ifdef MY_CPU_LE_UNALIGN
 /* We do the comparison in a quirky way so we won't depend on strcmp. */
 #define IS_HELP(p) ((*(const UInt16*)(p) == ('-' | '-' << 8)) && \
     *(const UInt32*)((const UInt16*)(p) + 1) == ('h' | 'e' << 8 | 'l' << 16 | 'p' << 24) && \
