@@ -39,5 +39,7 @@ Ideas to reduce file size:
 * DONE: Loop in LookInStream_Read2 many not be needed.
 * Use the lseek64 library call (or _llseek system call) for 64-bit seeks in
   the archive. minidiet doesn't support this, xtiny can.
+* Eliminate multiple calls to Utf16_To_Char in 7zMain.c.
+* Reuse the output buffer for Utf16_To_Char.
 
 __END__

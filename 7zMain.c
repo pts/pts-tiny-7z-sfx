@@ -82,38 +82,11 @@ static SRes Utf16_To_Utf8Buf(CBuf *dest, const UInt16 *src, size_t srcLen)
 }
 #endif
 
-static SRes Utf16_To_Char(CBuf *buf, const UInt16 *s, int fileMode)
+static SRes Utf16_To_Char(CBuf *buf, const UInt16 *s)
 {
   int len = 0;
-  for (len = 0; s[len] != '\0'; len++);
-
-  #ifdef _WIN32
-  {
-    int size = len * 3 + 100;
-    if (!Buf_EnsureSize(buf, size))
-      return SZ_ERROR_MEM;
-    {
-      char defaultChar = '_';
-      BOOL defUsed;
-      int numChars = WideCharToMultiByte(fileMode ?
-          (
-          #ifdef UNDER_CE
-          CP_ACP
-          #else
-          AreFileApisANSI() ? CP_ACP : CP_OEMCP
-          #endif
-          ) : CP_OEMCP,
-          0, s, len, (char *)buf->data, size, &defaultChar, &defUsed);
-      if (numChars == 0 || numChars >= size)
-        return SZ_ERROR_FAIL;
-      buf->data[numChars] = 0;
-      return SZ_OK;
-    }
-  }
-  #else
-  fileMode = fileMode;
+  for (len = 0; s[len] != 0; len++);
   return Utf16_To_Utf8Buf(buf, s, len);
-  #endif
 }
 
 static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
@@ -153,7 +126,7 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   CBuf buf;
   Bool res;
   Buf_Init(&buf);
-  RINOK(Utf16_To_Char(&buf, name, 1));
+  RINOK(Utf16_To_Char(&buf, name));
 
   #ifdef _WIN32
   res = _mkdir((const char *)buf.data) == 0;
@@ -197,7 +170,7 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   struct timeval tv[2];
   CBuf buf;
   Buf_Init(&buf);
-  RINOK(Utf16_To_Char(&buf, name, 1));
+  RINOK(Utf16_To_Char(&buf, name));
   if (usec < 0) {
     usec += 1000000;
     --sec;
@@ -217,7 +190,7 @@ static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes)
   CBuf buf;
   WRes res;
   Buf_Init(&buf);
-  RINOK(Utf16_To_Char(&buf, name, 1));
+  RINOK(Utf16_To_Char(&buf, name));
   /* TODO(pts): No lstat to detect whether the file exists. */
   if (!doYes && 0 == lstat((const char *)buf.data, &st)) {
     *p = -1;
@@ -235,7 +208,7 @@ static SRes PrintString(const UInt16 *s)
   CBuf buf;
   SRes res;
   Buf_Init(&buf);
-  res = Utf16_To_Char(&buf, s, 0);
+  res = Utf16_To_Char(&buf, s);
   if (res == SZ_OK)
     fputs((const char *)buf.data, stdout);
   Buf_Free(&buf);
@@ -511,7 +484,7 @@ int MY_CDECL main(int numargs, char *args[])
             CBuf buf;
             WRes sres;
             Buf_Init(&buf);
-            if ((sres = Utf16_To_Char(&buf, name, 1))) {
+            if ((sres = Utf16_To_Char(&buf, name))) {
               PrintError("symlink malloc");
               res = sres;
               break;
