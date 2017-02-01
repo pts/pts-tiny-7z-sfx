@@ -59,9 +59,7 @@ static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStre
           res = SZ_ERROR_DATA;
         break;
       }
-      res = LookToRead_Skip((void *)inStream, inProcessed);
-      if (res != SZ_OK)
-        break;
+      LOOKTOREAD_SKIP(inStream, inProcessed);
     }
   }
 
@@ -108,9 +106,7 @@ static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStr
           res = SZ_ERROR_DATA;
         break;
       }
-      res = LookToRead_Skip((void *)inStream, inProcessed);
-      if (res != SZ_OK)
-        break;
+      LOOKTOREAD_SKIP(inStream, inProcessed);
     }
   }
 
@@ -123,16 +119,14 @@ static SRes SzDecodeCopy(UInt64 inSize, CLookToRead *inStream, Byte *outBuffer)
   while (inSize > 0)
   {
     void *inBuf;
-    size_t curSize = (1 << 18);
-    if (curSize > inSize)
-      curSize = (size_t)inSize;
+    size_t curSize = inSize;
     RINOK(LookToRead_Look_Exact((void *)inStream, (const void **)&inBuf, &curSize));
     if (curSize == 0)
       return SZ_ERROR_INPUT_EOF;
     memcpy(outBuffer, inBuf, curSize);
     outBuffer += curSize;
     inSize -= curSize;
-    RINOK(LookToRead_Skip((void *)inStream, curSize));
+    LOOKTOREAD_SKIP(inStream, curSize);
   }
   return SZ_OK;
 }

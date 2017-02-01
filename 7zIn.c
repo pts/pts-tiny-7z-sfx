@@ -1161,7 +1161,7 @@ static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
       *buf_out = p + k7zSignatureSize;
       return ofs + (p - buf);
     }
-    LookToRead_Skip(inStream, size);  /* No need for error checking. */
+    LOOKTOREAD_SKIP(inStream, size);  /* No need for error checking. */
     ofs += size;
   }
   return 0;
@@ -1226,7 +1226,7 @@ static SRes SzArEx_Open2(
     res = LookToRead_Look_Exact(inStream, (const void**)&buf, &got);
     if (res != SZ_OK) break;
     if (got == 0) { res = SZ_ERROR_INPUT_EOF; break; }
-    LookToRead_Skip(inStream, got);
+    LOOKTOREAD_SKIP(inStream, got);
     memcpy(pbuf, buf, got);
     size -= got;
     pbuf += got;

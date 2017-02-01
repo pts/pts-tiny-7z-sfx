@@ -389,7 +389,7 @@ int MY_CDECL main(int numargs, char *args[])
     return 1;
   }
 
-  LookToRead_Init(&lookStream);
+  LOOKTOREAD_INIT(&lookStream);
 
   CrcGenerateTable();
 

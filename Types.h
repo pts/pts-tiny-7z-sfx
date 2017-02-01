@@ -140,13 +140,15 @@ typedef struct
 
 STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset);
 
-STATIC void LookToRead_Init(CLookToRead *p);
+/* STATIC void LookToRead_Init(CLookToRead *p) */
+#define LOOKTOREAD_INIT(p) do { (p)->pos = (p)->size = 0; } while (0)
 /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
    (output(*size) > input(*size)) is not allowed
    (output(*size) < input(*size)) is allowed */
 STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size);
 /* offset must be <= output(*size) of Look */
-STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset);
+/* STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset) */
+#define LOOKTOREAD_SKIP(p, offset) do { (p)->pos += (offset); } while (0)
 
 typedef struct
 {

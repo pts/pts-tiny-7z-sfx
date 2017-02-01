@@ -47,14 +47,3 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
   *buf = p->buf + p->pos;
   return res;
 }
-
-STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset)
-{
-  p->pos += offset;
-  return SZ_OK;
-}
-
-STATIC void LookToRead_Init(CLookToRead *p)
-{
-  p->pos = p->size = 0;
-}
