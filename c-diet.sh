@@ -16,7 +16,7 @@ diet -Os gcc -DSTATIC=static -m32 -s -Os -W -Wall -o tiny7zx \
     -ffunction-sections -fdata-sections -Wl,--gc-sections \
     all.c
 #    7zAlloc.c 7zBuf.c 7zBuf2.c 7zCrc.c 7zCrcOpt.c 7zDec.c 7zIn.c \
-#    7zMain.c 7zStream.c Bcj2.c Bra.c Bra86.c CpuArch.c Lzma2Dec.c LzmaDec.c \
+#    7zMain.c 7zStream.c Bcj2.c Bra.c Bra86.c Lzma2Dec.c LzmaDec.c \
 #    Ppmd7.c Ppmd7Dec.c
 # This stripping saves about 136 bytes.
 strip -s --strip-unneeded --remove-section=.note.gnu.gold-version \

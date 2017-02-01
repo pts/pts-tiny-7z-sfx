@@ -26,11 +26,6 @@ STATIC UInt32 MY_FAST_CALL CrcUpdateT4(UInt32 v, const void *data, size_t size, 
   return v;
 }
 
-STATIC UInt32 MY_FAST_CALL CrcUpdateT8(UInt32 v, const void *data, size_t size, const UInt32 *table)
-{
-  return CrcUpdateT4(v, data, size, table);
-}
-
 #endif
 
 

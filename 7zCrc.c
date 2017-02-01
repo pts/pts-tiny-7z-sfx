@@ -8,7 +8,7 @@
 
 #ifdef MY_CPU_X86_OR_AMD64
   #define CRC_NUM_TABLES 8
-  STATIC UInt32 MY_FAST_CALL CrcUpdateT8(UInt32 v, const void *data, size_t size, const UInt32 *table);
+  STATIC UInt32 MY_FAST_CALL CrcUpdateT4(UInt32 v, const void *data, size_t size, const UInt32 *table);
 #elif defined(MY_CPU_LE)
   #define CRC_NUM_TABLES 4
 #else
@@ -51,11 +51,6 @@ STATIC void MY_FAST_CALL CrcGenerateTable()
   #ifdef MY_CPU_LE
 
   g_CrcUpdate = CrcUpdateT4;
-
-  #if CRC_NUM_TABLES == 8
-  if (!CPU_Is_InOrder())
-    g_CrcUpdate = CrcUpdateT8;
-  #endif
 
   #else
   {

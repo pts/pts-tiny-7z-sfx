@@ -9,6 +9,5 @@
 #include "Bcj2.c"
 #include "Bra.c"
 #include "Bra86.c"
-#include "CpuArch.c"
 #include "Lzma2Dec.c"
 #include "LzmaDec.c"
