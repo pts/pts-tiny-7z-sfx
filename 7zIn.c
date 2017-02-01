@@ -1176,8 +1176,8 @@ static SRes SzArEx_Open2(
   size_t nextHeaderSizeT;
   UInt32 nextHeaderCRC;
   SRes res;
-  Byte *buf = 0, *pbuf;
-  size_t size, got;
+  Byte *buf = 0;
+  size_t size;
   CBuf buffer;
 
   startArcPos = FindStartArcPos(inStream, &buf);
@@ -1215,22 +1215,12 @@ static SRes SzArEx_Open2(
 #endif
   size = nextHeaderSizeT;
   if (!Buf_Create(&buffer, nextHeaderSizeT)) return SZ_ERROR_MEM;
-  /* We need a loop here to read nextHeaderSizeT bytes to buffer.data,
-   * because LookToRead_Look_Exact is able to read about 16 kB at once, and
-   * we may ned 500 kB or more for the archive header.
+  /* We need a loop here (implemented by LookToRead_ReadAll) to read
+   * nextHeaderSizeT bytes to buffer.data, because LookToRead_Look_Exact is
+   * able to read about 16 kB at once, and we may ned 500 kB or more for the
+   * archive header.
    */
-  pbuf = buffer.data;
-  res = SZ_OK;
-  while (size > 0) {
-    got = size;
-    res = LookToRead_Look_Exact(inStream, (const void**)&buf, &got);
-    if (res != SZ_OK) break;
-    if (got == 0) { res = SZ_ERROR_INPUT_EOF; break; }
-    LOOKTOREAD_SKIP(inStream, got);
-    memcpy(pbuf, buf, got);
-    size -= got;
-    pbuf += got;
-  }
+  res = LookToRead_ReadAll(inStream, buffer.data, &size);
   if (res == SZ_OK) {
     res = SZ_ERROR_ARCHIVE;
     if (CrcCalc(buffer.data, nextHeaderSizeT) == nextHeaderCRC)

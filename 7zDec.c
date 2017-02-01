@@ -114,23 +114,6 @@ static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStr
   return res;
 }
 
-static SRes SzDecodeCopy(UInt64 inSize, CLookToRead *inStream, Byte *outBuffer)
-{
-  while (inSize > 0)
-  {
-    void *inBuf;
-    size_t curSize = inSize;
-    RINOK(LookToRead_Look_Exact((void *)inStream, (const void **)&inBuf, &curSize));
-    if (curSize == 0)
-      return SZ_ERROR_INPUT_EOF;
-    memcpy(outBuffer, inBuf, curSize);
-    outBuffer += curSize;
-    inSize -= curSize;
-    LOOKTOREAD_SKIP(inStream, curSize);
-  }
-  return SZ_OK;
-}
-
 static Bool IS_MAIN_METHOD(UInt32 m)
 {
   switch(m)
@@ -279,9 +262,12 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
 
       if (coder->MethodID == k_Copy)
       {
+        size_t size = inSize;
         if (inSize != outSizeCur) /* check it */
           return SZ_ERROR_DATA;
-        RINOK(SzDecodeCopy(inSize, inStream, outBufCur));
+        if (inSize != size)
+          return SZ_ERROR_MEM;
+        RINOK(LookToRead_ReadAll(inStream, outBufCur, &size));
       }
       else if (coder->MethodID == k_LZMA)
       {
@@ -300,29 +286,26 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
     {
       UInt64 offset = GetSum(packSizes, 1);
       UInt64 s3Size = packSizes[1];
-      SRes res;
+      size_t size;
       if (ci != 3)
         return SZ_ERROR_UNSUPPORTED;
 #ifdef _SZ_SEEK_DEBUG
       fprintf(stderr, "SEEKN 3\n");
 #endif
       RINOK(LookInStream_SeekTo(inStream, startPos + offset));
-      tempSizes[2] = (SizeT)s3Size;
-      if (tempSizes[2] != s3Size)
+      tempSizes[2] = size = (SizeT)s3Size;
+      if (size != s3Size)
         return SZ_ERROR_MEM;
       tempBuf[2] = (Byte *)SzAlloc(tempSizes[2]);
       if (tempBuf[2] == 0 && tempSizes[2] != 0)
         return SZ_ERROR_MEM;
-      res = SzDecodeCopy(s3Size, inStream, tempBuf[2]);
-      RINOK(res)
-
-      res = Bcj2_Decode(
+      RINOK(LookToRead_ReadAll(inStream, tempBuf[2], &size));
+      RINOK(Bcj2_Decode(
           tempBuf3, tempSize3,
           tempBuf[0], tempSizes[0],
           tempBuf[1], tempSizes[1],
           tempBuf[2], tempSizes[2],
-          outBuffer, outSize);
-      RINOK(res)
+          outBuffer, outSize));
     }
     else
     {
