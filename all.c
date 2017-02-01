@@ -3,7 +3,6 @@
 #include "7zCrc.c"
 #include "7zCrcOpt.c"
 #include "7zDec.c"
-#include "7zFile.c"
 #include "7zIn.c"
 #include "7zMain.c"
 #include "7zStream.c"

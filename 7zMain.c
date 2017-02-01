@@ -5,7 +5,6 @@
 #include "7z.h"
 #include "7zAlloc.h"
 #include "7zCrc.h"
-#include "7zFile.h"
 #include "7zVersion.h"
 
 static int Buf_EnsureSize(CBuf *dest, size_t size)
@@ -385,8 +384,7 @@ int MY_CDECL main(int numargs, char *args[])
   fputs(archive, stdout);
   putchar('\n');
   putchar('\n');
-  if (InFile_Open(&lookStream.file, archive))
-  {
+  if ((lookStream.fd = open(archive, O_RDONLY)) < 0) {
     PrintError("can not open input file");
     return 1;
   }
@@ -582,7 +580,7 @@ int MY_CDECL main(int numargs, char *args[])
   SzArEx_Free(&db);
   SzFree(temp);
 
-  File_Close(&lookStream.file);
+  close(lookStream.fd);
   if (res == SZ_OK)
   {
     fputs("\nEverything is Ok\n", stdout);

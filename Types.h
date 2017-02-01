@@ -132,12 +132,7 @@ struct CFileInStream;
 
 typedef struct
 {
-  FILE *file;
-} CSzFile;
-
-typedef struct
-{
-  CSzFile file;
+  int fd;
   size_t pos;
   size_t size;
   Byte buf[LookToRead_BUF_SIZE];

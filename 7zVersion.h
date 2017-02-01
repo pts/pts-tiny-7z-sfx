@@ -1,7 +1,7 @@
 #define MY_VER_MAJOR 9
 #define MY_VER_MINOR 22
 #define MY_VER_BUILD 00
-#define MY_VERSION "9.22+pts2"
+#define MY_VERSION "9.22+pts3"
 #define MY_7ZIP_VERSION "9.22"
 #define MY_DATE "2011-04-18"
 #define MY_COPYRIGHT ": Igor Pavlov : Public domain"

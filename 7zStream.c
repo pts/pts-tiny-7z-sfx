@@ -31,14 +31,12 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
     /* True but we can do it later: p->size = size2; */
     /* : res = FileInStream_Read(p->realStream, p->buf + size2, size); */
     originalSize = *size -= size2;
-    if (originalSize == 0) {
-      res = SZ_OK;
-    } else {
+    if (originalSize != 0) {
 #ifdef _SZ_READ_DEBUG
       fprintf(stderr, "READ size=%ld\n", (long)originalSize);
 #endif
-      *size = fread(p->buf + size2, 1, originalSize, p->file.file);  /* 0 on error */
-      res = (*size == originalSize) ? SZ_OK : SZ_ERROR_READ;
+      *size = read(p->fd, p->buf + size2, originalSize);  /* -1 on error, need 0 */
+      if (*size != originalSize) { *size = 0; res = SZ_ERROR_READ; }
     }
     size2 = p->size = *size += size2;
   }
@@ -56,14 +54,13 @@ STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset)
 STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos)
 {
 #ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, ftell(p->file.file));
+  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, (long)lseek(p->fd, 0, SEEK_CUR));
 #endif
-  /* TODO(pts): Use fseeko for 64-bit offset. */
-  Int64 pos0 = *pos;
-  int res = fseek(p->file.file, (long)pos0, SEEK_SET);
+  /* TODO(pts): Use 64-bit offset. */
+  const Int64 pos0 = *pos;
+  *pos = lseek(p->fd, (off_t)pos0, SEEK_SET);
   p->pos = p->size = 0;
-  *pos = ftell(p->file.file);
-  return res == 0 && *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
+  return *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
 }
 
 STATIC void LookToRead_Init(CLookToRead *p)

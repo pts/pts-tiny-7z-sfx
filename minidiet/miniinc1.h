@@ -211,6 +211,7 @@ typedef __pid_t pid_t;
 typedef __time_t time_t;
 typedef __mode_t mode_t;
 typedef signed long suseconds_t;
+typedef unsigned long off_t;
 
 struct stat {
   __dev_t st_dev;
@@ -305,5 +306,6 @@ extern int memcmp(__const void *__s1, __const void *__s2, size_t __n) __attribut
 extern __pid_t fork(void) __attribute__((__nothrow__));
 extern __pid_t waitpid(__pid_t __pid, int *__stat_loc, int __options);
 extern int unlink(__const char *__name) __attribute__((__nothrow__)) __attribute__((__nonnull__(1)));
+extern off_t lseek(int fd, off_t offset, int whence) __attribute__((__nothrow__));
 
 #endif  /* _MINIINC1_H_ */

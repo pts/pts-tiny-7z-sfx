@@ -5,7 +5,7 @@ string.h: memcmp strcmp
 system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir
 dynamic memory: free malloc
 stdio.h messages: putchar (fputc) fputs stdout
-stdio.h reading files: fopen fread fseek ftell fclose
+stdio.h reading files: open read lseek close
 stdio.h writing files: open write close
 
 Ideas to reduce file size:
@@ -21,9 +21,7 @@ Ideas to reduce file size:
 * eliminate __divdi3 (use __udivdi3 instead)
 * do we really need __udivdi3 and __umoddi3, can't we do without them? (There is / 10 somewhere.)
 * DONE: fwrite() is called only once per file, use write(2) instead
-* fopen() for writing is called only from one location (OutFile_OpenUtf16), use open(2) instead
-* fopen() for reading is called only once: InFile_Open
-* use read() instead of fread() for reading: the file reading pattern is
+* DONE: use read() instead of fread() for reading: the file reading pattern is
   already buffered well enough: LookToRead_Look_Exact reads 16 kB most of
   the time (large enough buffer)
 * DONE: FileInStream_CreateVTable can be eliminated
@@ -39,6 +37,7 @@ Ideas to reduce file size:
   How much is the memory usage, who do we need the big malloc for?
   How does it change if we duplicate all files twice in the .7z?
 * DONE: Loop in LookInStream_Read2 many not be needed.
-* Use fseeko instead of fseek for 64-bit offset, also use ftello.
+* Use the lseek64 library call (or _llseek system call) for 64-bit seeks in
+  the archive. minidiet doesn't support this, xtiny can.
 
 __END__
