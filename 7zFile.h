@@ -37,8 +37,6 @@ typedef struct CFileInStream
   CSzFile file;
 } CFileInStream;
 
-STATIC SRes FileInStream_Seek(CFileInStream *p, Int64 *pos);
-
 typedef struct
 {
   ISeqOutStream s;

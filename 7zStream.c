@@ -52,11 +52,15 @@ STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset)
 
 STATIC SRes LookToRead_Seek(CLookToRead *p, Int64 *pos)
 {
-  p->pos = p->size = 0;
 #ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK LookToRead_Seek pos=%lld, origin=0\n", *pos);
+  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, ftell(p->realStream->file.file));
 #endif
-  return FileInStream_Seek(p->realStream, pos);
+  /* TODO(pts): Use fseeko for 64-bit offset. */
+  Int64 pos0 = *pos;
+  int res = fseek(p->realStream->file.file, (long)pos0, SEEK_SET);
+  p->pos = p->size = 0;
+  *pos = ftell(p->realStream->file.file);
+  return res == 0 && *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
 }
 
 STATIC void LookToRead_Init(CLookToRead *p)

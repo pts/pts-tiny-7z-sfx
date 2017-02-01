@@ -37,17 +37,3 @@ STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
     return 0;
   return 1;
 }
-
-/* ---------- FileInStream ---------- */
-
-STATIC SRes FileInStream_Seek(CFileInStream *p, Int64 *pos)
-{
-#ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK FileInStream_Seek pos=%lld, origin=0, from=%ld\n", *pos, ftell(p->file.file));
-#endif
-  /* TODO(pts): Use fseeko for 64-bit offset. */
-  Int64 pos0 = *pos;
-  int res = fseek(p->file.file, (long)pos0, SEEK_SET);
-  *pos = ftell(p->file.file);
-  return res == 0 && *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
-}
