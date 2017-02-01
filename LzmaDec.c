@@ -3,6 +3,8 @@
 
 #include "7zSys.h"
 
+#include "7zAlloc.h"
+
 #include "LzmaDec.h"
 
 #define kNumTopBits 24

@@ -4,6 +4,7 @@
 #include "7zSys.h"
 
 #include "7z.h"
+#include "7zAlloc.h"
 
 #include "Bcj2.h"
 #include "Bra.h"

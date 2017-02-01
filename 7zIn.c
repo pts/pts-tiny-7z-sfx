@@ -4,6 +4,7 @@
 #include "7zSys.h"
 
 #include "7z.h"
+#include "7zAlloc.h"
 #include "7zCrc.h"
 #include "CpuArch.h"
 

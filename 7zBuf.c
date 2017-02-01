@@ -3,6 +3,7 @@
 Igor Pavlov
 Public domain */
 
+#include "7zAlloc.h"
 #include "7zBuf.h"
 
 STATIC void Buf_Init(CBuf *p)
