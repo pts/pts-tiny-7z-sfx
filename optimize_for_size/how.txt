@@ -1,22 +1,19 @@
 by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
 
 int64 arithmetic: __udivdi3 __umoddi3
-system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir
+system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir open read write lseek close
 dynamic memory: free malloc
-stdio.h messages: putchar (fputc) fputs stdout
-stdio.h reading files: open read lseek close
-stdio.h writing files: open write close
 
 Ideas to reduce file size:
 
 * use GCC 4.8 or later, it has better -Os support
-* use pts-xtiny, implement dynamic memory and stdio.h first
+* use pts-xtiny, implement dynamic memory first
 * try some more command-line flags for gcc
-* use 64-bit system calls (e.g. for lstat) if needed
+* use 64-bit system calls (e.g. for lstat, _llseek) if needed
 * all system calls are available in pts-xtiny
 * DONE: memcmp is used only for k7zSignature, try to eliminate or inline it
 * DONE: strcmp is used only for argv parsing, try to eliminate or inline it
-* add output buffering for stdout (stdio.h messages)
+* DONE: add output buffering for stdout (stdio.h messages)
 * DONE: eliminate __divdi3 (use __udivdi3 instead) by converting signed
   divisions to unsinged
 * do we really need __udivdi3 and __umoddi3, can't we do without them? (There is / 10 somewhere.)
@@ -25,8 +22,8 @@ Ideas to reduce file size:
   already buffered well enough: LookToRead_Look_Exact reads 16 kB most of
   the time (large enough buffer)
 * DONE: FileInStream_CreateVTable can be eliminated
-* Once we use SZ_SEEK_SET only, we can eliminate ftell, use lseek, and fail
-  if seeking wasn't possible.
+* DONE: Once we use SZ_SEEK_SET only, we can eliminate ftell, use lseek, and
+  fail if seeking wasn't possible.
 * malloc()+free() is used in a predictable way, only 1 malloc/free pair per
   file (probably the filename); we can optimize it by making free() a no-op
   execpt if it's free()ing the last malloc().

@@ -29,9 +29,12 @@
 #include <sys/time.h>  /* futimes() for uClibc */
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_SZ_ALLOC_DEBUG) || defined(_SZ_SEEK_DEBUG) || defined(_SZ_HEADER_DEBUG) || defined(_SZ_READ_DEBUG)
+#include <stdio.h>
+#endif
 
 #ifndef UNDER_CE
 #include <errno.h>

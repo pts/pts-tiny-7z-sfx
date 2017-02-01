@@ -105,11 +105,31 @@ static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
   return mode & ~*umaskv & 07777;
 }
 
+static char stdout_buf[4096];
+static unsigned stdout_bufc = 0;
+
+/* Writes NUL-terminated string sz to stdout, does line buffering. */
+static void WriteMessage(const char *sz) {
+  char had_newline = False, c;
+  while ((c = *sz++) != '\0') {
+    if (stdout_bufc == sizeof stdout_buf) {
+      (void)!write(1, stdout_buf, stdout_bufc);
+      stdout_bufc = 0;
+    }
+    if (c == '\n') had_newline = True;
+    stdout_buf[stdout_bufc++] = c;
+  }
+  if (had_newline) {
+    (void)!write(1, stdout_buf, stdout_bufc);
+    stdout_bufc = 0;
+  }
+}
+
 STATIC void PrintError(char *sz)
 {
-  fputs("\nERROR: ", stdout);
-  fputs(sz, stdout);
-  putchar('\n');
+  WriteMessage("\nERROR: ");
+  WriteMessage(sz);
+  WriteMessage("\n");
 }
 
 static void PrintMyCreateDirError(int res) {
@@ -162,10 +182,10 @@ static int MyUtimes(const char *filename, const struct timeval tv[2]) {
 static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   /* mtime is 10 * number of microseconds since 1601 (+ 89 days). */
   const UInt64 q =
-      (UInt64)((UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low) / (UInt64)10 -
+      (UInt64)((UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low) / (UInt64)10 -  /* __udivdi3 */
       (369 * 365 + 89) * (UInt64)(24 * 60 * 60) * 1000000;
-  Int32 usec = q % 1000000;
-  Int32 sec =  q / 1000000;
+  Int32 usec = q % 1000000;  /* __umoddi3 */
+  Int32 sec =  q / 1000000;  /* __udivdi3 */
   int got;
   struct timeval tv[2];
   CBuf buf;
@@ -210,7 +230,7 @@ static SRes PrintString(const UInt16 *s)
   Buf_Init(&buf);
   res = Utf16_To_Char(&buf, s);
   if (res == SZ_OK)
-    fputs((const char *)buf.data, stdout);
+    WriteMessage((const char *)buf.data);
   Buf_Free(&buf);
   return res;
 }
@@ -221,8 +241,15 @@ static void UInt64ToStr(UInt64 value, char *s, int numDigits, char pad)
   int pos = 0;
   do
   {
+#if 0
+    const UInt64 v0 = value;
+    value /= 10;  /* __udivdi3 */
+    /* Does this use __umoddi3? */
+    temp[pos++] = '0' + (unsigned)(v0 - value * 10);
+#else
     temp[pos++] = (char)('0' + (unsigned)(value % 10));
     value /= 10;
+#endif
   }
   while (value != 0);
   for (numDigits -= pos; numDigits > 0; numDigits--)
@@ -256,13 +283,13 @@ static char *UIntToStr(char *s, unsigned value, int numDigits)
 static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
 {
   unsigned year, mon, day, hour, min, sec;
-  UInt64 v64 = (ft->Low | ((UInt64)ft->High << 32)) / 10000000;
+  UInt64 v64 = (ft->Low | ((UInt64)ft->High << 32)) / 10000000;  /* __udivdi3 */
   Byte ms[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
   unsigned t;
   UInt32 v;
-  sec = (unsigned)(v64 % 60); v64 /= 60;
-  min = (unsigned)(v64 % 60); v64 /= 60;
-  hour = (unsigned)(v64 % 24); v64 /= 24;
+  sec = (unsigned)(v64 % 60); v64 /= 60;  /* __umoddi3 */  /* __udivdi3 */
+  min = (unsigned)(v64 % 60); v64 /= 60;  /* __umoddi3 */  /* __udivdi3 */
+  hour = (unsigned)(v64 % 24); v64 /= 24;  /* __umoddi3 */  /* __udivdi3 */
 
   v = (UInt32)v64;
 
@@ -316,19 +343,19 @@ int MY_CDECL main(int numargs, char *args[])
   int argi = 2;
   const char *args1 = numargs >= 2 ? args[1] : "";
 
-  fputs("Tiny 7z extractor " MY_VERSION "\n\n", stdout);
+  WriteMessage("Tiny 7z extractor " MY_VERSION "\n\n");
   if ((args[1][0] == '-' && args[1][1] == 'h' && args[1][2] == '\0') ||
       IS_HELP(args1)) {
-    fputs("Usage: ", stdout);
-    fputs(args[0], stdout);
-    fputs(" <command> [<switches>...]\n\n"
+    WriteMessage("Usage: ");
+    WriteMessage(args[0]);
+    WriteMessage(" <command> [<switches>...]\n\n"
       "<Commands>\n"
       "  l: List contents of archive\n"
       "  t: Test integrity of archive\n"
       "  x: eXtract files with full pathname (default)\n"
       "<Switches>\n"
       "  -e{Archive}: archive to Extract (default is self, argv[0])\n"
-      "  -y: assume Yes on all queries\n", stdout);
+      "  -y: assume Yes on all queries\n");
      return 0;
   }
   if (numargs >= 2) {
@@ -365,10 +392,10 @@ int MY_CDECL main(int numargs, char *args[])
     }
   }
 
-  fputs("Processing archive: ", stdout);
-  fputs(archive, stdout);
-  putchar('\n');
-  putchar('\n');
+  WriteMessage("Processing archive: ");
+  WriteMessage(archive);
+  WriteMessage("\n");
+  WriteMessage("\n");
   if ((lookStream.fd = open(archive, O_RDONLY)) < 0) {
     PrintError("can not open input file");
     return 1;
@@ -430,28 +457,27 @@ int MY_CDECL main(int numargs, char *args[])
             t[j] = '\0';
           }
 
-          fputs(t, stdout);
-          fputs(" . ", stdout);  /* attrib */
-          fputs(s, stdout);
-          putchar(' ');
-          putchar(' ');
+          WriteMessage(t);
+          WriteMessage(" . ");  /* attrib */
+          WriteMessage(s);
+          WriteMessage(" ");
+          WriteMessage(" ");
           res = PrintString(temp);
           if (res != SZ_OK)
             break;
           if (f->IsDir)
-            putchar('/');
-          putchar('\n');
+            WriteMessage("/");
+          WriteMessage("\n");
           continue;
         }
-        fputs(testCommand ?
+        WriteMessage(testCommand ?
             "Testing    ":
-            "Extracting ",
-            stdout);
+            "Extracting ");
         res = PrintString(temp);
         if (res != SZ_OK)
           break;
         if (f->IsDir)
-          putchar('/');
+          WriteMessage("/");
         else
         {
           res = SzArEx_Extract(&db, &lookStream, i,
@@ -557,7 +583,7 @@ int MY_CDECL main(int numargs, char *args[])
           }
         }
        next_file:
-        putchar('\n');
+        WriteMessage("\n");
       }
       SzFree(outBuffer);
     }
@@ -568,7 +594,7 @@ int MY_CDECL main(int numargs, char *args[])
   close(lookStream.fd);
   if (res == SZ_OK)
   {
-    fputs("\nEverything is Ok\n", stdout);
+    WriteMessage("\nEverything is Ok\n");
     return 0;
   }
   if (res == SZ_ERROR_UNSUPPORTED)
@@ -582,9 +608,9 @@ int MY_CDECL main(int numargs, char *args[])
   else {
     char s[12];
     UIntToStr(s, res, 0);
-    fputs("\nERROR #", stdout);
-    fputs(s, stdout);
-    putchar('\n');
+    WriteMessage("\nERROR #");
+    WriteMessage(s);
+    WriteMessage("\n");
   }
   return 1;
 }
