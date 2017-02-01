@@ -18,6 +18,8 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
 {
   SRes res = SZ_OK;
   size_t size2 = p->size - p->pos;
+  size_t originalSize;
+
   if (*size == 0) return size2;
   if (*size > LookToRead_BUF_SIZE) *size = LookToRead_BUF_SIZE;
 
@@ -27,8 +29,14 @@ STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size
     memcpy(p->buf, p->buf + p->pos, size2);
     p->pos = 0;
     /* True but we can do it later: p->size = size2; */
-    *size -= size2;
-    res = FileInStream_Read(p->realStream, p->buf + size2, size);
+    /* : res = FileInStream_Read(p->realStream, p->buf + size2, size); */
+    originalSize = *size -= size2;
+    if (originalSize == 0) {
+      res = SZ_OK;
+    } else {
+      *size = fread(p->buf + size2, 1, originalSize, p->realStream->file.file);  /* 0 on error */
+      res = (*size == originalSize) ? SZ_OK : SZ_ERROR_READ;
+    }
     size2 = p->size = *size += size2;
   }
   if (size2 < *size) *size = size2;
