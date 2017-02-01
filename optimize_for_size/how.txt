@@ -18,7 +18,8 @@ Ideas to reduce file size:
 * memcmp is used only for k7zSignature, try to eliminate or inline it
 * strcmp is used only for argv parsing, try to eliminate or inline it
 * add output buffering for stdout (stdio.h messages)
-* eliminate __divdi3 (use __udivdi3 instead)
+* DONE: eliminate __divdi3 (use __udivdi3 instead) by converting signed
+  divisions to unsinged
 * do we really need __udivdi3 and __umoddi3, can't we do without them? (There is / 10 somewhere.)
 * DONE: fwrite() is called only once per file, use write(2) instead
 * DONE: use read() instead of fread() for reading: the file reading pattern is

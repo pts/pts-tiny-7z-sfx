@@ -162,8 +162,8 @@ static int MyUtimes(const char *filename, const struct timeval tv[2]) {
 static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   /* mtime is 10 * number of microseconds since 1601 (+ 89 days). */
   const UInt64 q =
-      (Int64)((UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low) / 10 -
-      (369 * 365 + 89) * (Int64)(24 * 60 * 60) * 1000000;
+      (UInt64)((UInt64)(UInt32)mtime->High << 32 | (UInt32)mtime->Low) / (UInt64)10 -
+      (369 * 365 + 89) * (UInt64)(24 * 60 * 60) * 1000000;
   Int32 usec = q % 1000000;
   Int32 sec =  q / 1000000;
   int got;
