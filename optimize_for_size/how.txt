@@ -44,5 +44,7 @@ Ideas to reduce file size:
 * DONE Remove redundancy between SetMTime and ConvertFileTimeToString.
 * (advanced) Don't store LZMA decompressors (once in the upx stub and one
   in Lzma2Dec.c).
+* Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
+  better?
 
 __END__

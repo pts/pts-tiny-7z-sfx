@@ -264,6 +264,9 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       if (coder->MethodID == k_Copy)
       {
         size_t size = inSize;
+#ifdef _SZ_CODER_DEBUG
+      fprintf(stderr, "CODER Copy\n");
+#endif
         if (inSize != outSizeCur) /* check it */
           return SZ_ERROR_DATA;
         if (inSize != size)
@@ -272,10 +275,16 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       }
       else if (coder->MethodID == k_LZMA)
       {
+#ifdef _SZ_CODER_DEBUG
+      fprintf(stderr, "CODER LZMA\n");
+#endif
         RINOK(SzDecodeLzma(coder, inSize, inStream, outBufCur, outSizeCur));
       }
       else if (coder->MethodID == k_LZMA2)
       {
+#ifdef _SZ_CODER_DEBUG
+      fprintf(stderr, "CODER LZMA2\n");
+#endif
         RINOK(SzDecodeLzma2(coder, inSize, inStream, outBufCur, outSizeCur));
       }
       else
@@ -288,6 +297,9 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       UInt64 offset = GetSum(packSizes, 1);
       UInt64 s3Size = packSizes[1];
       size_t size;
+#ifdef _SZ_CODER_DEBUG
+      fprintf(stderr, "CODER BCJ2\n");
+#endif
       if (ci != 3)
         return SZ_ERROR_UNSUPPORTED;
 #ifdef _SZ_SEEK_DEBUG
@@ -317,6 +329,9 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
         case k_BCJ:
         {
           UInt32 state;
+#ifdef _SZ_CODER_DEBUG
+          fprintf(stderr, "CODER BCJ\n");
+#endif
           x86_Convert_Init(state);
           x86_Convert(outBuffer, outSize, 0, &state, 0);
           break;

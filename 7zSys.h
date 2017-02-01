@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(_SZ_ALLOC_DEBUG) || defined(_SZ_SEEK_DEBUG) || defined(_SZ_HEADER_DEBUG) || defined(_SZ_READ_DEBUG)
+#if defined(_SZ_ALLOC_DEBUG) || defined(_SZ_SEEK_DEBUG) || defined(_SZ_HEADER_DEBUG) || defined(_SZ_READ_DEBUG) || defined(_SZ_CODER_DEBUG)
 #include <stdio.h>
 #endif
 
