@@ -65,9 +65,4 @@ STATIC SRes FileInStream_Seek(CFileInStream *p, Int64 *pos)
   return res == 0 && *pos == pos0 ? SZ_OK : SZ_ERROR_READ;
 }
 
-#if 0
-  p->s.Read = FileInStream_Read;
-  p->s.Seek = FileInStream_Seek;
-#endif
-
 /* ---------- FileOutStream ---------- */
