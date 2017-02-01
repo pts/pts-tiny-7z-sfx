@@ -181,11 +181,10 @@ static int MyUtimes(const char *filename, const struct timeval tv[2]) {
 
 /** Returns *a % b, and then sets *a = *a / b; */
 static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
-#if 1  /* TODO(pts): Get rid of __umoddi3. */
-  const UInt32 result = *a % b;  /* __umoddi3 */
-  *a /= b;  /* __udivdi3 */
-#endif
-  return result;
+  const UInt64 q = *a / b;  /* __udivdi3 */
+  const UInt32 r = *a - b * q;  /* `r = *a % b' would use __umoddi3. */
+  *a = q;
+  return r;
 }
 
 static void GetTimeSecAndUsec(

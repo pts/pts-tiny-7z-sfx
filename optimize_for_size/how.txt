@@ -1,6 +1,6 @@
 by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
 
-int64 arithmetic: __udivdi3 __umoddi3
+int64 arithmetic: __udivdi3
 system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir open read write lseek close
 dynamic memory: free malloc
 
@@ -16,7 +16,8 @@ Ideas to reduce file size:
 * DONE: add output buffering for stdout (stdio.h messages)
 * DONE: eliminate __divdi3 (use __udivdi3 instead) by converting signed
   divisions to unsinged
-* DONE: Remove soma calls to __udivdi3.
+* DONE: Remove some calls to __udivdi3.
+* DONE: Implement __umoddi3 in terms of __udivdi3.
 * do we really need __udivdi3, can't we do without them?
 * DONE: fwrite() is called only once per file, use write(2) instead
 * DONE: use read() instead of fread() for reading: the file reading pattern is
