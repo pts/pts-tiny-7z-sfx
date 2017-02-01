@@ -179,12 +179,25 @@ static int MyUtimes(const char *filename, const struct timeval tv[2]) {
 }
 #endif
 
-/** Returns *a % b, and then sets *a = *a / b; */
+/* Returns *a % b, and sets *a = *a_old / b; */
 static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
-  const UInt64 q = *a / b;  /* __udivdi3 */
+#ifdef __i386__  /* u64 / u32 division with little i386 machine code. */
+  /* http://stackoverflow.com/a/41982320/97248 */
+  UInt32 upper = ((UInt32*)a)[1], r;
+  ((UInt32*)a)[1] = 0;
+  if (upper >= b) {
+    ((UInt32*)a)[1] = upper / b;
+    upper %= b;
+  }
+  __asm__("divl %2" : "=a" (((UInt32*)a)[0]), "=d" (r) :
+      "rm" (b), "0" (((UInt32*)a)[0]), "1" (upper));
+  return r;
+#else
+  const UInt64 q = *a / b;  /* Calls __udivdi3. */
   const UInt32 r = *a - b * q;  /* `r = *a % b' would use __umoddi3. */
   *a = q;
   return r;
+#endif
 }
 
 static void GetTimeSecAndUsec(
