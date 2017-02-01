@@ -30,6 +30,8 @@ __extension__ typedef unsigned long long uint64_t;
 #define O_RDONLY 0
 #define O_WRONLY 1
 #define O_RDWR   2
+#define O_CREAT 0100
+#define O_TRUNC 01000
 
 #define S_IFMT  00170000
 #define S_IFSOCK 0140000

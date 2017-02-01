@@ -1,5 +1,4 @@
-/* 7zMain.c - Test application for 7z Decoder
-2010-10-28 : Igor Pavlov : Public domain */
+/* 7zMain.c - Test application for 7z Decoder2010-10-28 : Igor Pavlov : Public domain */
 
 #include "7zSys.h"
 
@@ -213,17 +212,20 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
 }
 
 
-static WRes OutFile_OpenUtf16(CSzFile *p, const UInt16 *name, Bool doYes)
+static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes)
 {
   struct stat st;
   CBuf buf;
   WRes res;
   Buf_Init(&buf);
   RINOK(Utf16_To_Char(&buf, name, 1));
+  /* TODO(pts): No lstat to detect whether the file exists. */
   if (!doYes && 0 == lstat((const char *)buf.data, &st)) {
+    *p = -1;
     res = SZ_ERROR_WRITE;
   } else {
-    res = OutFile_Open(p, (const char *)buf.data);
+    *p = open((const char *)buf.data, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+    res = *p < 0 ? SZ_ERROR_FAIL : SZ_OK;
   }
   Buf_Free(&buf);
   return res;
@@ -477,7 +479,7 @@ int MY_CDECL main(int numargs, char *args[])
         }
         if (!testCommand)
         {
-          CSzFile outFile;
+          int outFile;
           size_t processedSize;
           size_t j;
           UInt16 *name = (UInt16 *)temp;
@@ -548,27 +550,21 @@ int MY_CDECL main(int numargs, char *args[])
             break;
           }
           if (f->AttribDefined) {
-            if (0 != fchmod(fileno(outFile.file), GetUnixMode(&umaskv, f->Attrib))) {
-              File_Close(&outFile);
+            if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {
+              close(outFile);
               PrintError("can not chmod output file");
-              res = SZ_ERROR_FAIL;
+              res = SZ_ERROR_WRITE;
               break;
             }
           }
           processedSize = outSizeProcessed;
-          if (File_Write(&outFile, outBuffer + offset, &processedSize) != 0 || processedSize != outSizeProcessed)
-          {
-            File_Close(&outFile);
+          if ((size_t)write(outFile, outBuffer + offset, processedSize) != processedSize) {
+            close(outFile);
             PrintError("can not write output file");
-            res = SZ_ERROR_FAIL;
+            res = SZ_ERROR_WRITE;
             break;
           }
-          if (File_Close(&outFile))
-          {
-            PrintError("can not close output file");
-            res = SZ_ERROR_FAIL;
-            break;
-          }
+          close(outFile);
           if (f->MTimeDefined) {
             if (SetMTime(destPath, &f->MTime)) {
               res = SZ_ERROR_FAIL;

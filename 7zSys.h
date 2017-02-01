@@ -21,7 +21,7 @@
 #ifdef _WIN32
 #include <direct.h>
 #else
-#include <fcntl.h>
+#include <fcntl.h>  /* open() */
 #include <sys/stat.h>
 #include <errno.h>
 #include <utime.h>
@@ -32,8 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <stdio.h>
 
 #ifndef UNDER_CE
 #include <errno.h>

@@ -12,7 +12,6 @@ static WRes File_Open(CSzFile *p, const char *name, int writeMode)
 }
 
 STATIC WRes InFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 0); }
-STATIC WRes OutFile_Open(CSzFile *p, const char *name) { return File_Open(p, name, 1); }
 
 STATIC WRes File_Close(CSzFile *p)
 {
@@ -24,16 +23,4 @@ STATIC WRes File_Close(CSzFile *p)
     p->file = NULL;
   }
   return 0;
-}
-
-STATIC WRes File_Write(CSzFile *p, const void *data, size_t *size)
-{
-  size_t originalSize = *size;
-  if (originalSize == 0)
-    return 0;
-
-  *size = fwrite(data, 1, originalSize, p->file);
-  if (*size == originalSize)
-    return 0;
-  return 1;
 }
