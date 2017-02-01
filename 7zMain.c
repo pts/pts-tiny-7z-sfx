@@ -344,7 +344,7 @@ int MY_CDECL main(int numargs, char *args[])
   const char *args1 = numargs >= 2 ? args[1] : "";
 
   WriteMessage("Tiny 7z extractor " MY_VERSION "\n\n");
-  if ((args[1][0] == '-' && args[1][1] == 'h' && args[1][2] == '\0') ||
+  if ((args1[0] == '-' && args1[1] == 'h' && args1[2] == '\0') ||
       IS_HELP(args1)) {
     WriteMessage("Usage: ");
     WriteMessage(args[0]);
@@ -360,7 +360,7 @@ int MY_CDECL main(int numargs, char *args[])
   }
   if (numargs >= 2) {
     if (args1[0] == '-') {
-      argi = 1;  /* Interpret args[1] as a switch. */
+      argi = 1;  /* Interpret args1 as a switch. */
     } else if (STRCMP1(args1, 'l')) {
       listCommand = 1;
     } else if (STRCMP1(args1, 't')) {
