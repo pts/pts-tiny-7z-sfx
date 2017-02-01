@@ -292,6 +292,17 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   *s = '\0';
 }
 
+#if defined(__i386__) || defined(__amd64__)  /* Any little endian architecture with arbitrary (odd) pointer addressing will do. */
+/* We do the comparison in a quirky way so we won't depend on strcmp. */
+#define IS_HELP(p) ((*(const UInt16*)(p) == ('-' | '-' << 8)) && \
+    *(const UInt32*)((const UInt16*)(p) + 1) == ('h' | 'e' << 8 | 'l' << 16 | 'p' << 24) && \
+    ((const Byte*)(p))[6] == 0)
+#define STRCMP1(p, c) (*(const UInt16*)(p) == (UInt16)(Byte)(c))
+#else
+#define IS_HELP(p) (0 == strcmp((p), "--help"))
+#define STRCMP1(p, c) (((const Byte*)(p))[0] == (c) && ((const Byte*)(p))[1] == 0)
+#endif
+
 int MY_CDECL main(int numargs, char *args[])
 {
   CLookToRead lookStream;
@@ -303,10 +314,11 @@ int MY_CDECL main(int numargs, char *args[])
   const char *archive = args[0];
   Bool listCommand = 0, testCommand = 0, doYes = 0;
   int argi = 2;
+  const char *args1 = numargs >= 2 ? args[1] : "";
 
   fputs("Tiny 7z extractor " MY_VERSION "\n\n", stdout);
-  if (numargs >= 2 &&
-      (0 == strcmp(args[1], "-h") || 0 == strcmp(args[1], "--help"))) {
+  if ((args[1][0] == '-' && args[1][1] == 'h' && args[1][2] == '\0') ||
+      IS_HELP(args1)) {
     fputs("Usage: ", stdout);
     fputs(args[0], stdout);
     fputs(" <command> [<switches>...]\n\n"
@@ -320,13 +332,13 @@ int MY_CDECL main(int numargs, char *args[])
      return 0;
   }
   if (numargs >= 2) {
-    if (args[1][0] == '-') {
+    if (args1[0] == '-') {
       argi = 1;  /* Interpret args[1] as a switch. */
-    } else if (strcmp(args[1], "l") == 0) {
+    } else if (STRCMP1(args1, 'l')) {
       listCommand = 1;
-    } else if (strcmp(args[1], "t") == 0) {
+    } else if (STRCMP1(args1, 't')) {
       testCommand = 1;
-    } else if (strcmp(args[1], "x") == 0) {
+    } else if (STRCMP1(args1, 'x')) {
       /* extractCommand = 1; */
     } else {
       PrintError("unknown command");

@@ -1,7 +1,6 @@
 by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
 
 int64 arithmetic: __udivdi3 __umoddi3
-string.h: strcmp
 system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lstat mkdir
 dynamic memory: free malloc
 stdio.h messages: putchar (fputc) fputs stdout
@@ -16,7 +15,7 @@ Ideas to reduce file size:
 * use 64-bit system calls (e.g. for lstat) if needed
 * all system calls are available in pts-xtiny
 * DONE: memcmp is used only for k7zSignature, try to eliminate or inline it
-* strcmp is used only for argv parsing, try to eliminate or inline it
+* DONE: strcmp is used only for argv parsing, try to eliminate or inline it
 * add output buffering for stdout (stdio.h messages)
 * DONE: eliminate __divdi3 (use __udivdi3 instead) by converting signed
   divisions to unsinged
