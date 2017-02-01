@@ -14,26 +14,6 @@ STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset)
   return LookToRead_Seek(stream, &t);
 }
 
-STATIC SRes LookInStream_Read(CLookToRead *p, void *buf, size_t size)
-{
-  while (size != 0) {
-    size_t processed = size;
-    size_t rem = p->size - p->pos;
-    if (rem == 0) {
-      RINOK(FileInStream_Read(p->realStream, buf, &processed));
-    } else {
-      if (rem > processed) rem = processed;
-      memcpy(buf, p->buf + p->pos, rem);
-      p->pos += rem;
-      processed = rem;
-    }    
-    if (processed == 0) return SZ_ERROR_INPUT_EOF;
-    buf = (void *)((Byte *)buf + processed);
-    size -= processed;
-  }
-  return SZ_OK;
-}
-
 STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size)
 {
   SRes res = SZ_OK;

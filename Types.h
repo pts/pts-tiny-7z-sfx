@@ -140,10 +140,6 @@ typedef struct
 
 STATIC SRes LookInStream_SeekTo(CLookToRead *stream, UInt64 offset);
 
-/* reads via CLookToRead::Read */
-/* reads directly (without buffer). It's same as ISeqInStream::Read */
-STATIC SRes LookInStream_Read(CLookToRead *stream, void *buf, size_t size);
-
 STATIC void LookToRead_Init(CLookToRead *p);
 /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
    (output(*size) > input(*size)) is not allowed

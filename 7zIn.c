@@ -1175,9 +1175,10 @@ static SRes SzArEx_Open2(
   UInt64 nextHeaderOffset, nextHeaderSize;
   size_t nextHeaderSizeT;
   UInt32 nextHeaderCRC;
-  CBuf buffer;
   SRes res;
-  Byte *buf = 0;
+  Byte *buf = 0, *pbuf;
+  size_t size, got;
+  CBuf buffer;
 
   startArcPos = FindStartArcPos(inStream, &buf);
   if (startArcPos == 0) return SZ_ERROR_NO_ARCHIVE;
@@ -1207,16 +1208,29 @@ static SRes SzArEx_Open2(
 #endif
   RINOK(LookInStream_SeekTo(inStream, startArcPos + nextHeaderOffset));
 
-  if (!Buf_Create(&buffer, nextHeaderSizeT))
-    return SZ_ERROR_MEM;
 
 #ifdef _SZ_HEADER_DEBUG
   /* Typically only 36..39 bytes */
   fprintf(stderr, "HEADER read_next size=%ld\n", (long)nextHeaderSizeT);
 #endif
-  res = LookInStream_Read(inStream, buffer.data, nextHeaderSizeT);
-  if (res == SZ_OK)
-  {
+  size = nextHeaderSizeT;
+  if (!Buf_Create(&buffer, nextHeaderSizeT)) return SZ_ERROR_MEM;
+  /* We need a loop here to read nextHeaderSizeT bytes to buffer.data,
+   * because LookToRead_Look_Exact is able to read about 16 kB at once, and
+   * we may ned 500 kB or more for the archive header.
+   */
+  pbuf = buffer.data;
+  res = SZ_OK;
+  while (size > 0) {
+    got = size;
+    res = LookToRead_Look_Exact(inStream, (const void**)&buf, &got);
+    if (res != SZ_OK) break;
+    if (got == 0) { res = SZ_ERROR_INPUT_EOF; break; }
+    memcpy(pbuf, buf, got);
+    size -= got;
+    pbuf += got;
+  }
+  if (res == SZ_OK) {
     res = SZ_ERROR_ARCHIVE;
     if (CrcCalc(buffer.data, nextHeaderSizeT) == nextHeaderCRC)
     {
@@ -1243,6 +1257,10 @@ static SRes SzArEx_Open2(
             Buf_Free(&buffer);
             buffer.data = outBuffer.data;
             buffer.size = outBuffer.size;
+#ifdef _SZ_HEADER_DEBUG
+            /* Typical value: 521688 bytes */
+            fprintf(stderr, "HEADER encoded_header unpacked size=%ld\n", (long)outBuffer.size);
+#endif
             sd.Data = buffer.data;
             sd.Size = buffer.size;
             res = SzReadID(&sd, &type);
