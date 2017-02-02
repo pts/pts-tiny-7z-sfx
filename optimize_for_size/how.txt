@@ -17,6 +17,8 @@ Ideas to reduce file size:
 * Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
   better?
 * Inline some syscall functions in minidiet/minidiet.c.
+* Pick a shorter (but slower) CRC32 implementation. It's compatible.
+  http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
 Ideas already implemented:
 
@@ -71,6 +73,5 @@ Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 * Estimated size of tiny7zx.lzma without the LZMA decoder: 17000 * (14400 / 24400) = 10000 bytes.
 * Estimated size of the output ELF: 7600 + 300 + 10000 == 17900 bytes.
 * ... So probably not worth writing, because tiny7zx.upx is already 16640 bytes.
-
 
 __END__
