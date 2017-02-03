@@ -225,21 +225,15 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   return got != 0;
 }
 
-static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes)
-{
-  struct stat st;
+static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes) {
   CBuf buf;
   WRes res;
+  mode_t mode = O_WRONLY | O_CREAT | O_TRUNC;
   Buf_Init(&buf);
   RINOK(Utf16_To_Char(&buf, name));
-  /* TODO(pts): No lstat to detect whether the file exists. */
-  if (!doYes && 0 == lstat((const char *)buf.data, &st)) {
-    *p = -1;
-    res = SZ_ERROR_WRITE;
-  } else {
-    *p = open((const char *)buf.data, O_WRONLY|O_CREAT|O_TRUNC, 0644);
-    res = *p < 0 ? SZ_ERROR_FAIL : SZ_OK;
-  }
+  if (!doYes) mode |= O_EXCL;
+  *p = open((const char *)buf.data, mode, 0644);
+  res = *p >= 0 ? SZ_OK : errno == EEXIST ? SZ_ERROR_WRITE : SZ_ERROR_FAIL;
   Buf_Free(&buf);
   return res;
 }

@@ -20,6 +20,7 @@ __extension__ typedef unsigned long long uint64_t;
 #define O_WRONLY 1
 #define O_RDWR   2
 #define O_CREAT 0100
+#define O_EXCL  0200
 #define O_TRUNC 01000
 
 #define S_IFMT  00170000
@@ -202,29 +203,6 @@ typedef __mode_t mode_t;
 typedef signed long suseconds_t;
 typedef unsigned long off_t;
 
-struct stat {
-  __dev_t st_dev;
-  unsigned short int __pad1;
-  __ino_t st_ino;
-  __mode_t st_mode;
-  __nlink_t st_nlink;
-  __uid_t st_uid;
-  __gid_t st_gid;
-  __dev_t st_rdev;
-  unsigned short int __pad2;
-  __off_t st_size;
-  __blksize_t st_blksize;
-  __blkcnt_t st_blocks;
-  __time_t st_atime;
-  unsigned long int st_atimensec;
-  __time_t st_mtime;
-  unsigned long int st_mtimensec;
-  __time_t st_ctime;
-  unsigned long int st_ctimensec;
-  unsigned long int __unused4;
-  unsigned long int __unused5;
-};
-
 struct timeval {
   time_t tv_sec;
   suseconds_t tv_usec;
@@ -245,7 +223,6 @@ extern int chmod(const char *__file, mode_t __mode) ;
 extern int fchmod(int __fd, mode_t __mode) ;
 extern int mkdir(const char *__path, mode_t __mode) ;
 extern mode_t umask(mode_t __mask);
-extern int lstat(__const char *__restrict __file, struct stat *__restrict __buf) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));
 extern ssize_t write(int __fd, __const void *__buf, size_t __n) ;
 extern int open(__const char *__file, int __oflag, ...) __attribute__((__nonnull__(1)));
 extern ssize_t read(int __fd, void *__buf, size_t __nbytes) ;
