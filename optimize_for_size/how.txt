@@ -6,11 +6,11 @@ Ideas to reduce file size:
 
 * (fix alignment on SzAlloc)
 * (how to estimate the memory usage from the 7z command-line?)
-* use GCC 4.8 or later, it has better -Os support
-* try some more command-line flags for gcc
-* use 64-bit system calls (e.g. for lstat, _llseek) if needed
 * Use the lseek64 library call (or _llseek system call) for 64-bit seeks in
-  the archive. minidiet doesn't support this, xtiny can.
+  the archive in c-minidiet.sh
+* Measure how much slower the new (non-table) CrcCalc is and how much it
+  contributes to the total execution time.
+* try some more command-line flags for gcc (http://tiny.cc/tinygcc)
 * Eliminate multiple calls to Utf16_To_Char in 7zMain.c.
 * Reuse the output buffer for Utf16_To_Char.
 * (advanced) Don't store LZMA decompressors (once in the upx stub and one
@@ -23,6 +23,8 @@ Ideas to reduce file size:
 
 Ideas already implemented:
 
+* DONE: Use GCC 4.8 or later, it has better -Os support.
+* DONE: Replace CrcCalc with a non-table-based implementation.
 * DONE: Get rid of lstat, use O_EXCL flag in open.
 * DONE: Loop in LookInStream_Read2 many not be needed.
 * DONE: Remove unused CrcUpdateT8 and CpuArch.c.

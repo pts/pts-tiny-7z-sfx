@@ -409,7 +409,7 @@ int MY_CDECL main(int numargs, char *args[])
 
   LOOKTOREAD_INIT(&lookStream);
 
-  CrcGenerateTable();
+  /*CrcGenerateTable();*/
 
   SzArEx_Init(&db);
   res = SzArEx_Open(&db, &lookStream);
