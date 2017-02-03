@@ -4,6 +4,7 @@ system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink lsta
 
 Ideas to reduce file size:
 
+* (how to estimate the memory usage from the 7z command-line?)
 * use GCC 4.8 or later, it has better -Os support
 * try some more command-line flags for gcc
 * get rid of lstat
