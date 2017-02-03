@@ -6,11 +6,8 @@
 # See the explanation why these flags are useful for small output here:
 # http://ptspts.blogspot.com/2013/12/how-to-make-smaller-c-and-c-binaries.html
 #
-# TODO(pts): -D_FILE_OFFSET_BITS=64, fopen64 etc.
-# TODO(pts): Use fread_unlocked, *_unlocked etc.
-#
 
-CFLAGS='-DUSE_MINIINC1 -DUSE_MINIALLOC -ansi -pedantic -nostdinc -m32 -s -U_FORTIFY_SOURCE -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -Os -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration --sysroot minidiet -isystem minidiet -static-libgcc -DUSE_MINIINC2'
+CFLAGS='-DUSE_MINIINC1 -DUSE_MINIALLOC -ansi -pedantic -nostdinc -m32 -s -Os -U_FORTIFY_SOURCE -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration --sysroot minidiet -isystem minidiet -static-libgcc -DUSE_MINIINC2'
 # Not needed: ld -z norelro --build-id=none
 LDFLAGS1='-nostdlib -m elf_i386 -static -s'
 LDFLAGS2='-T minidiet/minidiet.scr'
