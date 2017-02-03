@@ -24,6 +24,7 @@ STATIC void *SzAlloc(size_t size) {
     return 0;
   /* It wouldn't fit to the rest of heap. */
   if (size > (size_t)(heap + sizeof(heap) - heap_end)) return 0;
+  heap_end += -(size_t)heap_end & 7;  /* Align to 8-byte boundary. */
   prev_alloc = result = heap_end;
   heap_end += size;
 #ifndef USE_MINIINC1

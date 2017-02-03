@@ -4,7 +4,6 @@ system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdi
 
 Ideas to reduce file size:
 
-* (fix alignment on SzAlloc)
 * (how to estimate the memory usage from the 7z command-line?)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
