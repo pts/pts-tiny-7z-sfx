@@ -15,9 +15,6 @@ Ideas to reduce file size:
   in Lzma2Dec.c).
 * Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
   better?
-* Inline some syscall functions in minidiet/minidiet.c.
-* Pick a shorter (but slower) CRC32 implementation. It's compatible.
-  http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
 Ideas already implemented:
 
@@ -55,6 +52,9 @@ Ideas already implemented:
   How does it change if we duplicate all files twice in the .7z?
 * DONE: Use the lseek64 library call (or _llseek system call) for 64-bit seeks
   in the archive in c-minidiet.sh
+* DONE: Inline some syscall functions in minidiet/minidiet.c.
+* DONE: Pick a shorter (but slower) CRC32 implementation. It's compatible.
+  http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
 Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 

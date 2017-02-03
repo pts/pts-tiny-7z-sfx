@@ -402,7 +402,7 @@ int MY_CDECL main(int numargs, char *args[])
   WriteMessage(archive);
   WriteMessage("\n");
   WriteMessage("\n");
-  if ((lookStream.fd = open(archive, O_RDONLY)) < 0) {
+  if ((lookStream.fd = open(archive, O_RDONLY, 0)) < 0) {
     PrintError("can not open input file");
     return 1;
   }
