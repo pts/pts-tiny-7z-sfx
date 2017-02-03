@@ -714,12 +714,19 @@ _syscall2(int,gettimeofday,struct timeval*,tv,struct timezone*,tz)
 _syscall3(ssize_t,write,int,fd,const void*,buf,size_t,count)
 _syscall3(ssize_t,read,int,fd,void*,buf,size_t,count)
 _syscall1_nomemory(mode_t,umask,mode_t,mask)
-_syscall3_nomemory(off_t,lseek,int,fd,off_t,offset,int,whence)
+_syscall5_nomemory(int,_llseek,int,fd,off_t,offset_high,off_t,offset_low,off64_t*,result,int,whence)
 _syscall2(int,lstat,const char*,path,struct stat*,buf)
 _syscall2(int,mkdir,const char*,pathname,mode_t,mode)
 _syscall2(int,symlink,const char*,oldpath,const char*,newpath)
 _syscall1(int,unlink,const char*,pathname)
 _syscall2(int,utimes,const char*,filename,const struct timeval*,times)
+
+__attribute__((__nothrow__)) off64_t lseek64(
+    int fd, off64_t offset, int whence) {
+  off64_t result;
+  return _llseek(fd, offset >> 32, (off_t)offset, &result, whence) == 0 ?
+      result : -1;
+}
 
 /* The entry point function: _start.
  * by pts@fazekas.hu at Wed Feb  1 17:04:13 CET 2017

@@ -1,13 +1,11 @@
 by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
 
-system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdir open read write lseek close
+system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdir open read write _llseek close
 
 Ideas to reduce file size:
 
 * (fix alignment on SzAlloc)
 * (how to estimate the memory usage from the 7z command-line?)
-* Use the lseek64 library call (or _llseek system call) for 64-bit seeks in
-  the archive in c-minidiet.sh
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
 * try some more command-line flags for gcc (http://tiny.cc/tinygcc)
@@ -55,6 +53,8 @@ Ideas already implemented:
   The malloc(21810108) happens after the free() of 26192641. Can we optimize it?
   How much is the memory usage, who do we need the big malloc for?
   How does it change if we duplicate all files twice in the .7z?
+* DONE: Use the lseek64 library call (or _llseek system call) for 64-bit seeks
+  in the archive in c-minidiet.sh
 
 Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 

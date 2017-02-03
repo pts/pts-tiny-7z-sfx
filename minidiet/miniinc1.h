@@ -190,6 +190,7 @@ __extension__ typedef unsigned long int __ino_t;
 __extension__ typedef unsigned int __mode_t;
 __extension__ typedef unsigned int __nlink_t;
 __extension__ typedef long int __off_t;
+__extension__ typedef long long int __off64_t;
 __extension__ typedef int __ssize_t;
 __extension__ typedef long int __blksize_t;
 __extension__ typedef long int __blkcnt_t;
@@ -201,7 +202,8 @@ typedef __pid_t pid_t;
 typedef __time_t time_t;
 typedef __mode_t mode_t;
 typedef signed long suseconds_t;
-typedef unsigned long off_t;
+typedef __off_t off_t;
+typedef __off64_t off64_t;
 
 struct timeval {
   time_t tv_sec;
@@ -228,7 +230,7 @@ extern int open(__const char *__file, int __oflag, ...) __attribute__((__nonnull
 extern ssize_t read(int __fd, void *__buf, size_t __nbytes) ;
 extern int close(int __fd);
 extern int unlink(__const char *__name) __attribute__((__nothrow__)) __attribute__((__nonnull__(1)));
-extern off_t lseek(int fd, off_t offset, int whence) __attribute__((__nothrow__));
+extern off64_t lseek64(int fd, off64_t offset, int whence) __attribute__((__nothrow__));
 
 /*extern void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
 #define memcpy __builtin_memcpy
