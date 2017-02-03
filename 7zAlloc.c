@@ -16,7 +16,8 @@
  * TODO(pts): Return an explicit out-of-memory error rather than a segfault.
  *            But how do we do that, even if we use mmap?
  */
-static char heap[2100000000], *heap_end = heap, *prev_alloc = 0;
+static char heap[2100000000] __attribute__((aligned(16)));
+static char *heap_end = heap, *prev_alloc = 0;
 
 STATIC void *SzAlloc(size_t size) {
   char *result;
