@@ -863,13 +863,17 @@ static SRes SzReadStreamsInfo(
 
 STATIC size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16 *dest)
 {
-  size_t len = p->FileNameOffsets[fileIndex + 1] - p->FileNameOffsets[fileIndex];
+  const size_t len = p->FileNameOffsets[fileIndex + 1] - p->FileNameOffsets[fileIndex];
   if (dest != 0)
   {
-    size_t i;
     const Byte *src = p->FileNames.data + (p->FileNameOffsets[fileIndex] * 2);
+#ifdef MY_CPU_LE_UNALIGN
+    memcpy(dest, src, len * 2);
+#else
+    size_t i;
     for (i = 0; i < len; i++)
       dest[i] = GetUi16(src + i * 2);
+#endif
   }
   return len;
 }
