@@ -1195,7 +1195,7 @@ static SRes SzArEx_Open2(
 {
   Int64 startArcPos;
   UInt64 nextHeaderOffset, nextHeaderSize;
-  size_t nextHeaderSizeT;
+  size_t nextHeadersize_t;
   UInt32 nextHeaderCRC;
   SRes res;
   Byte *buf = 0;
@@ -1215,10 +1215,10 @@ static SRes SzArEx_Open2(
   if (CrcCalc(buf + 6, 20) != GetUi32(buf + 2))
     return SZ_ERROR_CRC;
 
-  nextHeaderSizeT = (size_t)nextHeaderSize;
-  if (nextHeaderSizeT != nextHeaderSize)
+  nextHeadersize_t = (size_t)nextHeaderSize;
+  if (nextHeadersize_t != nextHeaderSize)
     return SZ_ERROR_MEM;
-  if (nextHeaderSizeT == 0)
+  if (nextHeadersize_t == 0)
     return SZ_OK;
   if (nextHeaderOffset > nextHeaderOffset + startArcPos)  /* Check for overflow. */
     return SZ_ERROR_NO_ARCHIVE;
@@ -1233,19 +1233,19 @@ static SRes SzArEx_Open2(
 
 #ifdef _SZ_HEADER_DEBUG
   /* Typically only 36..39 bytes */
-  fprintf(stderr, "HEADER read_next size=%ld\n", (long)nextHeaderSizeT);
+  fprintf(stderr, "HEADER read_next size=%ld\n", (long)nextHeadersize_t);
 #endif
-  size = nextHeaderSizeT;
-  if (!Buf_Create(&buffer, nextHeaderSizeT)) return SZ_ERROR_MEM;
+  size = nextHeadersize_t;
+  if (!Buf_Create(&buffer, nextHeadersize_t)) return SZ_ERROR_MEM;
   /* We need a loop here (implemented by LookToRead_ReadAll) to read
-   * nextHeaderSizeT bytes to buffer.data, because LookToRead_Look_Exact is
+   * nextHeadersize_t bytes to buffer.data, because LookToRead_Look_Exact is
    * able to read about 16 kB at once, and we may ned 500 kB or more for the
    * archive header.
    */
   res = LookToRead_ReadAll(inStream, buffer.data, &size);
   if (res == SZ_OK) {
     res = SZ_ERROR_ARCHIVE;
-    if (CrcCalc(buffer.data, nextHeaderSizeT) == nextHeaderCRC)
+    if (CrcCalc(buffer.data, nextHeadersize_t) == nextHeaderCRC)
     {
       CSzData sd;
       UInt64 type;

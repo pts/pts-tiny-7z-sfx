@@ -65,9 +65,8 @@ typedef unsigned int UInt32;
 #endif
 
 #ifdef _LZMA_NO_SYSTEM_SIZE_T
-typedef UInt32 SizeT;
-#else
-typedef size_t SizeT;
+typedef UInt32 size_t;
+typedef Int32 ssize_t;
 #endif
 
 typedef int Bool;

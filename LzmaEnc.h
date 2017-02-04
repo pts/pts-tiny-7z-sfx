@@ -52,10 +52,10 @@ typedef void * CLzmaEncHandle;
 CLzmaEncHandle LzmaEnc_Create(void);
 void LzmaEnc_Destroy(CLzmaEncHandle p);
 SRes LzmaEnc_SetProps(CLzmaEncHandle p, const CLzmaEncProps *props);
-SRes LzmaEnc_WriteProperties(CLzmaEncHandle p, Byte *properties, SizeT *size);
+SRes LzmaEnc_WriteProperties(CLzmaEncHandle p, Byte *properties, size_t *size);
 SRes LzmaEnc_Encode(CLzmaEncHandle p, ISeqOutStream *outStream, ISeqInStream *inStream,
     ICompressProgress *progress);
-SRes LzmaEnc_MemEncode(CLzmaEncHandle p, Byte *dest, SizeT *destLen, const Byte *src, SizeT srcLen,
+SRes LzmaEnc_MemEncode(CLzmaEncHandle p, Byte *dest, size_t *destLen, const Byte *src, size_t srcLen,
     int writeEndMark, ICompressProgress *progress);
 
 /* ---------- One Call Interface ---------- */
@@ -69,8 +69,8 @@ Return code:
   SZ_ERROR_THREAD     - errors in multithreading functions (only for Mt version)
 */
 
-SRes LzmaEncode(Byte *dest, SizeT *destLen, const Byte *src, SizeT srcLen,
-    const CLzmaEncProps *props, Byte *propsEncoded, SizeT *propsSize, int writeEndMark,
+SRes LzmaEncode(Byte *dest, size_t *destLen, const Byte *src, size_t srcLen,
+    const CLzmaEncProps *props, Byte *propsEncoded, size_t *propsSize, int writeEndMark,
     ICompressProgress *progress);
 
 EXTERN_C_END

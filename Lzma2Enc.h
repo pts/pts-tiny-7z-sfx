@@ -54,7 +54,7 @@ Return code:
 */
 
 /*
-SRes Lzma2Encode(Byte *dest, SizeT *destLen, const Byte *src, SizeT srcLen,
+SRes Lzma2Encode(Byte *dest, size_t *destLen, const Byte *src, size_t srcLen,
     const CLzmaEncProps *props, Byte *propsEncoded, int writeEndMark,
     ICompressProgress *progress);
 */

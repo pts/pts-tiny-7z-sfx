@@ -10,14 +10,14 @@ static const Byte kMaskToAllowedStatus = 0x17;
 /*static const Byte kMaskToBitNumber[8] = {0, 1, 2, 2, 3, 3, 3, 3};*/
 static const UInt16 kMaskToBitNumber = 0xffa4;
 
-STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int encoding)
+STATIC size_t x86_Convert(Byte *data, size_t size, UInt32 ip, UInt32 *state, int encoding)
 {
-  SizeT bufferPos = 0, prevPosT;
+  size_t bufferPos = 0, prevPosT;
   UInt32 prevMask = *state & 0x7;
   if (size < 5)
     return 0;
   ip += 5;
-  prevPosT = (SizeT)0 - 1;
+  prevPosT = (size_t)0 - 1;
 
   for (;;)
   {
@@ -26,7 +26,7 @@ STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int e
     for (; p < limit; p++)
       if ((*p & 0xFE) == 0xE8)
         break;
-    bufferPos = (SizeT)(p - data);
+    bufferPos = (size_t)(p - data);
     if (p >= limit)
       break;
     prevPosT = bufferPos - prevPosT;

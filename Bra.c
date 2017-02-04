@@ -3,9 +3,9 @@
 
 #include "Bra.h"
 
-STATIC SizeT ARM_Convert(Byte *data, SizeT size, UInt32 ip, int encoding)
+STATIC size_t ARM_Convert(Byte *data, size_t size, UInt32 ip, int encoding)
 {
-  SizeT i;
+  size_t i;
   if (size < 4)
     return 0;
   size -= 4;

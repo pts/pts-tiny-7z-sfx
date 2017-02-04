@@ -54,8 +54,8 @@ typedef struct
   Byte *dic;
   const Byte *buf;
   UInt32 range, code;
-  SizeT dicPos;
-  SizeT dicBufSize;
+  size_t dicPos;
+  size_t dicBufSize;
   UInt32 processedPos;
   UInt32 checkDicSize;
   unsigned state;
@@ -175,8 +175,8 @@ Returns:
   SZ_ERROR_DATA - Data error
 */
 
-STATIC SRes LzmaDec_DecodeToDic(CLzmaDec *p, SizeT dicLimit,
-    const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
+STATIC SRes LzmaDec_DecodeToDic(CLzmaDec *p, size_t dicLimit,
+    const Byte *src, size_t *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
 
 
 /* ---------- Buffer Interface ---------- */

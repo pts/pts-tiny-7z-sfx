@@ -23,7 +23,7 @@
 #define k_BCJ2  0x0303011B
 
 static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStream,
-    Byte *outBuffer, SizeT outSize)
+    Byte *outBuffer, size_t outSize)
 {
   CLzmaDec state;
   SRes res = SZ_OK;
@@ -45,7 +45,7 @@ static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStre
       break;
 
     {
-      SizeT inProcessed = (SizeT)lookahead, dicPos = state.dicPos;
+      size_t inProcessed = (size_t)lookahead, dicPos = state.dicPos;
       ELzmaStatus status;
       res = LzmaDec_DecodeToDic(&state, outSize, inBuf, &inProcessed, LZMA_FINISH_END, &status);
       lookahead -= inProcessed;
@@ -69,7 +69,7 @@ static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStre
 }
 
 static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStream,
-    Byte *outBuffer, SizeT outSize)
+    Byte *outBuffer, size_t outSize)
 {
   CLzma2Dec state;
   SRes res = SZ_OK;
@@ -93,7 +93,7 @@ static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStr
       break;
 
     {
-      SizeT inProcessed = (SizeT)lookahead, dicPos = state.decoder.dicPos;
+      size_t inProcessed = (size_t)lookahead, dicPos = state.decoder.dicPos;
       ELzmaStatus status;
       res = Lzma2Dec_DecodeToDic(&state, outSize, inBuf, &inProcessed, LZMA_FINISH_END, &status);
       lookahead -= inProcessed;
@@ -206,12 +206,12 @@ static UInt64 GetSum(const UInt64 *values, UInt32 index)
 
 static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
     CLookToRead *inStream, UInt64 startPos,
-    Byte *outBuffer, SizeT outSize,
+    Byte *outBuffer, size_t outSize,
     Byte *tempBuf[])
 {
   UInt32 ci;
-  SizeT tempSizes[3] = { 0, 0, 0};
-  SizeT tempSize3 = 0;
+  size_t tempSizes[3] = { 0, 0, 0};
+  size_t tempSize3 = 0;
   Byte *tempBuf3 = 0;
 
   RINOK(CheckSupportedFolder(folder));
@@ -226,7 +226,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       UInt64 offset;
       UInt64 inSize;
       Byte *outBufCur = outBuffer;
-      SizeT outSizeCur = outSize;
+      size_t outSizeCur = outSize;
       if (folder->NumCoders == 4)
       {
         UInt32 indices[] = { 3, 2, 0 };
@@ -235,7 +235,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
         if (ci < 2)
         {
           Byte *temp;
-          outSizeCur = (SizeT)unpackSize;
+          outSizeCur = (size_t)unpackSize;
           if (outSizeCur != unpackSize)
             return SZ_ERROR_MEM;
           temp = (Byte *)SzAlloc(outSizeCur);
@@ -249,7 +249,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
           if (unpackSize > outSize) /* check it */
             return SZ_ERROR_PARAM;
           tempBuf3 = outBufCur = outBuffer + (outSize - (size_t)unpackSize);
-          tempSize3 = outSizeCur = (SizeT)unpackSize;
+          tempSize3 = outSizeCur = (size_t)unpackSize;
         }
         else
           return SZ_ERROR_UNSUPPORTED;
@@ -306,7 +306,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       fprintf(stderr, "SEEKN 3\n");
 #endif
       RINOK(LookInStream_SeekTo(inStream, startPos + offset));
-      tempSizes[2] = size = (SizeT)s3Size;
+      tempSizes[2] = size = (size_t)s3Size;
       if (size != s3Size)
         return SZ_ERROR_MEM;
       tempBuf[2] = (Byte *)SzAlloc(tempSizes[2]);
@@ -352,7 +352,7 @@ STATIC SRes SzFolder_Decode(const CSzFolder *folder, const UInt64 *packSizes,
   Byte *tempBuf[3] = { 0, 0, 0};
   int i;
   SRes res = SzFolder_Decode2(folder, packSizes, inStream, startPos,
-      outBuffer, (SizeT)outSize, tempBuf);
+      outBuffer, (size_t)outSize, tempBuf);
   for (i = 0; i < 3; i++)
     SzFree(tempBuf[i]);
   return res;

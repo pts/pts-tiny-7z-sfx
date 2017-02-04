@@ -145,7 +145,7 @@ static ELzma2State Lzma2Dec_UpdateState(CLzma2Dec *p, Byte b)
   return LZMA2_STATE_ERROR;
 }
 
-static void LzmaDec_UpdateWithUncompressed(CLzmaDec *p, const Byte *src, SizeT size)
+static void LzmaDec_UpdateWithUncompressed(CLzmaDec *p, const Byte *src, size_t size)
 {
   memcpy(p->dic + p->dicPos, src, size);
   p->dicPos += size;
@@ -156,16 +156,16 @@ static void LzmaDec_UpdateWithUncompressed(CLzmaDec *p, const Byte *src, SizeT s
 
 STATIC void LzmaDec_InitDicAndState(CLzmaDec *p, Bool initDic, Bool initState);
 
-STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
-    const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
+STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, size_t dicLimit,
+    const Byte *src, size_t *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
 {
-  SizeT inSize = *srcLen;
+  size_t inSize = *srcLen;
   *srcLen = 0;
   *status = LZMA_STATUS_NOT_SPECIFIED;
 
   while (p->state != LZMA2_STATE_FINISHED)
   {
-    SizeT dicPos = p->decoder.dicPos;
+    size_t dicPos = p->decoder.dicPos;
     if (p->state == LZMA2_STATE_ERROR)
       return SZ_ERROR_DATA;
     if (dicPos == dicLimit && finishMode == LZMA_FINISH_ANY)
@@ -185,13 +185,13 @@ STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
       continue;
     }
     {
-      SizeT destSizeCur = dicLimit - dicPos;
-      SizeT srcSizeCur = inSize - *srcLen;
+      size_t destSizeCur = dicLimit - dicPos;
+      size_t srcSizeCur = inSize - *srcLen;
       ELzmaFinishMode curFinishMode = LZMA_FINISH_ANY;
 
       if (p->unpackSize <= destSizeCur)
       {
-        destSizeCur = (SizeT)p->unpackSize;
+        destSizeCur = (size_t)p->unpackSize;
         curFinishMode = LZMA_FINISH_END;
       }
 
@@ -229,7 +229,7 @@ STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
       }
       else
       {
-        SizeT outSizeProcessed;
+        size_t outSizeProcessed;
         SRes res;
 
         if (p->state == LZMA2_STATE_DATA)
@@ -246,7 +246,7 @@ STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
           p->state = LZMA2_STATE_DATA_CONT;
         }
         if (srcSizeCur > p->packSize)
-          srcSizeCur = (SizeT)p->packSize;
+          srcSizeCur = (size_t)p->packSize;
 
         res = LzmaDec_DecodeToDic(&p->decoder, dicPos + destSizeCur, src, &srcSizeCur, curFinishMode, status);
 

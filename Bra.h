@@ -46,7 +46,7 @@ in CALL instructions to increase the compression ratio.
     for ()
     {
       ; size must be >= Alignment + LookAhead, if it's not last block
-      SizeT processed = Convert(data, size, ip, 1);
+      size_t processed = Convert(data, size, ip, 1);
       data += processed;
       size -= processed;
       ip += processed;
@@ -54,8 +54,8 @@ in CALL instructions to increase the compression ratio.
 */
 
 #define x86_Convert_Init(state) { state = 0; }
-STATIC SizeT x86_Convert(Byte *data, SizeT size, UInt32 ip, UInt32 *state, int encoding);
-STATIC SizeT ARM_Convert(Byte *data, SizeT size, UInt32 ip, int encoding);
+STATIC size_t x86_Convert(Byte *data, size_t size, UInt32 ip, UInt32 *state, int encoding);
+STATIC size_t ARM_Convert(Byte *data, size_t size, UInt32 ip, int encoding);
 
 #ifdef __cplusplus
 }

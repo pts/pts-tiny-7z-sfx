@@ -47,8 +47,8 @@ Returns:
   SZ_ERROR_DATA - Data error
 */
 
-STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
-    const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
+STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, size_t dicLimit,
+    const Byte *src, size_t *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
 
 /* ---------- One Call Interface ---------- */
 

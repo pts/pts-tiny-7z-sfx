@@ -153,7 +153,7 @@ typedef struct _IStateCoder
   void (*Free)(void *p);
   SRes (*SetProps)(void *p, const Byte *props, size_t propSize);
   void (*Init)(void *p);
-  SRes (*Code)(void *p, Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
+  SRes (*Code)(void *p, Byte *dest, size_t *destLen, const Byte *src, size_t *srcLen,
       int srcWasFinished, ECoderFinishMode finishMode, int *wasFinished);
 } IStateCoder;
 
@@ -174,8 +174,8 @@ void MixCoder_Construct(CMixCoder *p);
 void MixCoder_Free(CMixCoder *p);
 void MixCoder_Init(CMixCoder *p);
 SRes MixCoder_SetFromMethod(CMixCoder *p, int coderIndex, UInt64 methodId);
-SRes MixCoder_Code(CMixCoder *p, Byte *dest, SizeT *destLen,
-    const Byte *src, SizeT *srcLen, int srcWasFinished,
+SRes MixCoder_Code(CMixCoder *p, Byte *dest, size_t *destLen,
+    const Byte *src, size_t *srcLen, int srcWasFinished,
     ECoderFinishMode finishMode, ECoderStatus *status);
 
 typedef enum
@@ -242,8 +242,8 @@ Returns:
 */
 
 
-SRes XzUnpacker_Code(CXzUnpacker *p, Byte *dest, SizeT *destLen,
-    const Byte *src, SizeT *srcLen, /* int srcWasFinished, */ int finishMode,
+SRes XzUnpacker_Code(CXzUnpacker *p, Byte *dest, size_t *destLen,
+    const Byte *src, size_t *srcLen, /* int srcWasFinished, */ int finishMode,
     ECoderStatus *status);
 
 Bool XzUnpacker_IsStreamWasFinished(CXzUnpacker *p);

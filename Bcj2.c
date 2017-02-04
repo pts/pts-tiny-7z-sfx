@@ -31,14 +31,14 @@
 #define UPDATE_1_BCJ2(p) range -= bound; code -= bound; *(p) = (CProb)(ttt - (ttt >> kNumMoveBits)); NORMALIZE_BCJ2;
 
 STATIC int Bcj2_Decode(
-    const Byte *buf0, SizeT size0,
-    const Byte *buf1, SizeT size1,
-    const Byte *buf2, SizeT size2,
-    const Byte *buf3, SizeT size3,
-    Byte *outBuf, SizeT outSize)
+    const Byte *buf0, size_t size0,
+    const Byte *buf1, size_t size1,
+    const Byte *buf2, size_t size2,
+    const Byte *buf3, size_t size3,
+    Byte *outBuf, size_t outSize)
 {
   CProb p[256 + 2];
-  SizeT inPos = 0, outPos = 0;
+  size_t inPos = 0, outPos = 0;
 
   const Byte *buffer, *bufferLim;
   UInt32 range, code;
@@ -62,7 +62,7 @@ STATIC int Bcj2_Decode(
     UInt32 bound;
     UInt32 ttt;
 
-    SizeT limit = size0 - inPos;
+    size_t limit = size0 - inPos;
     if (outSize - outPos < limit)
       limit = outSize - outPos;
     while (limit != 0)
