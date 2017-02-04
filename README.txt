@@ -23,6 +23,15 @@ Limitations:
 * It always extracts to the current directory.
 * It does not support (and may misbehave for) encryption in archives.
 
+Supported systems:
+
+* Linux i386 without libc (recommended): compile with ./c-minidiet.sh
+* Linux with glibc: compile with ./c-dynamic.sh
+* Linux with dietlibc: compile with ./c-diet.sh
+* Linux i386 with xstatic uClibc: compile with ./c-xstatic.sh
+* other Unix: ./c-dynamic.sh probably works, maybe needs minor porting
+* Windows: not supported.
+
 See http://sourceforge.net/p/sevenzip/discussion/45797/thread/233f5efd
 about 7zS2con.sfx, a similar software for Win32.
 
