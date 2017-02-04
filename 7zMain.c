@@ -540,6 +540,8 @@ int MY_CDECL main(int numargs, char *args[])
               if (errno == EEXIST) {
                 if (!doYes) {
                   res = SZ_ERROR_WRITE;
+                  SzFree(target);
+                  Buf_Free(&buf);
                   goto overw;
                 }
                 unlink((const char *)buf.data);
