@@ -40,6 +40,10 @@ EXTERN_C_BEGIN
 #define SZ_ERROR_ARCHIVE 16
 #define SZ_ERROR_NO_ARCHIVE 17
 
+#define SZ_ERROR_OVERWRITE 21
+#define SZ_ERROR_WRITE_OPEN 22
+#define SZ_ERROR_WRITE_CHMOD 23
+
 typedef int SRes;
 
 #ifdef _WIN32

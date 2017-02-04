@@ -231,7 +231,7 @@ static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes) {
   RINOK(Utf16_To_Char(&buf, name));
   if (!doYes) mode |= O_EXCL;
   *p = open((const char *)buf.data, mode, 0644);
-  res = *p >= 0 ? SZ_OK : errno == EEXIST ? SZ_ERROR_WRITE : SZ_ERROR_FAIL;
+  res = *p >= 0 ? SZ_OK : errno == EEXIST ? SZ_ERROR_OVERWRITE : SZ_ERROR_WRITE_OPEN;
   Buf_Free(&buf);
   return res;
 }
@@ -412,206 +412,196 @@ int MY_CDECL main(int numargs, char *args[])
   SzArEx_Init(&db);
   res = SzArEx_Open(&db, &lookStream);
   if (res == SZ_OK) {
+    UInt32 i;
+    struct timeval tv[2];
+
+    /*
+    if you need cache, use these 3 variables.
+    if you use external function, you can make these variable as static.
+    */
+    UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
+    Byte *outBuffer = 0; /* it must be 0 before first call for each new archive. */
+    size_t outBufferSize = 0;  /* it can have any value before first call (if outBuffer = 0) */
+
+    /* Get desired st_time for extracted files. */
+    gettimeofday(&tv[0], NULL);
+
+    for (i = 0; i < db.db.NumFiles; i++)
     {
-      UInt32 i;
-      struct timeval tv[2];
+      size_t offset = 0;
+      size_t outSizeProcessed = 0;
+      const CSzFileItem *f = db.db.Files + i;
+      size_t len;
+      len = SzArEx_GetFileNameUtf16(&db, i, NULL);
 
-      /*
-      if you need cache, use these 3 variables.
-      if you use external function, you can make these variable as static.
-      */
-      UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
-      Byte *outBuffer = 0; /* it must be 0 before first call for each new archive. */
-      size_t outBufferSize = 0;  /* it can have any value before first call (if outBuffer = 0) */
-
-      /* Get desired st_time for extracted files. */
-      gettimeofday(&tv[0], NULL);
-
-      for (i = 0; i < db.db.NumFiles; i++)
+      if (len > tempSize)
       {
-        size_t offset = 0;
-        size_t outSizeProcessed = 0;
-        const CSzFileItem *f = db.db.Files + i;
-        size_t len;
-        len = SzArEx_GetFileNameUtf16(&db, i, NULL);
-
-        if (len > tempSize)
+        SzFree(temp);
+        tempSize = len;
+        temp = (UInt16 *)SzAlloc(tempSize * sizeof(temp[0]));
+        if (temp == 0)
         {
-          SzFree(temp);
-          tempSize = len;
-          temp = (UInt16 *)SzAlloc(tempSize * sizeof(temp[0]));
-          if (temp == 0)
-          {
-            res = SZ_ERROR_MEM;
-            break;
-          }
+          res = SZ_ERROR_MEM;
+          break;
+        }
+      }
+
+      SzArEx_GetFileNameUtf16(&db, i, temp);
+      if (listCommand)
+      {
+        char s[32], t[32];
+
+        UInt64ToStr(f->Size, s, 10, ' ');
+        if (f->MTimeDefined)
+          ConvertFileTimeToString(&f->MTime, t);
+        else
+        {
+          size_t j;
+          for (j = 0; j < 19; j++)
+            t[j] = ' ';
+          t[j] = '\0';
         }
 
-        SzArEx_GetFileNameUtf16(&db, i, temp);
-        if (listCommand)
-        {
-          char s[32], t[32];
-
-          UInt64ToStr(f->Size, s, 10, ' ');
-          if (f->MTimeDefined)
-            ConvertFileTimeToString(&f->MTime, t);
-          else
-          {
-            size_t j;
-            for (j = 0; j < 19; j++)
-              t[j] = ' ';
-            t[j] = '\0';
-          }
-
-          WriteMessage(t);
-          WriteMessage(" . ");  /* attrib */
-          WriteMessage(s);
-          WriteMessage(" ");
-          WriteMessage(" ");
-          res = PrintString(temp);
-          if (res != SZ_OK)
-            break;
-          if (f->IsDir)
-            WriteMessage("/");
-          WriteMessage("\n");
-          continue;
-        }
-        WriteMessage(testCommand ?
-            "Testing    ":
-            "Extracting ");
+        WriteMessage(t);
+        WriteMessage(" . ");  /* attrib */
+        WriteMessage(s);
+        WriteMessage(" ");
+        WriteMessage(" ");
         res = PrintString(temp);
         if (res != SZ_OK)
           break;
         if (f->IsDir)
           WriteMessage("/");
-        else
-        {
-          res = SzArEx_Extract(&db, &lookStream, i,
-              &blockIndex, &outBuffer, &outBufferSize,
-              &offset, &outSizeProcessed);
-          if (res != SZ_OK)
-            break;
-        }
-        if (!testCommand)
-        {
-          int outFile = 0;  /* Initialize to 0 to pacify gcc-4.8. */
-          size_t processedSize;
-          size_t j;
-          UInt16 *name = (UInt16 *)temp;
-          const UInt16 *destPath = (const UInt16 *)name;
-          for (j = 0; name[j] != 0; j++)
-            if (name[j] == '/')
-            {
-              WRes dres;
-              name[j] = 0;
-              dres = MyCreateDir(name, &umaskv, 0, 0);
-              name[j] = CHAR_PATH_SEPARATOR;
-              if (dres) break;
-            }
-
-          if (f->IsDir)
+        WriteMessage("\n");
+        continue;
+      }
+      WriteMessage(testCommand ?
+          "Testing    ":
+          "Extracting ");
+      res = PrintString(temp);
+      if (res != SZ_OK)
+        break;
+      if (f->IsDir)
+        WriteMessage("/");
+      else
+      {
+        res = SzArEx_Extract(&db, &lookStream, i,
+            &blockIndex, &outBuffer, &outBufferSize,
+            &offset, &outSizeProcessed);
+        if (res != SZ_OK)
+          break;
+      }
+      if (!testCommand) {
+        int outFile = 0;  /* Initialize to 0 to pacify gcc-4.8. */
+        size_t processedSize;
+        size_t j;
+        UInt16 *name = (UInt16 *)temp;
+        const UInt16 *destPath = (const UInt16 *)name;
+        for (j = 0; name[j] != 0; j++)
+          if (name[j] == '/')
           {
-            /* 7-Zip stores the directory after its contents, so it's safe to
-             * make the directory read-only now.
-             */
-            WRes dres = MyCreateDir(destPath, &umaskv, f->AttribDefined, f->Attrib);
-            if (dres) {
-              PrintMyCreateDirError(dres);
-              break;
-            }
-            goto next_file;
+            WRes dres;
+            name[j] = 0;
+            dres = MyCreateDir(name, &umaskv, 0, 0);
+            name[j] = CHAR_PATH_SEPARATOR;
+            if (dres) break;
           }
-          else if (f->AttribDefined &&
-                   (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
-                   S_ISLNK(f->Attrib >> 16)) {
-            char *target;
-            CBuf buf;
-            WRes sres;
-            Buf_Init(&buf);
-            if ((sres = Utf16_To_Char(&buf, name))) {
-              PrintError("symlink malloc");
-              res = sres;
-              break;
-            }
-            target = (char*)SzAlloc(outSizeProcessed + 1);
-            memcpy(target, outBuffer + offset, outSizeProcessed);
-            target[outSizeProcessed] = '\0';
-            if (0 != symlink(target, (const char *)buf.data)) {
-              if (errno == EEXIST) {
-                if (!doYes) {
-                  res = SZ_ERROR_WRITE;
-                  SzFree(target);
-                  Buf_Free(&buf);
-                  goto overw;
-                }
-                unlink((const char *)buf.data);
-                if (0 == symlink(target, (const char *)buf.data)) goto reok;
+
+        if (f->IsDir)
+        {
+          /* 7-Zip stores the directory after its contents, so it's safe to
+           * make the directory read-only now.
+           */
+          WRes dres = MyCreateDir(destPath, &umaskv, f->AttribDefined, f->Attrib);
+          if (dres) {
+            PrintMyCreateDirError(dres);
+            break;
+          }
+        } else if (f->AttribDefined &&
+                 (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
+                 S_ISLNK(f->Attrib >> 16)) {
+          char *target;
+          CBuf buf;
+          WRes sres;
+          Buf_Init(&buf);
+          if ((sres = Utf16_To_Char(&buf, name))) {
+            PrintError("symlink malloc");
+            res = sres;
+            break;
+          }
+          target = (char*)SzAlloc(outSizeProcessed + 1);
+          memcpy(target, outBuffer + offset, outSizeProcessed);
+          target[outSizeProcessed] = '\0';
+          if (0 != symlink(target, (const char *)buf.data)) {
+            if (errno == EEXIST) {
+              if (!doYes) {
+                res = SZ_ERROR_OVERWRITE;
+                SzFree(target);
+                Buf_Free(&buf);
+                break;
               }
-              PrintError("can not create symlink");
-              res = SZ_ERROR_FAIL;
-              SzFree(target);
-              Buf_Free(&buf);
-              break;
+              unlink((const char *)buf.data);
+              if (0 == symlink(target, (const char *)buf.data)) goto reok_symlink;
             }
-           reok:
+            PrintError("can not create symlink");
+            res = SZ_ERROR_FAIL;
             SzFree(target);
             Buf_Free(&buf);
-            goto next_file;
-          }
-          else if ((res = OutFile_OpenUtf16(&outFile, destPath, doYes)))
-          {
-           overw:
-            PrintError(res == SZ_ERROR_WRITE ?
-                       "already exists, specify -y to overwrite" :
-                       "can not open output file");
             break;
           }
+         reok_symlink:
+          SzFree(target);
+          Buf_Free(&buf);
+        } else {
+          if ((res = OutFile_OpenUtf16(&outFile, destPath, doYes)) != SZ_OK) break;
           if (f->AttribDefined) {
             if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {
+              res = SZ_ERROR_WRITE_CHMOD;
               close(outFile);
-              PrintError("can not chmod output file");
-              res = SZ_ERROR_WRITE;
               break;
             }
           }
           processedSize = outSizeProcessed;
           if ((size_t)write(outFile, outBuffer + offset, processedSize) != processedSize) {
             close(outFile);
-            PrintError("can not write output file");
             res = SZ_ERROR_WRITE;
             break;
           }
           close(outFile);
           if (SetMTime(destPath, f->MTimeDefined ? &f->MTime : NULL, tv)) {
-            res = SZ_ERROR_FAIL;
             PrintError("can not set mtime");
             /* Don't break, it's not a big problem. */
           }
         }
-       next_file:
-        WriteMessage("\n");
       }
-      SzFree(outBuffer);
+      WriteMessage("\n");
     }
+    SzFree(outBuffer);
   }
   SzArEx_Free(&db);
   SzFree(temp);
 
   close(lookStream.fd);
-  if (res == SZ_OK)
-  {
+  if (res == SZ_OK) {
     WriteMessage("\nEverything is Ok\n");
     return 0;
-  }
-  if (res == SZ_ERROR_UNSUPPORTED)
+  } else if (res == SZ_ERROR_UNSUPPORTED) {
     PrintError("decoder doesn't support this archive");
-  else if (res == SZ_ERROR_MEM)
+  } else if (res == SZ_ERROR_MEM) {
     PrintError("can not allocate memory");
-  else if (res == SZ_ERROR_CRC)
+  } else if (res == SZ_ERROR_CRC) {
     PrintError("CRC error");
-  else if (res == SZ_ERROR_NO_ARCHIVE)
+  } else if (res == SZ_ERROR_NO_ARCHIVE) {
     PrintError("input file is not a .7z archive");
-  else {
+  } else if (res == SZ_ERROR_OVERWRITE) {
+    PrintError("already exists, specify -y to overwrite");
+  } else if (res == SZ_ERROR_WRITE_OPEN) {
+    PrintError("can not open output file");
+  } else if (res == SZ_ERROR_WRITE_CHMOD) {
+    PrintError("can not chmod output file");
+  } else if (res == SZ_ERROR_WRITE) {
+    PrintError("can not write output file");
+  } else {
     char s[12];
     UIntToStr(s, res, 0);
     WriteMessage("\nERROR #");
