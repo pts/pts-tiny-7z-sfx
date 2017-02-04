@@ -15,33 +15,31 @@ STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset)
   return offset == offset1 ? SZ_OK : SZ_ERROR_READ;
 }
 
-STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size)
-{
+STATIC SRes LookToRead_Look(CLookToRead *p, const void **buf, size_t *size) {
   SRes res = SZ_OK;
-  size_t size2 = p->size - p->pos;
-  size_t originalSize;
+  size_t size_in_buf = p->size - p->pos;
+  ssize_t rsize;
 
-  if (*size == 0) return size2;
-  if (*size > LookToRead_BUF_SIZE) *size = LookToRead_BUF_SIZE;
-
-  /* Checking size2 <= p->pos is needed to avoid overlap in memcpy. */
-  /* TODO(pts): Do we need memmove instead? */
-  if (size2 < *size && size2 <= p->pos) {
-    memcpy(p->buf, p->buf + p->pos, size2);
-    p->pos = 0;
-    /* True but we can do it later: p->size = size2; */
-    /* : res = FileInStream_Read(p->realStream, p->buf + size2, size); */
-    originalSize = *size -= size2;
-    if (originalSize != 0) {
 #ifdef _SZ_READ_DEBUG
-      fprintf(stderr, "READ size=%ld\n", (long)originalSize);
+  fprintf(stderr, "READ size_in_buf=%lld size=%lld pos=%lld\n", (long long)size_in_buf, (long long)*size, (long long)p->pos);
 #endif
-      *size = read(p->fd, p->buf + size2, originalSize);  /* -1 on error, need 0 */
-      if (*size != originalSize) { *size = 0; res = SZ_ERROR_READ; }
-    }
-    size2 = p->size = *size += size2;
+  /* Checking size_in_buf <= p->pos is needed to avoid overlap in memcpy. */
+  if (*size > size_in_buf && size_in_buf <= p->pos) {  /* TODO(pts): Do we need memmove instead? */
+    memcpy(p->buf, p->buf + p->pos, size_in_buf);
+    p->pos = 0;
+    /* True but we can do it later: p->size = size_in_buf; */
+    /* : res = FileInStream_Read(p->realStream, p->buf + size_in_buf, size); */
+    /* We fill the buffer, we read more than: *size - size_in_buf; */
+    rsize = LookToRead_BUF_SIZE - size_in_buf;
+#ifdef _SZ_READ_DEBUG
+    fprintf(stderr, "READ rsize=%ld\n", (long)rsize);
+#endif
+    rsize = read(p->fd, p->buf + size_in_buf, rsize);
+    if (rsize < 0) { rsize = 0; res = SZ_ERROR_READ; }
+    p->size = *size = size_in_buf += rsize;
+  } else {
+    *size = size_in_buf;
   }
-  if (size2 < *size) *size = size2;
   *buf = p->buf + p->pos;
   return res;
 }
@@ -52,7 +50,7 @@ STATIC SRes LookToRead_ReadAll(CLookToRead *p, void *buf, size_t *size) {
   size_t got;
   while (*size > 0) {
     got = *size;
-    res = LookToRead_Look_Exact(p, (const void**)&lbuf, &got);
+    res = LookToRead_Look(p, (const void**)&lbuf, &got);
     if (res != SZ_OK) break;
     if (got == 0) { res = SZ_ERROR_INPUT_EOF; break; }
     LOOKTOREAD_SKIP(p, got);

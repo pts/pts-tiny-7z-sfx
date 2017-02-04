@@ -1171,11 +1171,11 @@ static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
   /* Find k7zSignature in the beginning. */
   while (ofs < (2 << 20)) {  /* 2 MB. */
     size = LookToRead_BUF_SIZE;
-    if (LookToRead_Look_Exact(inStream, (const void**)&buf, &size) != SZ_OK ||
+    if (LookToRead_Look(inStream, (const void**)&buf, &size) != SZ_OK ||
         size < k7zStartHeaderSize) {
       break;
     }
-    size -= k7zStartHeaderSize - 1;
+    size -= k7zStartHeaderSize - 1;  /* size is usually much more. */
     for (p = buf, pend = buf + size;
          p != pend && !IS_7Z_SIGNATURE(p);
          ++p) {}

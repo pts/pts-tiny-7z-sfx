@@ -37,24 +37,22 @@ static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStre
   for (;;)
   {
     Byte *inBuf = NULL;
-    size_t lookahead = (1 << 18);
-    if (lookahead > inSize)
-      lookahead = (size_t)inSize;
-    res = LookToRead_Look_Exact((void *)inStream, (const void **)&inBuf, &lookahead);
+    size_t inProcessed = inSize > LookToRead_BUF_SIZE ?
+        LookToRead_BUF_SIZE : inSize;
+    res = LookToRead_Look(inStream, (const void **)&inBuf, &inProcessed);
     if (res != SZ_OK)
       break;
 
     {
-      size_t inProcessed = (size_t)lookahead, dicPos = state.dicPos;
+      size_t dicPos = state.dicPos;
       ELzmaStatus status;
       res = LzmaDec_DecodeToDic(&state, outSize, inBuf, &inProcessed, LZMA_FINISH_END, &status);
-      lookahead -= inProcessed;
       inSize -= inProcessed;
       if (res != SZ_OK)
         break;
       if (state.dicPos == state.dicBufSize || (inProcessed == 0 && dicPos == state.dicPos))
       {
-        if (state.dicBufSize != outSize || lookahead != 0 ||
+        if (state.dicBufSize != outSize || inSize != 0 ||
             (status != LZMA_STATUS_FINISHED_WITH_MARK &&
              status != LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK))
           res = SZ_ERROR_DATA;
@@ -85,24 +83,22 @@ static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStr
   for (;;)
   {
     Byte *inBuf = NULL;
-    size_t lookahead = (1 << 18);
-    if (lookahead > inSize)
-      lookahead = (size_t)inSize;
-    res = LookToRead_Look_Exact((void *)inStream, (const void **)&inBuf, &lookahead);
+    size_t inProcessed = inSize > LookToRead_BUF_SIZE ?
+        LookToRead_BUF_SIZE : inSize;
+    res = LookToRead_Look(inStream, (const void **)&inBuf, &inProcessed);
     if (res != SZ_OK)
       break;
 
     {
-      size_t inProcessed = (size_t)lookahead, dicPos = state.decoder.dicPos;
+      size_t dicPos = state.decoder.dicPos;
       ELzmaStatus status;
       res = Lzma2Dec_DecodeToDic(&state, outSize, inBuf, &inProcessed, LZMA_FINISH_END, &status);
-      lookahead -= inProcessed;
       inSize -= inProcessed;
       if (res != SZ_OK)
         break;
       if (state.decoder.dicPos == state.decoder.dicBufSize || (inProcessed == 0 && dicPos == state.decoder.dicPos))
       {
-        if (state.decoder.dicBufSize != outSize || lookahead != 0 ||
+        if (state.decoder.dicBufSize != outSize || inSize != 0 ||
             (status != LZMA_STATUS_FINISHED_WITH_MARK))
           res = SZ_ERROR_DATA;
         break;

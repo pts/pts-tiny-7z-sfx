@@ -141,10 +141,14 @@ STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset);
 
 /* STATIC void LookToRead_Init(CLookToRead *p) */
 #define LOOKTOREAD_INIT(p) do { (p)->pos = (p)->size = 0; } while (0)
-/* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
-   (output(*size) > input(*size)) is not allowed
-   (output(*size) < input(*size)) is allowed */
-STATIC SRes LookToRead_Look_Exact(CLookToRead *p, const void **buf, size_t *size);
+/* 1. If less than *size bytes are already in the input buffer, then fills the
+ *    rest of the input buffer from disk.
+ * 2. Sets *size to the number of bytes now in the input buffer. Can be more or
+ *    less or equal to the original *size. Detect EOF by calling
+ *    LOOKTOREAD_SKIP(*size), calling LookToRead_Look again, and then checking
+ *    *size == 0.
+ */
+STATIC SRes LookToRead_Look(CLookToRead *p, const void **buf, size_t *size);
 STATIC SRes LookToRead_ReadAll(CLookToRead *p, void *buf, size_t *size);
 /* offset must be <= output(*size) of Look */
 /* STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset) */
