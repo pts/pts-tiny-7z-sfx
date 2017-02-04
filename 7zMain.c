@@ -7,18 +7,9 @@
 #include "7zCrc.h"
 #include "7zVersion.h"
 
-static int Buf_EnsureSize(CBuf *dest, size_t size)
-{
-  if (dest->size >= size)
-    return 1;
-  Buf_Free(dest);
-  return Buf_Create(dest, size);
-}
-
-#ifndef _WIN32
-
 static Byte kUtf8Limits[5] = { 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
 
+/* TODO(pts): Check for overflow in destPos? */
 static Bool Utf16_To_Utf8(Byte *dest, size_t *destLen, const UInt16 *src, size_t srcLen)
 {
   size_t destPos = 0, srcPos = 0;
@@ -68,27 +59,6 @@ static Bool Utf16_To_Utf8(Byte *dest, size_t *destLen, const UInt16 *src, size_t
   return False;
 }
 
-static SRes Utf16_To_Utf8Buf(CBuf *dest, const UInt16 *src, size_t srcLen)
-{
-  size_t destLen = 0;
-  Bool res;
-  Utf16_To_Utf8(NULL, &destLen, src, srcLen);
-  destLen += 1;
-  if (!Buf_EnsureSize(dest, destLen))
-    return SZ_ERROR_MEM;
-  res = Utf16_To_Utf8(dest->data, &destLen, src, srcLen);
-  dest->data[destLen] = 0;
-  return res ? SZ_OK : SZ_ERROR_FAIL;
-}
-#endif
-
-static SRes Utf16_To_Char(CBuf *buf, const UInt16 *s)
-{
-  int len = 0;
-  for (len = 0; s[len] != 0; len++);
-  return Utf16_To_Utf8Buf(buf, s, len);
-}
-
 static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
   unsigned mode;
   if (*umaskv + 1U == 0U) {
@@ -132,39 +102,17 @@ STATIC void PrintError(char *sz)
   WriteMessage("\n");
 }
 
-static void PrintMyCreateDirError(int res) {
-  if (res == 1) {
-    PrintError("can not create output dir");
-  } else if (res == 2) {
-    PrintError("can not chmod output dir");
-  }
-}
-
-static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined, UInt32 attrib)
-{
-  unsigned mode;
-  CBuf buf;
-  Bool res;
-  Buf_Init(&buf);
-  RINOK(Utf16_To_Char(&buf, name));
-
-  #ifdef _WIN32
-  res = _mkdir((const char *)buf.data) == 0;
-  #else
-  mode = GetUnixMode(umaskv, attribDefined ? attrib :
+static SRes MyCreateDir(const char *filename, unsigned *umaskv, Bool attribDefined, UInt32 attrib) {
+  const unsigned mode = GetUnixMode(umaskv, attribDefined ? attrib :
       FILE_ATTRIBUTE_UNIX_EXTENSION | 0755 << 16);
-  res = mkdir((const char *)buf.data, mode) == 0;
-  if (!res && errno == EEXIST) res = 1;  /* Already exists. */
-  if (res && attribDefined) {
-    /* !! TODO(pts): chmod directory after its contents */
-    if (0 != chmod((const char *)buf.data, GetUnixMode(umaskv, attrib))) {
-      Buf_Free(&buf);
-      return 2;
-    }
+  if (mkdir(filename, mode) != 0) {
+    if (errno != EEXIST) return SZ_ERROR_WRITE_MKDIR;
   }
-  #endif
-  Buf_Free(&buf);
-  return res ? 0 : 1;
+  if (attribDefined) {
+    /* !! TODO(pts): chmod directory after its contents */
+    if (0 != chmod(filename, GetUnixMode(umaskv, attrib))) return SZ_ERROR_WRITE_MKDIR_CHMOD;
+  }
+  return SZ_OK;
 }
 
 /* Returns *a % b, and sets *a = *a_old / b; */
@@ -196,11 +144,10 @@ static void GetTimeSecAndUsec(
 }
 
 /* tv[0] is assumed to be prefilled with the desired st_atime */
-static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime,
+static WRes SetMTime(const char *filename,
+                     const CNtfsFileTime *mtime,
                      struct timeval tv[2]) {
   UInt64 sec;
-  int got;
-  CBuf buf;
   if (mtime) {
     if (sizeof(tv[1].tv_usec) == 4) {  /* i386 Linux */
       GetTimeSecAndUsec(mtime, &sec, (UInt32*)&tv[1].tv_usec);
@@ -216,35 +163,15 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime,
   } else {
     tv[1] = tv[0];
   }
-  Buf_Init(&buf);
-  RINOK(Utf16_To_Char(&buf, name));
-  got = utimes((const char *)buf.data, tv);
-  Buf_Free(&buf);
-  return got != 0;
+  return utimes(filename, tv) != 0;
 }
 
-static SRes OutFile_OpenUtf16(int *p, const UInt16 *name, Bool doYes) {
-  CBuf buf;
+static SRes OutFile_Open(int *p, const char *filename, Bool doYes) {
   WRes res;
   mode_t mode = O_WRONLY | O_CREAT | O_TRUNC;
-  Buf_Init(&buf);
-  RINOK(Utf16_To_Char(&buf, name));
   if (!doYes) mode |= O_EXCL;
-  *p = open((const char *)buf.data, mode, 0644);
+  *p = open(filename, mode, 0644);
   res = *p >= 0 ? SZ_OK : errno == EEXIST ? SZ_ERROR_OVERWRITE : SZ_ERROR_WRITE_OPEN;
-  Buf_Free(&buf);
-  return res;
-}
-
-static SRes PrintString(const UInt16 *s)
-{
-  CBuf buf;
-  SRes res;
-  Buf_Init(&buf);
-  res = Utf16_To_Char(&buf, s);
-  if (res == SZ_OK)
-    WriteMessage((const char *)buf.data);
-  Buf_Free(&buf);
   return res;
 }
 
@@ -340,7 +267,7 @@ int MY_CDECL main(int numargs, char *args[])
   CSzArEx db;
   SRes res;
   UInt16 *temp = NULL;
-  size_t tempSize = 0;
+  size_t temp_size = 0;
   unsigned umaskv = -1;
   const char *archive = args[0];
   Bool listCommand = 0, testCommand = 0, doYes = 0;
@@ -401,7 +328,7 @@ int MY_CDECL main(int numargs, char *args[])
   WriteMessage("\n");
   WriteMessage("\n");
   if ((lookStream.fd = open(archive, O_RDONLY, 0)) < 0) {
-    PrintError("can not open input file");
+    PrintError("can not open input archive");
     return 1;
   }
 
@@ -431,22 +358,30 @@ int MY_CDECL main(int numargs, char *args[])
       size_t offset = 0;
       size_t outSizeProcessed = 0;
       const CSzFileItem *f = db.db.Files + i;
-      size_t len;
-      len = SzArEx_GetFileNameUtf16(&db, i, NULL);
+      const size_t filename_len = SzArEx_GetFileNameUtf16(&db, i, NULL);
+      /* 2 for UTF-18 + 3 for UTF-8. 1 UTF-16 entry point can create at most 3 UTF-8 bytes (averaging for surrogates). */
+      /* TODO(pts): Allow UTF-8 and UTF-16 to overlap. */
+      /* TODO(pts): Check for overflow. */
+      const size_t filename_alloc = filename_len * 5;
+      Byte *filename_utf8;
+      size_t filename_utf8_len;
 
-      if (len > tempSize)
-      {
-        SzFree(temp);
-        tempSize = len;
-        temp = (UInt16 *)SzAlloc(tempSize * sizeof(temp[0]));
-        if (temp == 0)
-        {
+      if (filename_alloc > temp_size) {
+        SzFree(temp);  /* TODO(pts): realloc(). */
+        temp_size = filename_len * 5;
+        if ((temp = (UInt16 *)SzAlloc(temp_size)) == 0) {
           res = SZ_ERROR_MEM;
           break;
         }
       }
-
       SzArEx_GetFileNameUtf16(&db, i, temp);
+      filename_utf8 = (Byte*)temp + filename_len * 2;
+      filename_utf8_len = filename_len * 3;
+      if (!Utf16_To_Utf8(filename_utf8, &filename_utf8_len, temp, filename_len)) {
+        res = SZ_ERROR_BAD_FILENAME;
+        break;
+      }
+
       if (listCommand)
       {
         char s[32], t[32];
@@ -467,9 +402,7 @@ int MY_CDECL main(int numargs, char *args[])
         WriteMessage(s);
         WriteMessage(" ");
         WriteMessage(" ");
-        res = PrintString(temp);
-        if (res != SZ_OK)
-          break;
+        WriteMessage((const char*)filename_utf8);
         if (f->IsDir)
           WriteMessage("/");
         WriteMessage("\n");
@@ -478,9 +411,7 @@ int MY_CDECL main(int numargs, char *args[])
       WriteMessage(testCommand ?
           "Testing    ":
           "Extracting ");
-      res = PrintString(temp);
-      if (res != SZ_OK)
-        break;
+      WriteMessage((const char*)filename_utf8);
       if (f->IsDir)
         WriteMessage("/");
       else
@@ -495,16 +426,12 @@ int MY_CDECL main(int numargs, char *args[])
         int outFile = 0;  /* Initialize to 0 to pacify gcc-4.8. */
         size_t processedSize;
         size_t j;
-        UInt16 *name = (UInt16 *)temp;
-        const UInt16 *destPath = (const UInt16 *)name;
-        for (j = 0; name[j] != 0; j++)
-          if (name[j] == '/')
-          {
-            WRes dres;
-            name[j] = 0;
-            dres = MyCreateDir(name, &umaskv, 0, 0);
-            name[j] = CHAR_PATH_SEPARATOR;
-            if (dres) break;
+        for (j = 0; j < filename_utf8_len; j++)
+          if (filename_utf8[j] == '/') {
+            filename_utf8[j] = 0;
+            res = MyCreateDir((const char*)filename_utf8, &umaskv, 0, 0);
+            filename_utf8[j] = CHAR_PATH_SEPARATOR;
+            if (res != SZ_OK) break;
           }
 
         if (f->IsDir)
@@ -512,48 +439,33 @@ int MY_CDECL main(int numargs, char *args[])
           /* 7-Zip stores the directory after its contents, so it's safe to
            * make the directory read-only now.
            */
-          WRes dres = MyCreateDir(destPath, &umaskv, f->AttribDefined, f->Attrib);
-          if (dres) {
-            PrintMyCreateDirError(dres);
-            break;
-          }
+          if ((res = MyCreateDir((const char*)filename_utf8, &umaskv, f->AttribDefined, f->Attrib)) != SZ_OK) break;
         } else if (f->AttribDefined &&
                  (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
                  S_ISLNK(f->Attrib >> 16)) {
           char *target;
-          CBuf buf;
-          WRes sres;
-          Buf_Init(&buf);
-          if ((sres = Utf16_To_Char(&buf, name))) {
-            PrintError("symlink malloc");
-            res = sres;
-            break;
-          }
+          /* !! TODO(pts): Don't do a malloc just for one \0 byte, at least join in to temp. */
           target = (char*)SzAlloc(outSizeProcessed + 1);
           memcpy(target, outBuffer + offset, outSizeProcessed);
           target[outSizeProcessed] = '\0';
-          if (0 != symlink(target, (const char *)buf.data)) {
+          if (0 != symlink(target, (const char*)filename_utf8)) {
             if (errno == EEXIST) {
               if (!doYes) {
                 res = SZ_ERROR_OVERWRITE;
                 SzFree(target);
-                Buf_Free(&buf);
                 break;
               }
-              unlink((const char *)buf.data);
-              if (0 == symlink(target, (const char *)buf.data)) goto reok_symlink;
+              unlink((const char*)filename_utf8);
+              if (0 == symlink(target, (const char*)filename_utf8)) goto reok_symlink;
             }
-            PrintError("can not create symlink");
-            res = SZ_ERROR_FAIL;
+            res = SZ_ERROR_WRITE_SYMLINK;
             SzFree(target);
-            Buf_Free(&buf);
             break;
           }
          reok_symlink:
           SzFree(target);
-          Buf_Free(&buf);
         } else {
-          if ((res = OutFile_OpenUtf16(&outFile, destPath, doYes)) != SZ_OK) break;
+          if ((res = OutFile_Open(&outFile, (const char*)filename_utf8, doYes)) != SZ_OK) break;
           if (f->AttribDefined) {
             if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {
               res = SZ_ERROR_WRITE_CHMOD;
@@ -568,7 +480,7 @@ int MY_CDECL main(int numargs, char *args[])
             break;
           }
           close(outFile);
-          if (SetMTime(destPath, f->MTimeDefined ? &f->MTime : NULL, tv)) {
+          if (SetMTime((const char*)filename_utf8, f->MTimeDefined ? &f->MTime : NULL, tv)) {
             PrintError("can not set mtime");
             /* Don't break, it's not a big problem. */
           }
@@ -601,6 +513,14 @@ int MY_CDECL main(int numargs, char *args[])
     PrintError("can not chmod output file");
   } else if (res == SZ_ERROR_WRITE) {
     PrintError("can not write output file");
+  } else if (res == SZ_ERROR_BAD_FILENAME) {
+    PrintError("bad filename (UTF-16 encoding)");
+  } else if (res == SZ_ERROR_WRITE_MKDIR) {
+    PrintError("can not create output dir");
+  } else if (res == SZ_ERROR_WRITE_MKDIR_CHMOD) {
+    PrintError("can not chmod output dir");
+  } else if (res == SZ_ERROR_WRITE_SYMLINK) {
+    PrintError("can not create symlink");
   } else {
     char s[12];
     UIntToStr(s, res, 0);
