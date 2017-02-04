@@ -195,19 +195,29 @@ static void GetTimeSecAndUsec(
   *usec_out = UInt64DivAndGetMod(sec_out, 10000000) / 10;
 }
 
-static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
-  UInt32 usec;
+/* tv[0] is assumed to be prefilled with the desired st_atime */
+static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime,
+                     struct timeval tv[2]) {
   UInt64 sec;
   int got;
-  struct timeval tv[2];
   CBuf buf;
-  GetTimeSecAndUsec(mtime, &sec, &usec);
-  sec -= (369 * 365 + 89) * (UInt64)(24 * 60 * 60);
+  if (mtime) {
+    if (sizeof(tv[1].tv_usec) == 4) {  /* i386 Linux */
+      GetTimeSecAndUsec(mtime, &sec, (UInt32*)&tv[1].tv_usec);
+    } else {
+      UInt32 usec;
+      GetTimeSecAndUsec(mtime, &sec, &usec);
+      tv[1].tv_usec = usec;
+    }
+    sec -= (369 * 365 + 89) * (UInt64)(24 * 60 * 60);
+    /* If (signed) tv_sec would underflow or overflow */
+    if (sizeof(tv[1].tv_sec) == 4 && (UInt32)(sec >> 32) + 1U > 1U) return -1;
+    tv[1].tv_sec = sec;
+  } else {
+    tv[1] = tv[0];
+  }
   Buf_Init(&buf);
   RINOK(Utf16_To_Char(&buf, name));
-  gettimeofday(&tv[0], NULL);
-  tv[1].tv_sec = sec;
-  tv[1].tv_usec = usec;
   got = utimes((const char *)buf.data, tv);
   Buf_Free(&buf);
   return got != 0;
@@ -406,6 +416,7 @@ int MY_CDECL main(int numargs, char *args[])
     if (res == SZ_OK)
     {
       UInt32 i;
+      struct timeval tv[2];
 
       /*
       if you need cache, use these 3 variables.
@@ -414,6 +425,9 @@ int MY_CDECL main(int numargs, char *args[])
       UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
       Byte *outBuffer = 0; /* it must be 0 before first call for each new archive. */
       size_t outBufferSize = 0;  /* it can have any value before first call (if outBuffer = 0) */
+
+      /* Get desired st_time for extracted files. */
+      gettimeofday(&tv[0], NULL);
 
       for (i = 0; i < db.db.NumFiles; i++)
       {
@@ -568,12 +582,10 @@ int MY_CDECL main(int numargs, char *args[])
             break;
           }
           close(outFile);
-          if (f->MTimeDefined) {
-            if (SetMTime(destPath, &f->MTime)) {
-              res = SZ_ERROR_FAIL;
-              PrintError("can not set mtime");
-              /* Don't break, it's not a big problem. */
-            }
+          if (SetMTime(destPath, f->MTimeDefined ? &f->MTime : NULL, tv)) {
+            res = SZ_ERROR_FAIL;
+            PrintError("can not set mtime");
+            /* Don't break, it's not a big problem. */
           }
         }
        next_file:
