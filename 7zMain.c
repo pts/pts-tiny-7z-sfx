@@ -167,18 +167,6 @@ static WRes MyCreateDir(const UInt16 *name, unsigned *umaskv, Bool attribDefined
   return res ? 0 : 1;
 }
 
-#ifdef __linux
-#define MyUtimes utimes
-#else
-/* Fallback which can't do subsecond precision. */
-static int MyUtimes(const char *filename, const struct timeval tv[2]) {
-  struct utimbuf times;
-  times.actime = tv[0].tv_sec;
-  times.modtime = tv[1].tv_sec;
-  return utime(filename, &times);
-}
-#endif
-
 /* Returns *a % b, and sets *a = *a_old / b; */
 static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
 #ifdef __i386__  /* u64 / u32 division with little i386 machine code. */
@@ -220,7 +208,7 @@ static WRes SetMTime(const UInt16 *name, const CNtfsFileTime *mtime) {
   gettimeofday(&tv[0], NULL);
   tv[1].tv_sec = sec;
   tv[1].tv_usec = usec;
-  got = MyUtimes((const char *)buf.data, tv);
+  got = utimes((const char *)buf.data, tv);
   Buf_Free(&buf);
   return got != 0;
 }
