@@ -411,9 +411,7 @@ int MY_CDECL main(int numargs, char *args[])
 
   SzArEx_Init(&db);
   res = SzArEx_Open(&db, &lookStream);
-  if (res == SZ_OK)
-  {
-    if (res == SZ_OK)
+  if (res == SZ_OK) {
     {
       UInt32 i;
       struct timeval tv[2];
