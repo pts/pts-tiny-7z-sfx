@@ -412,10 +412,10 @@ int MY_CDECL main(int numargs, char *args[])
           "Testing    ":
           "Extracting ");
       WriteMessage((const char*)filename_utf8);
-      if (f->IsDir)
+      if (f->IsDir) {
         WriteMessage("/");
-      else
-      {
+      } else {
+        /* !! TODO(pts): If it would change &outBuffer, SzFree(temp) first for stack-based alloc. */
         res = SzArEx_Extract(&db, &lookStream, i,
             &blockIndex, &outBuffer, &outBufferSize,
             &offset, &outSizeProcessed);
@@ -423,19 +423,17 @@ int MY_CDECL main(int numargs, char *args[])
           break;
       }
       if (!testCommand) {
-        int outFile = 0;  /* Initialize to 0 to pacify gcc-4.8. */
         size_t processedSize;
         size_t j;
-        for (j = 0; j < filename_utf8_len; j++)
+        for (j = 0; j < filename_utf8_len; j++) {
           if (filename_utf8[j] == '/') {
             filename_utf8[j] = 0;
             res = MyCreateDir((const char*)filename_utf8, &umaskv, 0, 0);
             filename_utf8[j] = CHAR_PATH_SEPARATOR;
             if (res != SZ_OK) break;
           }
-
-        if (f->IsDir)
-        {
+        }
+        if (f->IsDir) {
           /* 7-Zip stores the directory after its contents, so it's safe to
            * make the directory read-only now.
            */
@@ -465,6 +463,7 @@ int MY_CDECL main(int numargs, char *args[])
          reok_symlink:
           SzFree(target);
         } else {
+          int outFile;
           if ((res = OutFile_Open(&outFile, (const char*)filename_utf8, doYes)) != SZ_OK) break;
           if (f->AttribDefined) {
             if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {

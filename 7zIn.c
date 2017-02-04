@@ -1323,7 +1323,7 @@ STATIC SRes SzArEx_Extract(
   SRes res = SZ_OK;
   *offset = 0;
   *outSizeProcessed = 0;
-  if (folderIndex == (UInt32)-1)
+  if (folderIndex == (UInt32)-1)  /* TODO(pts): Does this happen? */
   {
     SzFree(*outBuffer);
     *blockIndex = folderIndex;
