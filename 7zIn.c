@@ -1337,12 +1337,8 @@ STATIC SRes SzArEx_Extract(
   SRes res = SZ_OK;
   *offset = 0;
   *outSizeProcessed = 0;
-  if (folderIndex == (UInt32)-1)  /* TODO(pts): Does this happen? */
-  {
-    SzFree(*outBuffer);
+  if (folderIndex == (UInt32)-1) {  /* This happens for empty files. */
     *blockIndex = folderIndex;
-    *outBuffer = 0;
-    *outBufferSize = 0;
     return SZ_OK;
   }
 
