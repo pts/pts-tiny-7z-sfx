@@ -346,7 +346,7 @@ int MY_CDECL main(int numargs, char *args[])
     if you need cache, use these 3 variables.
     if you use external function, you can make these variable as static.
     */
-    UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
+    UInt32 blockIndex = (UInt32)-1; /* it can have any value before first call (if outBuffer = 0) */
     Byte *outBuffer = 0; /* it must be 0 before first call for each new archive. */
     size_t outBufferSize = 0;  /* it can have any value before first call (if outBuffer = 0) */
 
@@ -365,7 +365,27 @@ int MY_CDECL main(int numargs, char *args[])
       const size_t filename_alloc = filename_len * 5;
       Byte *filename_utf8;
       size_t filename_utf8_len;
+      SRes extract_res = SZ_OK;
 
+      if (!listCommand && !f->IsDir) {
+        if (blockIndex != db.FileIndexToFolderIndexMap[i]) {
+          /* Memory usage optimization for USE_MINIALLOC.
+           *
+           * Without this, all solid blocks would be kept in memory,
+           * potentially using gigabytes.
+           */
+          SzFree(temp);
+          temp = NULL;
+          temp_size = 0;
+        }
+        /* It's important to do this first, before we allocate memory for
+         * temp for filename processing. Otherwise, with USE_MINIALLOC,
+         * solid blocks would accumulate in memory.
+         */
+        extract_res = SzArEx_Extract(&db, &lookStream, i,
+            &blockIndex, &outBuffer, &outBufferSize,
+            &offset, &outSizeProcessed);
+      }
       if (filename_alloc > temp_size) {
         SzFree(temp);  /* TODO(pts): realloc(). */
         temp_size = filename_len * 5;
@@ -415,12 +435,7 @@ int MY_CDECL main(int numargs, char *args[])
       if (f->IsDir) {
         WriteMessage("/");
       } else {
-        /* !! TODO(pts): If it would change &outBuffer, SzFree(temp) first for stack-based alloc. */
-        res = SzArEx_Extract(&db, &lookStream, i,
-            &blockIndex, &outBuffer, &outBufferSize,
-            &offset, &outSizeProcessed);
-        if (res != SZ_OK)
-          break;
+        if (extract_res != SZ_OK) { res = extract_res; break; }
       }
       if (!testCommand) {
         size_t processedSize;
