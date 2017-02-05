@@ -267,7 +267,9 @@ int MY_CDECL main(int numargs, char *args[])
   CSzArEx db;
   SRes res;
   UInt16 *temp = NULL;
+#ifndef USE_MINIALLOC
   size_t temp_size = 0;
+#endif
   unsigned umaskv = -1;
   const char *archive = args[0];
   Bool listCommand = 0, testCommand = 0, doYes = 0;
@@ -376,7 +378,9 @@ int MY_CDECL main(int numargs, char *args[])
            */
           SzFree(temp);
           temp = NULL;
+#ifndef USE_MINIALLOC
           temp_size = 0;
+#endif
         }
         /* It's important to do this first, before we allocate memory for
          * temp for filename processing. Otherwise, with USE_MINIALLOC,
@@ -386,14 +390,25 @@ int MY_CDECL main(int numargs, char *args[])
             &blockIndex, &outBuffer, &outBufferSize,
             &offset, &outSizeProcessed);
       }
+#ifdef USE_MINIALLOC  /* Do an SzAlloc for each filename. It's cheap with USE_MINIALLOC. */
+      SzFree(temp);
+      if ((temp = (UInt16 *)SzAlloc(filename_alloc)) == 0) {
+        res = SZ_ERROR_MEM;
+        break;
+      }
+#else
       if (filename_alloc > temp_size) {
-        SzFree(temp);  /* TODO(pts): realloc(). */
-        temp_size = filename_len * 5;
-        if ((temp = (UInt16 *)SzAlloc(temp_size)) == 0) {
+        SzFree(temp);
+        if (temp_size == 0) temp_size = 128;
+        while (temp_size < filename_alloc) {
+          temp_size <<= 1;
+        }
+        if ((temp = (UInt16 *)SzAlloc(filename_alloc)) == 0) {
           res = SZ_ERROR_MEM;
           break;
         }
       }
+#endif
       SzArEx_GetFileNameUtf16(&db, i, temp);
       filename_utf8 = (Byte*)temp + filename_len * 2;
       filename_utf8_len = filename_len * 3;
