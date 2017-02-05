@@ -441,27 +441,27 @@ int MY_CDECL main(int numargs, char *args[])
         } else if (f->AttribDefined &&
                  (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
                  S_ISLNK(f->Attrib >> 16)) {
-          char *target;
-          /* !! TODO(pts): Don't do a malloc just for one \0 byte, at least join in to temp. */
-          target = (char*)SzAlloc(outSizeProcessed + 1);
-          memcpy(target, outBuffer + offset, outSizeProcessed);
-          target[outSizeProcessed] = '\0';
-          if (0 != symlink(target, (const char*)filename_utf8)) {
-            if (errno == EEXIST) {
-              if (!doYes) {
-                res = SZ_ERROR_OVERWRITE;
-                SzFree(target);
-                break;
-              }
-              unlink((const char*)filename_utf8);
-              if (0 == symlink(target, (const char*)filename_utf8)) goto reok_symlink;
-            }
+          Byte * const target = outBuffer + offset;
+          Byte * const target_end = target + outSizeProcessed;
+          const Byte target_end_byte = *target_end;
+          Bool had_again = False;
+         again:
+          *target_end = '\0';  /* symlink() needs the NUL-terminator */
+          /* SZ_OK == 0 is OK, other error codes are incorrect. */
+          res = symlink((const char*)target, (const char*)filename_utf8);
+          *target_end = target_end_byte;
+          if (res == SZ_OK) {
+          } else if (had_again || errno != EEXIST) {
             res = SZ_ERROR_WRITE_SYMLINK;
-            SzFree(target);
             break;
+          } else if (!doYes) {
+            res = SZ_ERROR_OVERWRITE;
+            break;
+          } else {
+            unlink((const char*)filename_utf8);
+            had_again = True;
+            goto again;
           }
-         reok_symlink:
-          SzFree(target);
         } else {
           int outFile;
           if ((res = OutFile_Open(&outFile, (const char*)filename_utf8, doYes)) != SZ_OK) break;

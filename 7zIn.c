@@ -1355,7 +1355,10 @@ STATIC SRes SzArEx_Extract(
       *outBufferSize = unpackSize;
       if (unpackSize != 0)
       {
-        *outBuffer = (Byte *)SzAlloc(unpackSize);
+        /* Allocate 1 extra byte for possible NUL-termination later.
+         * symlink() needs the NUL.
+         */
+        *outBuffer = (Byte *)SzAlloc(unpackSize + 1);
         if (*outBuffer == 0)
           res = SZ_ERROR_MEM;
       }
