@@ -889,11 +889,16 @@ static SRes SzReadFileNames(const Byte *p, size_t size, UInt32 numFiles, size_t 
     {
       if (pos >= size)
         return SZ_ERROR_ARCHIVE;
-      if (p[pos * 2] == 0 && p[pos * 2 + 1] == 0)
+      ++pos;
+#ifdef MY_CPU_LE_UNALIGN
+      if ((*(UInt16**)&p)++[0] == 0)
         break;
-      pos++;
+#else
+      p += 2;
+      if (p[-1] == 0 && p[-2] == 0)
+        break;
+#endif
     }
-    pos++;
   }
   sizes[i] = pos;
   return (pos == size) ? SZ_OK : SZ_ERROR_ARCHIVE;
