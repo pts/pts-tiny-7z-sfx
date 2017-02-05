@@ -4,13 +4,8 @@ system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdi
 
 Ideas to reduce file size:
 
-* How much memory i needed for an archive with many files? When is it
-  deleted?
 * (drop the -e flag.)
 * (add support for the l command.)
-* Use a malloc stack, make sure it plays well with allocations in
-  SzArEx_Extract.
-* (how to estimate the memory usage from the 7z command-line?)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
 * (advanced) Don't store LZMA decompressors (once in the upx stub and one
@@ -65,6 +60,8 @@ Ideas already implemented:
 * DONE: Try some more command-line flags for gcc (http://tiny.cc/tinygcc).
 * DONE: Eliminate multiple calls to Utf16_To_Char in 7zMain.c.
 * DONE: Reuse the output buffer for Utf16_To_Char.
+* DONE: Use a malloc stack, make sure it plays well with allocations in
+  SzArEx_Extract.
 
 Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 
