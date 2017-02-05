@@ -163,7 +163,8 @@ STATIC void SzArEx_Init(CSzArEx *p)
   p->FolderStartFileIndex = 0;
   p->FileIndexToFolderIndexMap = 0;
   p->FileNameOffsets = 0;
-  p->FileNamesPtr = 0;
+  p->FileNamesInHeaderBufPtr = 0;
+  p->HeaderBufStart = 0;
 }
 
 STATIC void SzArEx_Free(CSzArEx *p)
@@ -174,7 +175,7 @@ STATIC void SzArEx_Free(CSzArEx *p)
   SzFree(p->FileIndexToFolderIndexMap);
 
   SzFree(p->FileNameOffsets);
-  SzFree(p->FileNamesPtr);
+  SzFree(p->HeaderBufStart);
 
   SzAr_Free(&p->db);
   SzArEx_Init(p);
@@ -866,7 +867,7 @@ STATIC size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16
   const size_t len = p->FileNameOffsets[fileIndex + 1] - p->FileNameOffsets[fileIndex];
   if (dest != 0)
   {
-    const Byte *src = p->FileNamesPtr + (p->FileNameOffsets[fileIndex] * 2);
+    const Byte *src = p->FileNamesInHeaderBufPtr + (p->FileNameOffsets[fileIndex] * 2);
 #ifdef MY_CPU_LE_UNALIGN
     memcpy(dest, src, len * 2);
 #else
@@ -981,10 +982,10 @@ static SRes SzReadHeader2(
         namesSize = (size_t)size - 1;
         if ((namesSize & 1) != 0)
           return SZ_ERROR_ARCHIVE;
-        if (!(p->FileNamesPtr = SzAlloc( namesSize)))
-          return SZ_ERROR_MEM;
+        /* if (!(p->FileNamesPtr = SzAlloc( namesSize))) */
         MY_ALLOC(size_t, p->FileNameOffsets, numFiles + 1);
-        memcpy(p->FileNamesPtr, sd->Data, namesSize);
+        p->FileNamesInHeaderBufPtr = sd->Data;
+        /* memcpy(p->FileNamesPtr, sd->Data, namesSize); */
         RINOK(SzReadFileNames(sd->Data, namesSize >> 1, numFiles, p->FileNameOffsets))
         RINOK(SzSkeepDataSize(sd, namesSize));
         break;
@@ -1302,7 +1303,15 @@ static SRes SzArEx_Open2(
       }
     }
   }
-  Buf_Free(&buffer);
+#ifdef _SZ_HEADER_DEBUG
+  {
+    const Bool FileNamesInHeaderBufPtr_inside = p->FileNamesInHeaderBufPtr >= buffer.data && p->FileNamesInHeaderBufPtr < buffer.data + buffer.size;
+    fprintf(stderr, "HEADER FileNamesInHeaderBufPtr_inside=%d\n", FileNamesInHeaderBufPtr_inside);
+    if (!FileNamesInHeaderBufPtr_inside) abort();
+  }
+#endif
+  p->HeaderBufStart = buffer.data;
+  /* Buf_Free(&buffer); */  /* p->HeaderBufStart has taken ownership. */
   return res;
 }
 
