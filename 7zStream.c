@@ -8,7 +8,7 @@
 STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset)
 {
 #ifdef _SZ_SEEK_DEBUG
-  fprintf(stderr, "SEEK LookInStream_SeekTo pos=%lld, origin=0, from=%lld\n", offset, (long long)lseek64(p->fd, 0, SEEK_CUR));
+  fprintf(stderr, "SEEK LookInStream_SeekTo pos=%lld, origin=0, from=%lld\n", (long long)offset, (long long)lseek64(p->fd, 0, SEEK_CUR));
 #endif
   const UInt64 offset1 = lseek64(p->fd, offset, SEEK_SET);
   p->pos = p->size = 0;

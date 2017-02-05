@@ -30,7 +30,7 @@ Memory usage:
 * Only the solid block size (`7z -ms=...') matters. The default can be
   very high (up to 4 GB), so always specify something small (e.g.
   `7z -ms=50000000b') or turn off solid blocks (`7z -ms=off').
-* The memory usage will be (most of the time):
+* The memory usage of c-minidiet.c will be (most of the time):
 
   total_memory_usage_for_tiny7zx_decompression <=
       static_memory_size +
@@ -54,6 +54,16 @@ Supported systems:
 * Linux i386 with xstatic uClibc: compile with ./c-xstatic.sh
 * other Unix: ./c-dynamic.sh probably works, maybe needs minor porting
 * Windows: not supported.
+
+To create a .7z archive compatible with tiny7zx:
+
+* Run: 7z a -t7z -mx=7 -ms=50m -ms=on foo.7z foo...
+* Use `7z -ms=...' to control the extraction memory usage, see above.
+
+Compilation options (can be specified for c-*.sh):
+
+* -DUSE_CHMODW: tiny7zx should work hard on calling chmod() to make files
+  and directories writable upon a ``Permission denied''.
 
 See http://sourceforge.net/p/sevenzip/discussion/45797/thread/233f5efd
 about 7zS2con.sfx, a similar software for Win32.

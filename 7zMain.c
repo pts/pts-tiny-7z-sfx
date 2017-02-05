@@ -109,7 +109,6 @@ static SRes MyCreateDir(const char *filename, unsigned *umaskv, Bool attribDefin
     if (errno != EEXIST) return SZ_ERROR_WRITE_MKDIR;
   }
   if (attribDefined) {
-    /* !! TODO(pts): chmod directory after its contents */
     if (0 != chmod(filename, GetUnixMode(umaskv, attrib))) return SZ_ERROR_WRITE_MKDIR_CHMOD;
   }
   return SZ_OK;
@@ -166,13 +165,65 @@ static WRes SetMTime(const char *filename,
   return utimes(filename, tv) != 0;
 }
 
-static SRes OutFile_Open(int *p, const char *filename, Bool doYes) {
-  WRes res;
+#ifdef USE_CHMODW
+static Bool MakeFileWritable(const char *filename) {
+  struct stat st;
+#ifdef _SZ_CHMODW_DEBUG
+  fprintf(stderr, "CHMODW MFW %s\n", filename);
+#endif
+  return 0 == lstat(filename, &st) && S_ISREG(st.st_mode) &&
+      (st.st_mode & 0200) == 0 &&
+      chmod(filename, (st.st_mode & 07777) | 0200) != 0 &&
+      errno == EACCES;  /* Permission denied. */
+}
+
+static void MakeDirWritable(const char *filename) {
+  struct stat st;
+#ifdef _SZ_CHMODW_DEBUG
+  fprintf(stderr, "CHMODW MDW %s\n", filename);
+#endif
+  if (0 == lstat(filename, &st) && S_ISDIR(st.st_mode) &&
+      (st.st_mode & 0200) == 0) {
+    chmod(filename, (st.st_mode & 07777) | 0200);
+  }
+}
+
+static void MakeDirsWritable(char *filename) {
+  char *p = filename;
+  /* MakeDirWritable("."); */ /* Don't do this, for security reasons. */
+  for (;;) {
+    while (*p && *p != '/') ++p;
+    if (*p == '\0') break;
+    *p = '\0';
+    MakeDirWritable(filename);
+    *p++ = '/';
+  }
+}
+#endif
+
+static SRes OutFile_Open(int *p, char *filename, Bool doYes) {
   mode_t mode = O_WRONLY | O_CREAT | O_TRUNC;
+#ifdef USE_CHMODW
+  Bool had_again = False;
+#endif
   if (!doYes) mode |= O_EXCL;
+#ifdef USE_CHMODW
+ again:
+#endif
   *p = open(filename, mode, 0644);
-  res = *p >= 0 ? SZ_OK : errno == EEXIST ? SZ_ERROR_OVERWRITE : SZ_ERROR_WRITE_OPEN;
-  return res;
+  if (*p >= 0) return SZ_OK;
+  if (errno == EEXIST) return SZ_ERROR_OVERWRITE;
+#ifdef USE_CHMODW
+  if (errno == EACCES && !had_again) {  /* Permission denied. */
+    if (MakeFileWritable(filename)) {  /* Permission denied. */
+      MakeDirsWritable(filename);
+      MakeFileWritable(filename);
+    }
+    had_again = True;
+    goto again;
+  }
+#endif
+  return SZ_ERROR_WRITE_OPEN;
 }
 
 static void UInt64ToStr(UInt64 value, char *s, int numDigits, char pad)
@@ -457,9 +508,9 @@ int MY_CDECL main(int numargs, char *args[])
         size_t j;
         for (j = 0; j < filename_utf8_len; j++) {
           if (filename_utf8[j] == '/') {
-            filename_utf8[j] = 0;
+            filename_utf8[j] = '\0';
             res = MyCreateDir((const char*)filename_utf8, &umaskv, 0, 0);
-            filename_utf8[j] = CHAR_PATH_SEPARATOR;
+            filename_utf8[j] = '/';
             if (res != SZ_OK) break;
           }
         }
@@ -481,20 +532,28 @@ int MY_CDECL main(int numargs, char *args[])
           res = symlink((const char*)target, (const char*)filename_utf8);
           *target_end = target_end_byte;
           if (res == SZ_OK) {
-          } else if (had_again || errno != EEXIST) {
+          } else if (had_again || errno != EEXIST) { err:
             res = SZ_ERROR_WRITE_SYMLINK;
             break;
           } else if (!doYes) {
             res = SZ_ERROR_OVERWRITE;
             break;
-          } else {
-            unlink((const char*)filename_utf8);
+          } else if (unlink((const char*)filename_utf8) == 0) {
             had_again = True;
             goto again;
+#ifdef USE_CHMODW
+          } else if (errno == EACCES) {  /* Permission denied. */
+            MakeDirsWritable((char*)filename_utf8);
+            if (unlink((const char*)filename_utf8) != 0) goto err;
+            had_again = True;
+            goto again;
+#endif
+          } else {
+            goto err;
           }
         } else {
           int outFile;
-          if ((res = OutFile_Open(&outFile, (const char*)filename_utf8, doYes)) != SZ_OK) break;
+          if ((res = OutFile_Open(&outFile, (char*)filename_utf8, doYes)) != SZ_OK) break;
           if (f->AttribDefined) {
             if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {
               res = SZ_ERROR_WRITE_CHMOD;

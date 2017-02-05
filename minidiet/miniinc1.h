@@ -215,6 +215,30 @@ struct timezone {
   int tz_dsttime;
 };
 
+struct stat64 {
+  __extension__  unsigned long long st_dev;
+  unsigned char  __pad0[4];
+  unsigned long  __st_ino;
+  unsigned int   st_mode;
+  unsigned int   st_nlink;
+  unsigned long  st_uid;
+  unsigned long  st_gid;
+  __extension__  unsigned long long st_rdev;
+  unsigned char  __pad3[4];
+  __extension__ __off_t  st_size;
+  unsigned long  st_blksize;
+  /* Number 512-byte blocks allocated. */
+  __extension__  unsigned long long st_blocks;
+  unsigned long  st_atime;
+  unsigned long  st_atime_nsec;
+  unsigned long  st_mtime;
+  unsigned int   st_mtime_nsec;
+  unsigned long  st_ctime;
+  unsigned long  st_ctime_nsec;
+  __extension__  unsigned long long st_ino;
+  unsigned char __pad_end[8];  /* Without this lstat64 seems to clobber the stack after this. */
+}  __attribute__((packed));
+
 extern int errno __asm__("__minidiet_errno");
 extern char **environ __asm__("__minidiet_environ");
 
@@ -741,6 +765,10 @@ _syscall2(int,mkdir,const char*,pathname,mode_t,mode)
 _syscall2(int,symlink,const char*,oldpath,const char*,newpath)
 _syscall1(int,unlink,const char*,pathname)
 _syscall2(int,utimes,const char*,filename,const struct timeval*,times)
+_syscall2(int,lstat64,const char*,path,struct stat64*,buf)
+
+#define stat stat64
+#define lstat lstat64
 
 __attribute__((__nothrow__)) static __inline__ off64_t lseek64(
     int fd, off64_t offset, int whence) {

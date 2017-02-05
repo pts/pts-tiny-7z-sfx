@@ -1,11 +1,12 @@
 by pts@fazekas.hu at Tue Jan 31 11:15:10 CET 2017
 
-system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdir open read write _llseek close
+system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdir open read write _llseek close lstat
 
 Ideas to reduce file size:
 
 * (drop the -e flag.)
 * (add support for the l command.)
+* (Don't let filename_utf8 start with '/' or have '..'.)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
 * (advanced) Don't store LZMA decompressors (once in the upx stub and one
