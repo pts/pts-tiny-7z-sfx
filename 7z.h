@@ -160,7 +160,7 @@ typedef struct
   UInt32 *FileIndexToFolderIndexMap;
 
   size_t *FileNameOffsets; /* in 2-byte steps */
-  CBuf FileNames;  /* UTF-16-LE */
+  Byte *FileNamesPtr;  /* UTF-16-LE */
 } CSzArEx;
 
 STATIC void SzArEx_Init(CSzArEx *p);
