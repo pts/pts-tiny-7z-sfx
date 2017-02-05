@@ -82,7 +82,7 @@ typedef enum
   LZMA_FINISH_END    /* block must be finished at the end */
 } ELzmaFinishMode;
 
-/* ELzmaFinishMode has meaning only if the decoding reaches output limit !!!
+/* ELzmaFinishMode has meaning only if the decoding reaches output limit
 
    You must use LZMA_FINISH_END, when you know that current output buffer
    covers last bytes of block. In other cases you must use LZMA_FINISH_ANY.
@@ -158,7 +158,7 @@ STATIC void LzmaDec_FreeProbs(CLzmaDec *p);
 /* LzmaDec_DecodeToDic
 
    The decoding to internal dictionary buffer (CLzmaDec::dic).
-   You must manually update CLzmaDec::dicPos, if it reaches CLzmaDec::dicBufSize !!!
+   You must manually update CLzmaDec::dicPos, if it reaches CLzmaDec::dicBufSize
 
 finishMode:
   It has meaning only if the decoding reaches output limit (dicLimit).
