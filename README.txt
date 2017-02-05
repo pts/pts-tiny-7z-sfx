@@ -30,9 +30,9 @@ Memory usage:
 * Only the solid block size (`7z -ms=...') matters. The default can be
   very high (up to 4 GB), so always specify something small (e.g.
   `7z -ms=50000000b') or turn off solid blocks (`7z -ms=off').
-* The memory usage will be:
+* The memory usage will be (most of the time):
 
-  total_memory_usage_for_tiny7zip_decompression <=
+  total_memory_usage_for_tiny7zx_decompression <=
       static_memory_size +
       archive_header_size +
       listing_structures_size +
@@ -40,7 +40,7 @@ Memory usage:
   static_memory_size == 100 000 bytes.
   archive_header_size == file_count * 32 bytes + sum(filename_sizes).
   filename_sizes counts each character as 2 bytes (because of UTF-16 encoding).
-  listing_structures_size == file_count * 58 bytes + sum(filename_sizes).
+  listing_structures_size == file_count * 56 bytes.
   solid_block_size == value of `7z -ms=...', or 0 if `7z -ms=off'.
       Be careful, the default can be as large as 4 GB.
   uncompressed_file_sizes: List of uncompressed file sizes in the archive.
