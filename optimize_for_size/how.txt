@@ -4,6 +4,10 @@ system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdi
 
 Ideas to reduce file size:
 
+* How much memory i needed for an archive with many files? When is it
+  deleted?
+* (drop the -e flag.)
+* (add support for the l command.)
 * Use a malloc stack, make sure it plays well with allocations in
   SzArEx_Extract.
 * (how to estimate the memory usage from the 7z command-line?)
@@ -50,6 +54,11 @@ Ideas already implemented:
   The malloc(21810108) happens after the free() of 26192641. Can we optimize it?
   How much is the memory usage, who do we need the big malloc for?
   How does it change if we duplicate all files twice in the .7z?
+  LZMA extraction of a big file (400000002) seems to need:
+  DYNAMIC ALLOC 400000002 = 0xdfa57008
+  DYNAMIC ALLOC 15980 = 0x91f1a68
+  DYNAMIC FREE 0x91f1a68 was 15980
+  DYNAMIC FREE 0xdfa57008 was 400000002
 * DONE: Use the lseek64 library call (or _llseek system call) for 64-bit seeks
   in the archive in c-minidiet.sh
 * DONE: Inline some syscall functions in minidiet/minidiet.c.

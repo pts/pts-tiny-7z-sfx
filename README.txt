@@ -16,12 +16,35 @@ Features:
 Limitations:
 
 * It supports only: LZMA, LZMA2, BCJ, BCJ2, COPY.
-* It keeps an uncompressed version of each file in RAM.
-* It decompresses solid 7z blocks (it can be whole 7z archive) to RAM.
-  So user that calls SFX installer must have free RAM of size of largest
-  solid 7z block (size of 7z archive at simplest case).
+* Memory usage is high, especially for solid archives. See below.
 * It always extracts to the current directory.
 * It does not support (and may misbehave for) encryption in archives.
+
+Memory usage:
+
+* It keeps an uncompressed version of each file in memory.
+* It decompresses solid blocks (it can be whole .7z archive) to memory.
+* You can limit the memory usage of decompression by specifying `7z -m...'
+  flags when creating the .7z archive.
+* The dictionary size (`7z -md=...') doesn't matter for memory usage.
+* Only the solid block size (`7z -ms=...') matters. The default can be
+  very high (up to 4 GB), so always specify something small (e.g.
+  `7z -ms=50000000b') or turn off solid blocks (`7z -ms=off').
+* The memory usage will be:
+
+  total_memory_usage_for_tiny7zip_decompression <=
+      static_memory_size +
+      archive_header_size +
+      listing_structures_size +
+      max([solid_block_size] + uncompressed_file_sizes).
+  static_memory_size == 100 000 bytes.
+  archive_header_size == file_count * 32 bytes + sum(filename_sizes).
+  filename_sizes counts each character as 2 bytes (because of UTF-16 encoding).
+  listing_structures_size == file_count * 58 bytes + sum(filename_sizes).
+  solid_block_size == value of `7z -ms=...', or 0 if `7z -ms=off'.
+      Be careful, the default can be as large as 4 GB.
+  uncompressed_file_sizes: List of uncompressed file sizes in the archive.
+  file_count and file_size include both files and directories (folders).
 
 Supported systems:
 
