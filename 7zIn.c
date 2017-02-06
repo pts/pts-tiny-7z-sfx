@@ -210,6 +210,7 @@ static SRes SzArEx_Fill(CSzArEx *p)
   UInt32 i;
   UInt32 folderIndex = 0;
   UInt32 indexInFolder = 0;
+
   MY_ALLOC(UInt32, p->FolderStartPackStreamIndex, p->db.NumFolders);
   for (i = 0; i < p->db.NumFolders; i++)
   {
@@ -966,7 +967,7 @@ static SRes SzReadHeader2(
         if ((namesSize & 1) != 0)
           return SZ_ERROR_ARCHIVE;
         /* if (!(p->FileNamesPtr = SzAlloc( namesSize))) */
-        MY_ALLOC(size_t, p->FileNameOffsets, numFiles + 1);
+        MY_ALLOC(size_t, p->FileNameOffsets, numFiles + 1);  /* SzAlloc(4 * numFiles + 4).; */
         p->FileNamesInHeaderBufPtr = sd->Data;
         /* memcpy(p->FileNamesPtr, sd->Data, namesSize); */
         RINOK(SzReadFileNames(sd->Data, namesSize >> 1, numFiles, p->FileNameOffsets))
@@ -975,7 +976,7 @@ static SRes SzReadHeader2(
       }
       case k7zIdEmptyStream:
       {
-        RINOK(SzReadBoolVector(sd, numFiles, emptyStreamVector));
+        RINOK(SzReadBoolVector(sd, numFiles, emptyStreamVector));  /* SzAlloc(numFiles). */
         numEmptyStreams = 0;
         for (i = 0; i < numFiles; i++)
           if ((*emptyStreamVector)[i])
@@ -984,12 +985,12 @@ static SRes SzReadHeader2(
       }
       case k7zIdEmptyFile:
       {
-        RINOK(SzReadBoolVector(sd, numEmptyStreams, emptyFileVector));
+        RINOK(SzReadBoolVector(sd, numEmptyStreams, emptyFileVector));  /* SzAlloc(numEmptyStreams), can be as much as SzAlloc(numFiles). */
         break;
       }
       case k7zIdWinAttributes:
       {
-        RINOK(SzReadBoolVector2(sd, numFiles, lwtVector));
+        RINOK(SzReadBoolVector2(sd, numFiles, lwtVector));  /* SzAlloc(numFiles), will get freed quickly. */
         RINOK(SzReadSwitch(sd));
         for (i = 0; i < numFiles; i++)
         {
@@ -1008,7 +1009,7 @@ static SRes SzReadHeader2(
       }
       case k7zIdMTime:
       {
-        RINOK(SzReadBoolVector2(sd, numFiles, lwtVector));
+        RINOK(SzReadBoolVector2(sd, numFiles, lwtVector));  /* SzAlloc(numFiles), will get freed quickly. */
         RINOK(SzReadSwitch(sd));
         for (i = 0; i < numFiles; i++)
         {

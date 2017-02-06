@@ -87,4 +87,12 @@ Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 * Estimated size of the output ELF: 7600 + 300 + 10000 == 17900 bytes.
 * ... So probably not worth writing, because tiny7zx.upx is already 16640 bytes.
 
+Typical values:
+
+* pts-letsencrypt-0.5.0.2.sfx.7z (solid archive with 3131 files+directories and 2 solid blocks): NumPackStreams=2 NumFolders=2 NumFiles=3131
+* manyf1.7z (solid archive with 100000 empty files and 1 directory): NumPackStreams=0 NumFolders=0 NumFiles=100001
+* hello_unwritable_nosolid.7z (non-solid archive with 5 nonempty files and 2 directories): NumPackStreams=5 NumFolders=5 NumFiles=7
+* NumPackStreams = NumFolders = is_solid ? number_of_solid_blocks : number_of_nonempty_files;
+* NumFiles = number_of_files + number_of_directories;
+
 __END__
