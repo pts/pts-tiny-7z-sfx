@@ -100,7 +100,6 @@ typedef struct
   UInt32 Attrib;
   Byte HasStream;
   Byte IsDir;
-  Byte IsAnti;
   Byte CrcDefined;
   Byte MTimeDefined;
   Byte AttribDefined;

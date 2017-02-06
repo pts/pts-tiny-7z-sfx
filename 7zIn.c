@@ -122,7 +122,6 @@ STATIC void SzFile_Init(CSzFileItem *p)
 {
   p->HasStream = 1;
   p->IsDir = 0;
-  p->IsAnti = 0;
   p->CrcDefined = 0;
   p->MTimeDefined = 0;
 }
@@ -1049,7 +1048,6 @@ static SRes SzReadHeader(
     for (i = 0; i < numFiles; i++)
     {
       CSzFileItem *file = files + i;
-      file->IsAnti = 0;
       file->HasStream = !emptyStreamVector || !emptyStreamVector[i];
       if (file->HasStream)
       {
