@@ -313,46 +313,49 @@ int MY_CDECL main(int numargs, char *args[])
   size_t filename_utf8_capacity = 0;
 #endif
   unsigned umaskv = -1;
-  const char *archive = args[0];
-  Bool listCommand = 0, testCommand = 0, doYes = 0;
-  int argi = 2;
+  const char *archive = NULL;
+  Byte command = 'x';
+  Bool doYes = 0;
+  int argi = 1;
   const char *args1 = numargs >= 2 ? args[1] : "";
 
-  WriteMessage("Tiny 7z extractor " MY_VERSION "\n\n");
+  WriteMessage("Tiny 7z extractor " MY_VERSION "\n");
   if ((args1[0] == '-' && args1[1] == 'h' && args1[2] == '\0') ||
       IS_HELP(args1)) {
-    WriteMessage("Usage: ");
+    argi = 0;
+   exit_with_usage:
+    WriteMessage("\nUsage: ");
     WriteMessage(args[0]);
-    WriteMessage(" <command> [<switches>...]\n\n"
-      "<Commands>\n"
-      "  l: List contents of archive\n"
-      "  t: Test integrity of archive\n"
-      "  x: eXtract files with full pathname (default)\n"
-      "<Switches>\n"
-      "  -e{Archive}: archive to Extract (default is self, argv[0])\n"
-      "  -y: assume Yes on all queries\n");
-     return 0;
+    WriteMessage(" [<command>] [<switch>...] [<archive.7z>]\n\n"
+        "Commands:\n"
+        "  l or v: List contents of archive.\n"
+        "  t: Test integrity of archive.\n"
+        "  x: eXtract files with full pathname (default).\n"
+        "Switches:\n"
+        "  -e<archive.7z>: archive to extract (default is self, argv[0]).\n"
+        "  -y: assume Overwrite files.\n");
+    return argi;
   }
-  if (numargs >= 2) {
-    if (args1[0] == '-') {
-      argi = 1;  /* Interpret args1 as a switch. */
-    } else if (STRCMP1(args1, 'l')) {
-      listCommand = 1;
-    } else if (STRCMP1(args1, 't')) {
-      testCommand = 1;
-    } else if (STRCMP1(args1, 'x')) {
-      /* extractCommand = 1; */
+  if (numargs >= 2 && args1[0] != '-') {
+    const char *arg = args[argi++];
+    if (STRCMP1(arg, 'l') || STRCMP1(arg, 'v')) {
+      command = 'l';
+    } else if (STRCMP1(arg, 't')) {
+      command = 't';
+    } else if (STRCMP1(arg, 'x')) {
+      /* command = 'x'; */
     } else {
       PrintError("unknown command");
-      return 1;
+      argi = 1; goto exit_with_usage;
     }
   }
   for (; argi < numargs; ++argi) {
     const char *arg = args[argi];
-    if (arg[0] != '-') { incorrect_switch:
-      PrintError("incorrect switch");
-      return 1;
+    if (STRCMP1(arg, '-')) {
+      ++argi;
+      break;
     }
+    if (arg[0] != '-') break;
    same_arg:
     if (arg[1] == 'e') {
       archive = arg + 2;
@@ -363,11 +366,24 @@ int MY_CDECL main(int numargs, char *args[])
         goto same_arg;
       }
     } else {
-      goto incorrect_switch;
+      PrintError("incorrect switch");
+      argi = 1; goto exit_with_usage;
     }
   }
+  if (argi < numargs) {
+    if (archive) {
+      PrintError("archive specified multiple times");
+      argi = 1; goto exit_with_usage;
+    }
+    archive = args[argi++];
+  }
+  if (argi != numargs) {
+    PrintError("too many arguments");
+    argi = 1; goto exit_with_usage;
+  }
+  if (!archive) archive = args[0];  /* Self-extract (sfx). */
 
-  WriteMessage("Processing archive: ");
+  WriteMessage("\nProcessing archive: ");
   WriteMessage(archive);
   WriteMessage("\n");
   WriteMessage("\n");
@@ -409,7 +425,7 @@ int MY_CDECL main(int numargs, char *args[])
       size_t filename_utf8_len = filename_utf16le_len * 3;
       SRes extract_res = SZ_OK;
 
-      if (!listCommand && !f->IsDir) {
+      if (command != 'l' && !f->IsDir) {
         if (blockIndex != db.FileIndexToFolderIndexMap[fileIndex]) {
           /* Memory usage optimization for USE_MINIALLOC.
            *
@@ -454,7 +470,7 @@ int MY_CDECL main(int numargs, char *args[])
         break;
       }
 
-      if (listCommand)
+      if (command == 'l')
       {
         char s[32], t[32];
 
@@ -480,16 +496,14 @@ int MY_CDECL main(int numargs, char *args[])
         WriteMessage("\n");
         continue;
       }
-      WriteMessage(testCommand ?
-          "Testing    ":
-          "Extracting ");
+      WriteMessage(command == 't' ? "Testing    ": "Extracting ");
       WriteMessage((const char*)filename_utf8);
       if (f->IsDir) {
         WriteMessage("/");
       } else {
         if (extract_res != SZ_OK) { res = extract_res; break; }
       }
-      if (!testCommand) {
+      if (command != 't') {
         size_t processedSize;
         const UInt32 attrib = f->Attrib;
         unsigned mode = attrib >> 16;  /* Don't apply the umask. */
@@ -586,7 +600,7 @@ int MY_CDECL main(int numargs, char *args[])
 
   close(lookStream.fd);
   if (res == SZ_OK) {
-    WriteMessage("\nEverything is Ok\n");
+    WriteMessage("\ntiny7zx OK.\n");
     return 0;
   } else if (res == SZ_ERROR_UNSUPPORTED) {
     PrintError("decoder doesn't support this archive");
@@ -596,6 +610,7 @@ int MY_CDECL main(int numargs, char *args[])
     PrintError("CRC error");
   } else if (res == SZ_ERROR_NO_ARCHIVE) {
     PrintError("input file is not a .7z archive");
+    if (archive == args[0]) { argi = 1; goto exit_with_usage; }
   } else if (res == SZ_ERROR_OVERWRITE) {
     PrintError("already exists, specify -y to overwrite");
   } else if (res == SZ_ERROR_WRITE_OPEN) {
