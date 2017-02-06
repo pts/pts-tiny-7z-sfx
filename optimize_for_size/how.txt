@@ -9,8 +9,6 @@ Ideas to reduce file size:
 * (Don't let filename_utf8 start with '/' or have '..'.)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
-* (advanced) Don't store LZMA decompressors (once in the upx stub and one
-  in Lzma2Dec.c).
 * Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
   better?
 
@@ -63,6 +61,9 @@ Ideas already implemented:
 * DONE: Reuse the output buffer for Utf16_To_Char.
 * DONE: Use a malloc stack, make sure it plays well with allocations in
   SzArEx_Extract.
+* DONE: Get rid of the memcpy in SzArEx_GetFileNameUtf16 (and the entire function),
+  for that FileNamesInHeaderBufPtr needs to be on a 2-aligned address on
+  some architectures.
 
 Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 

@@ -6,23 +6,26 @@
 #include "7zAlloc.h"
 #include "7zCrc.h"
 #include "7zVersion.h"
+#include "CpuArch.h"
 
 static Byte kUtf8Limits[5] = { 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
 
 /* TODO(pts): Check for overflow in destPos? */
-static Bool Utf16_To_Utf8(Byte *dest, size_t *destLen, const UInt16 *src, size_t srcLen)
+static Bool Utf16Le_To_Utf8(Byte *dest, size_t *destLen, const Byte *srcUtf16Le, size_t srcUtf16LeLen)
 {
-  size_t destPos = 0, srcPos = 0;
+  size_t destPos = 0;
+  const Byte *srcUtf16LeEnd = srcUtf16Le + srcUtf16LeLen * 2;
   for (;;)
   {
     unsigned numAdds;
     UInt32 value;
-    if (srcPos == srcLen)
+    if (srcUtf16Le == srcUtf16LeEnd)
     {
       *destLen = destPos;
       return True;
     }
-    value = src[srcPos++];
+    value = GetUi16(srcUtf16Le);
+    srcUtf16Le += 2;
     if (value < 0x80)
     {
       if (dest)
@@ -33,9 +36,10 @@ static Bool Utf16_To_Utf8(Byte *dest, size_t *destLen, const UInt16 *src, size_t
     if (value >= 0xD800 && value < 0xE000)
     {
       UInt32 c2;
-      if (value >= 0xDC00 || srcPos == srcLen)
+      if (value >= 0xDC00 || srcUtf16Le == srcUtf16LeEnd)
         break;
-      c2 = src[srcPos++];
+      c2 = GetUi16(srcUtf16Le);
+      srcUtf16Le += 2;
       if (c2 < 0xDC00 || c2 >= 0xE000)
         break;
       value = (((value - 0xD800) << 10) | (c2 - 0xDC00)) + 0x10000;
@@ -317,9 +321,9 @@ int MY_CDECL main(int numargs, char *args[])
   CLookToRead lookStream;
   CSzArEx db;
   SRes res;
-  UInt16 *temp = NULL;
+  Byte *filename_utf8 = NULL;
 #ifndef USE_MINIALLOC
-  size_t temp_size = 0;
+  size_t filename_utf8_capacity = 0;
 #endif
   unsigned umaskv = -1;
   const char *archive = args[0];
@@ -392,7 +396,7 @@ int MY_CDECL main(int numargs, char *args[])
   SzArEx_Init(&db);
   res = SzArEx_Open(&db, &lookStream);
   if (res == SZ_OK) {
-    UInt32 i;
+    UInt32 fileIndex;
     struct timeval tv[2];
 
     /*
@@ -406,64 +410,58 @@ int MY_CDECL main(int numargs, char *args[])
     /* Get desired st_time for extracted files. */
     gettimeofday(&tv[0], NULL);
 
-    for (i = 0; i < db.db.NumFiles; i++)
-    {
+    for (fileIndex = 0; fileIndex < db.db.NumFiles; fileIndex++) {
       size_t offset = 0;
       size_t outSizeProcessed = 0;
-      const CSzFileItem *f = db.db.Files + i;
-      const size_t filename_len = SzArEx_GetFileNameUtf16(&db, i, NULL);
+      const CSzFileItem *f = db.db.Files + fileIndex;
+      const size_t filename_offset = db.FileNameOffsets[fileIndex];
+      const size_t filename_utf16le_len =  db.FileNameOffsets[fileIndex + 1] - filename_offset;
+      const Byte *filename_utf16le = db.FileNamesInHeaderBufPtr + filename_offset * 2;
       /* 2 for UTF-18 + 3 for UTF-8. 1 UTF-16 entry point can create at most 3 UTF-8 bytes (averaging for surrogates). */
-      /* TODO(pts): Allow UTF-8 and UTF-16 to overlap. */
-      /* TODO(pts): Check for overflow. */
-      const size_t filename_alloc = filename_len * 5;
-      Byte *filename_utf8;
-      size_t filename_utf8_len;
+      size_t filename_utf8_len = filename_utf16le_len * 3;
       SRes extract_res = SZ_OK;
 
       if (!listCommand && !f->IsDir) {
-        if (blockIndex != db.FileIndexToFolderIndexMap[i]) {
+        if (blockIndex != db.FileIndexToFolderIndexMap[fileIndex]) {
           /* Memory usage optimization for USE_MINIALLOC.
            *
            * Without this, all solid blocks would be kept in memory,
            * potentially using gigabytes.
            */
-          SzFree(temp);
-          temp = NULL;
+          SzFree(filename_utf8);
+          filename_utf8 = NULL;
 #ifndef USE_MINIALLOC
-          temp_size = 0;
+          filename_utf8_capacity = 0;
 #endif
         }
         /* It's important to do this first, before we allocate memory for
-         * temp for filename processing. Otherwise, with USE_MINIALLOC,
+         * filename_utf8 for filename processing. Otherwise, with USE_MINIALLOC,
          * solid blocks would accumulate in memory.
          */
-        extract_res = SzArEx_Extract(&db, &lookStream, i,
+        extract_res = SzArEx_Extract(&db, &lookStream, fileIndex,
             &blockIndex, &outBuffer, &outBufferSize,
             &offset, &outSizeProcessed);
       }
 #ifdef USE_MINIALLOC  /* Do an SzAlloc for each filename. It's cheap with USE_MINIALLOC. */
-      SzFree(temp);
-      if ((temp = (UInt16 *)SzAlloc(filename_alloc)) == 0) {
+      SzFree(filename_utf8);
+      if ((filename_utf8 = (Byte*)SzAlloc(filename_utf8_len)) == 0) {
         res = SZ_ERROR_MEM;
         break;
       }
 #else
-      if (filename_alloc > temp_size) {
-        SzFree(temp);
-        if (temp_size == 0) temp_size = 128;
-        while (temp_size < filename_alloc) {
-          temp_size <<= 1;
+      if (filename_utf8_len > filename_utf8_capacity) {
+        SzFree(filename_utf8);
+        if (filename_utf8_capacity == 0) filename_utf8_capacity = 128;
+        while (filename_utf8_capacity < filename_utf8_len) {
+          filename_utf8_capacity <<= 1;
         }
-        if ((temp = (UInt16 *)SzAlloc(temp_size)) == 0) {
+        if ((filename_utf8 = (Byte*)SzAlloc(filename_utf8_capacity)) == 0) {
           res = SZ_ERROR_MEM;
           break;
         }
       }
 #endif
-      SzArEx_GetFileNameUtf16(&db, i, temp);
-      filename_utf8 = (Byte*)temp + filename_len * 2;
-      filename_utf8_len = filename_len * 3;
-      if (!Utf16_To_Utf8(filename_utf8, &filename_utf8_len, temp, filename_len)) {
+      if (!Utf16Le_To_Utf8(filename_utf8, &filename_utf8_len, filename_utf16le, filename_utf16le_len)) {
         res = SZ_ERROR_BAD_FILENAME;
         break;
       }
@@ -579,7 +577,7 @@ int MY_CDECL main(int numargs, char *args[])
     SzFree(outBuffer);
   }
   SzArEx_Free(&db);
-  SzFree(temp);
+  SzFree(filename_utf8);
 
   close(lookStream.fd);
   if (res == SZ_OK) {

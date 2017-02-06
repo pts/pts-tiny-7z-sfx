@@ -168,14 +168,6 @@ STATIC void SzArEx_Init(CSzArEx *p);
 STATIC void SzArEx_Free(CSzArEx *p);
 STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
 
-/*
-if dest == NULL, the return value specifies the required size of the buffer,
-  in 16-bit characters, including the null-terminating character.
-if dest != NULL, the return value specifies the number of 16-bit characters that
-  are written to the dest, including the null-terminating character. */
-
-STATIC size_t SzArEx_GetFileNameUtf16(const CSzArEx *p, size_t fileIndex, UInt16 *dest);
-
 STATIC SRes SzArEx_Extract(
     const CSzArEx *db,
     CLookToRead *inStream,
