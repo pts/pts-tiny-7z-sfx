@@ -889,54 +889,59 @@ static SRes SzReadFileNames(const Byte *p, size_t size, UInt32 numFiles, size_t 
   return (pos == size) ? SZ_OK : SZ_ERROR_ARCHIVE;
 }
 
-static SRes SzReadHeader2(
+#define RDINOK(x) do { if ((res = (x)) != SZ_OK) goto done; } while(0)
+#define RDALLOC(T, p, size) { if ((size) == 0) p = 0; else \
+  if ((p = (T *)SzAlloc((size) * sizeof(T))) == 0) { res = SZ_ERROR_MEM; goto done; } }
+
+static SRes SzReadHeader(
     CSzArEx *p,   /* allocMain */
-    CSzData *sd,
-    UInt64 **unpackSizes,  /* allocTemp */
-    Byte **digestsDefined,    /* allocTemp */
-    UInt32 **digests,         /* allocTemp */
-    Byte **emptyStreamVector, /* allocTemp */
-    Byte **emptyFileVector,   /* allocTemp */
-    Byte **lwtVector)         /* allocTemp */
-{
+    CSzData *sd) {
+  UInt64 *unpackSizes = 0;  /* Unpacked size for each file. SzAlloc(8 * numUnpackStreams). */
+  Byte *digestsDefined = 0;  /* SzAlloc(numUnpackStreams). */
+  UInt32 *digests = 0;  /* SzAlloc(4 * numUnpackStreams). */
+  Byte *emptyStreamVector = 0;  /* SzAlloc(numFiles) or NULL. */
+  Byte *emptyFileVector = 0;
+  Byte *lwtVector = 0;  /* SzAlloc(numFiles), only temporarily. */
   UInt64 type;
-  UInt32 numUnpackStreams = 0;
+  UInt32 numUnpackStreams = 0;  /* numUnpackStreams <= numFiles. */
   UInt32 numFiles = 0;
   CSzFileItem *files = 0;
   UInt32 numEmptyStreams = 0;
   UInt32 i;
+  SRes res = SZ_OK;
 
-  RINOK(SzReadID(sd, &type));
+  RDINOK(SzReadID(sd, &type));
 
   if (type == k7zIdArchiveProperties)
   {
-    RINOK(SzReadArchiveProperties(sd));
-    RINOK(SzReadID(sd, &type));
+    RDINOK(SzReadArchiveProperties(sd));
+    RDINOK(SzReadID(sd, &type));
   }
 
 
   if (type == k7zIdMainStreamsInfo)
   {
-    RINOK(SzReadStreamsInfo(sd,
+    RDINOK(SzReadStreamsInfo(sd,
         &p->dataPos,
         &p->db,
         &numUnpackStreams,
-        unpackSizes,
-        digestsDefined,
-        digests));
+        &unpackSizes,
+        &digestsDefined,
+        &digests));
     p->dataPos += p->startPosAfterHeader;
-    RINOK(SzReadID(sd, &type));
+    RDINOK(SzReadID(sd, &type));
   }
 
-  if (type == k7zIdEnd)
-    return SZ_OK;
-  if (type != k7zIdFilesInfo)
-    return SZ_ERROR_ARCHIVE;
+  if (type == k7zIdEnd) goto done;
+  if (type != k7zIdFilesInfo) {
+    res = SZ_ERROR_ARCHIVE;
+    goto done;
+  }
 
-  RINOK(SzReadNumber32(sd, &numFiles));
+  RDINOK(SzReadNumber32(sd, &numFiles));
   p->db.NumFiles = numFiles;
 
-  MY_ALLOC(CSzFileItem, files, (size_t)numFiles);
+  RDALLOC(CSzFileItem, files, (size_t)numFiles);
 
   p->db.Files = files;
   for (i = 0; i < numFiles; i++)
@@ -946,15 +951,17 @@ static SRes SzReadHeader2(
   {
     UInt64 type;
     UInt64 size;
-    RINOK(SzReadID(sd, &type));
+    RDINOK(SzReadID(sd, &type));
     if (type == k7zIdEnd)
       break;
-    RINOK(SzReadNumber(sd, &size));
-    if (size > sd->Size)
-      return SZ_ERROR_ARCHIVE;
+    RDINOK(SzReadNumber(sd, &size));
+    if (size > sd->Size) {
+      res = SZ_ERROR_ARCHIVE;
+      goto done;
+    }
     if ((UInt64)(int)type != type)
     {
-      RINOK(SzSkeepDataSize(sd, size));
+      RDINOK(SzSkeepDataSize(sd, size));
     }
     else
     switch((int)type)
@@ -962,74 +969,76 @@ static SRes SzReadHeader2(
       case k7zIdName:
       {
         size_t namesSize;
-        RINOK(SzReadSwitch(sd));
+        RDINOK(SzReadSwitch(sd));
         namesSize = (size_t)size - 1;
-        if ((namesSize & 1) != 0)
-          return SZ_ERROR_ARCHIVE;
+        if ((namesSize & 1) != 0) {
+          res = SZ_ERROR_ARCHIVE;
+          goto done;
+        }
         /* if (!(p->FileNamesPtr = SzAlloc( namesSize))) */
-        MY_ALLOC(size_t, p->FileNameOffsets, numFiles + 1);  /* SzAlloc(4 * numFiles + 4).; */
+        RDALLOC(size_t, p->FileNameOffsets, numFiles + 1);  /* SzAlloc(4 * numFiles + 4).; */
         p->FileNamesInHeaderBufPtr = sd->Data;
         /* memcpy(p->FileNamesPtr, sd->Data, namesSize); */
-        RINOK(SzReadFileNames(sd->Data, namesSize >> 1, numFiles, p->FileNameOffsets))
-        RINOK(SzSkeepDataSize(sd, namesSize));
+        RDINOK(SzReadFileNames(sd->Data, namesSize >> 1, numFiles, p->FileNameOffsets));
+        RDINOK(SzSkeepDataSize(sd, namesSize));
         break;
       }
       case k7zIdEmptyStream:
       {
-        RINOK(SzReadBoolVector(sd, numFiles, emptyStreamVector));  /* SzAlloc(numFiles). */
+        RDINOK(SzReadBoolVector(sd, numFiles, &emptyStreamVector));  /* SzAlloc(numFiles). */
         numEmptyStreams = 0;
         for (i = 0; i < numFiles; i++)
-          if ((*emptyStreamVector)[i])
+          if (emptyStreamVector[i])
             numEmptyStreams++;
         break;
       }
       case k7zIdEmptyFile:
       {
-        RINOK(SzReadBoolVector(sd, numEmptyStreams, emptyFileVector));  /* SzAlloc(numEmptyStreams), can be as much as SzAlloc(numFiles). */
+        RDINOK(SzReadBoolVector(sd, numEmptyStreams, &emptyFileVector));  /* SzAlloc(numEmptyStreams), can be as much as SzAlloc(numFiles). */
         break;
       }
       case k7zIdWinAttributes:
       {
-        RINOK(SzReadBoolVector2(sd, numFiles, lwtVector));  /* SzAlloc(numFiles), will get freed quickly. */
-        RINOK(SzReadSwitch(sd));
+        RDINOK(SzReadBoolVector2(sd, numFiles, &lwtVector));  /* SzAlloc(numFiles), will get freed quickly. */
+        RDINOK(SzReadSwitch(sd));
         for (i = 0; i < numFiles; i++)
         {
           CSzFileItem *f = &files[i];
-          Byte defined = (*lwtVector)[i];
+          Byte defined = lwtVector[i];
           f->AttribDefined = defined;
           f->Attrib = 0;
           if (defined)
           {
-            RINOK(SzReadUInt32(sd, &f->Attrib));
+            RDINOK(SzReadUInt32(sd, &f->Attrib));
           }
         }
-        SzFree(*lwtVector);
-        *lwtVector = NULL;
+        SzFree(lwtVector);
+        lwtVector = NULL;
         break;
       }
       case k7zIdMTime:
       {
-        RINOK(SzReadBoolVector2(sd, numFiles, lwtVector));  /* SzAlloc(numFiles), will get freed quickly. */
-        RINOK(SzReadSwitch(sd));
+        RDINOK(SzReadBoolVector2(sd, numFiles, &lwtVector));  /* SzAlloc(numFiles), will get freed quickly. */
+        RDINOK(SzReadSwitch(sd));
         for (i = 0; i < numFiles; i++)
         {
           CSzFileItem *f = &files[i];
-          Byte defined = (*lwtVector)[i];
+          Byte defined = lwtVector[i];
           f->MTimeDefined = defined;
           f->MTime.Low = f->MTime.High = 0;
           if (defined)
           {
-            RINOK(SzReadUInt32(sd, &f->MTime.Low));
-            RINOK(SzReadUInt32(sd, &f->MTime.High));
+            RDINOK(SzReadUInt32(sd, &f->MTime.Low));
+            RDINOK(SzReadUInt32(sd, &f->MTime.High));
           }
         }
-        SzFree(*lwtVector);
-        *lwtVector = NULL;
+        SzFree(lwtVector);
+        lwtVector = NULL;
         break;
       }
       default:
       {
-        RINOK(SzSkeepDataSize(sd, size));
+        RDINOK(SzSkeepDataSize(sd, size));
       }
     }
   }
@@ -1041,24 +1050,18 @@ static SRes SzReadHeader2(
     {
       CSzFileItem *file = files + i;
       file->IsAnti = 0;
-      if (*emptyStreamVector == 0)
-        file->HasStream = 1;
-      else
-        file->HasStream = (Byte)((*emptyStreamVector)[i] ? 0 : 1);
+      file->HasStream = !emptyStreamVector || !emptyStreamVector[i];
       if (file->HasStream)
       {
         file->IsDir = 0;
-        file->Size = (*unpackSizes)[sizeIndex];
-        file->Crc = (*digests)[sizeIndex];
-        file->CrcDefined = (Byte)(*digestsDefined)[sizeIndex];
+        file->Size = unpackSizes[sizeIndex];
+        file->Crc = digests[sizeIndex];
+        file->CrcDefined = digestsDefined[sizeIndex];
         sizeIndex++;
       }
       else
       {
-        if (*emptyFileVector == 0)
-          file->IsDir = 1;
-        else
-          file->IsDir = (Byte)((*emptyFileVector)[emptyFileIndex] ? 0 : 1);
+        file->IsDir = !emptyFileVector || !emptyFileVector[emptyFileIndex];
         emptyFileIndex++;
         file->Size = 0;
         file->Crc = 0;
@@ -1066,29 +1069,15 @@ static SRes SzReadHeader2(
       }
     }
   }
-  return SzArEx_Fill(p);
-}
 
-static SRes SzReadHeader(
-    CSzArEx *p,
-    CSzData *sd)
-{
-  UInt64 *unpackSizes = 0;
-  Byte *digestsDefined = 0;
-  UInt32 *digests = 0;
-  Byte *emptyStreamVector = 0;
-  Byte *emptyFileVector = 0;
-  Byte *lwtVector = 0;
-  SRes res = SzReadHeader2(p, sd,
-      &unpackSizes, &digestsDefined, &digests,
-      &emptyStreamVector, &emptyFileVector, &lwtVector);
+ done:
   SzFree(unpackSizes);
   SzFree(digestsDefined);
   SzFree(digests);
   SzFree(emptyStreamVector);
   SzFree(emptyFileVector);
   SzFree(lwtVector);
-  return res;
+  return res == SZ_OK ? SzArEx_Fill(p) : res;
 }
 
 static SRes SzReadAndDecodePackedStreams2(
