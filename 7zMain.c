@@ -106,7 +106,8 @@ STATIC void PrintError(char *sz)
   WriteMessage("\n");
 }
 
-static SRes MyCreateDir(const char *filename, unsigned *umaskv, Bool attribDefined, UInt32 attrib) {
+static SRes MyCreateDir(const char *filename, unsigned *umaskv, UInt32 attrib) {
+  const Bool attribDefined = attrib != (UInt32)-1;
   const unsigned mode = GetUnixMode(umaskv, attribDefined ? attrib :
       FILE_ATTRIBUTE_UNIX_EXTENSION | 0755 << 16);
   if (mkdir(filename, mode) != 0) {
@@ -507,7 +508,7 @@ int MY_CDECL main(int numargs, char *args[])
         for (j = 0; j < filename_utf8_len; j++) {
           if (filename_utf8[j] == '/') {
             filename_utf8[j] = '\0';
-            res = MyCreateDir((const char*)filename_utf8, &umaskv, 0, 0);
+            res = MyCreateDir((const char*)filename_utf8, &umaskv, (UInt32)-1);
             filename_utf8[j] = '/';
             if (res != SZ_OK) break;
           }
@@ -516,8 +517,8 @@ int MY_CDECL main(int numargs, char *args[])
           /* 7-Zip stores the directory after its contents, so it's safe to
            * make the directory read-only now.
            */
-          if ((res = MyCreateDir((const char*)filename_utf8, &umaskv, f->AttribDefined, f->Attrib)) != SZ_OK) break;
-        } else if (f->AttribDefined &&
+          if ((res = MyCreateDir((const char*)filename_utf8, &umaskv, f->Attrib)) != SZ_OK) break;
+        } else if (f->Attrib != (UInt32)-1 &&
                  (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
                  S_ISLNK(f->Attrib >> 16)) {
           Byte * const target = outBuffer + offset;
@@ -552,7 +553,7 @@ int MY_CDECL main(int numargs, char *args[])
         } else {
           int outFile;
           if ((res = OutFile_Open(&outFile, (char*)filename_utf8, doYes)) != SZ_OK) break;
-          if (f->AttribDefined) {
+          if (f->Attrib != (UInt32)-1) {
             if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {
               res = SZ_ERROR_WRITE_CHMOD;
               close(outFile);

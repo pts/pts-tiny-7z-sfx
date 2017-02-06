@@ -97,12 +97,11 @@ typedef struct
   CNtfsFileTime MTime;  /* Initialized only if MTimeDefined. */
   UInt64 Size;
   UInt32 Crc;  /* Initialized only if CrcDefined. */
-  UInt32 Attrib;  /* Initialized only if AttribDefined. */
+  UInt32 Attrib;  /* Undefined of (UInt32)-1. */
   Byte HasStream;
   Byte IsDir;
   Byte CrcDefined;
   Byte MTimeDefined;
-  Byte AttribDefined;
 } CSzFileItem;
 #define FILE_ATTRIBUTE_READONLY             1
 #define FILE_ATTRIBUTE_DIRECTORY           16

@@ -944,8 +944,7 @@ static SRes SzReadHeader(
     p->MTimeDefined = 0;
     /* p->Crc will be initialized later, conditionally */
     p->CrcDefined = 0;
-    /* p->Attrib will be initialized later, conditionally */
-    p->AttribDefined = 0;
+    p->Attrib = (UInt32)-1;
   }
 
   for (;;)
@@ -1006,7 +1005,6 @@ static SRes SzReadHeader(
         {
           CSzFileItem *file = &files[i];
           if (lwtVector[i]) {
-            file->AttribDefined = 1;
             RDINOK(SzReadUInt32(sd, &file->Attrib));
           }
         }
