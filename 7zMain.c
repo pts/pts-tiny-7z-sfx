@@ -63,22 +63,6 @@ static Bool Utf16Le_To_Utf8(Byte *dest, size_t *destLen, const Byte *srcUtf16Le,
   return False;
 }
 
-static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
-  unsigned mode;
-  if (*umaskv + 1U == 0U) {  /* Save the current umask to umaskv. */
-    unsigned default_umask = 022;
-    *umaskv = umask(default_umask);
-    if (*umaskv != default_umask) umask(*umaskv);
-  }
-  if (attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) {
-    mode = attrib >> 16;
-  } else {
-    mode = (attrib & FILE_ATTRIBUTE_READONLY ? 0444 : 0666) |
-        (attrib & FILE_ATTRIBUTE_DIRECTORY ? 0111 : 0);
-  }
-  return mode & ~*umaskv & 07777;
-}
-
 static char stdout_buf[4096];
 static unsigned stdout_bufc = 0;
 
@@ -104,19 +88,6 @@ STATIC void PrintError(char *sz)
   WriteMessage("\nERROR: ");
   WriteMessage(sz);
   WriteMessage("\n");
-}
-
-static SRes MyCreateDir(const char *filename, unsigned *umaskv, UInt32 attrib) {
-  const Bool attribDefined = attrib != (UInt32)-1;
-  const unsigned mode = GetUnixMode(umaskv, attribDefined ? attrib :
-      FILE_ATTRIBUTE_UNIX_EXTENSION | 0755 << 16);
-  if (mkdir(filename, mode) != 0) {
-    if (errno != EEXIST) return SZ_ERROR_WRITE_MKDIR;
-  }
-  if (attribDefined) {
-    if (0 != chmod(filename, GetUnixMode(umaskv, attrib))) return SZ_ERROR_WRITE_MKDIR_CHMOD;
-  }
-  return SZ_OK;
 }
 
 /* Returns *a % b, and sets *a = *a_old / b; */
@@ -206,17 +177,32 @@ static void MakeDirsWritable(char *filename) {
 }
 #endif
 
-static SRes OutFile_Open(int *p, char *filename, Bool doYes) {
+static SRes CreateDirs(char *filename, unsigned umaskv) {
+  size_t j;
+  Bool is_ok;
+  for (j = 0; filename[j] != '\0'; j++) {
+    if (filename[j] == '/') {
+      filename[j] = '\0';
+      is_ok = mkdir(filename, 0700 & ~umaskv) == 0 || errno == EEXIST;
+      filename[j] = '/';
+      if (!is_ok) return SZ_ERROR_WRITE_MKDIR;
+    }
+  }
+  return SZ_OK;
+}
+
+static SRes OutFile_Open(int *p, char *filename, Bool doYes, unsigned umaskv) {
   mode_t mode = O_WRONLY | O_CREAT | O_TRUNC;
-#ifdef USE_CHMODW
   Bool had_again = False;
-#endif
   if (!doYes) mode |= O_EXCL;
-#ifdef USE_CHMODW
  again:
-#endif
   *p = open(filename, mode, 0644);
   if (*p >= 0) return SZ_OK;
+  if (errno == ENOENT && !had_again) {
+    RINOK(CreateDirs(filename, umaskv));
+    had_again = True;
+    goto again;
+  }
   if (errno == EEXIST) return SZ_ERROR_OVERWRITE;
 #ifdef USE_CHMODW
   if (errno == EACCES && !had_again) {  /* Permission denied. */
@@ -416,6 +402,7 @@ int MY_CDECL main(int numargs, char *args[])
       size_t outSizeProcessed = 0;
       const CSzFileItem *f = db.db.Files + fileIndex;
       const size_t filename_offset = db.FileNameOffsets[fileIndex];
+      /* The length includes the trailing 0. */
       const size_t filename_utf16le_len =  db.FileNameOffsets[fileIndex + 1] - filename_offset;
       const Byte *filename_utf16le = db.FileNamesInHeaderBufPtr + filename_offset * 2;
       /* 2 for UTF-18 + 3 for UTF-8. 1 UTF-16 entry point can create at most 3 UTF-8 bytes (averaging for surrogates). */
@@ -504,20 +491,33 @@ int MY_CDECL main(int numargs, char *args[])
       }
       if (!testCommand) {
         size_t processedSize;
-        size_t j;
-        for (j = 0; j < filename_utf8_len; j++) {
-          if (filename_utf8[j] == '/') {
-            filename_utf8[j] = '\0';
-            res = MyCreateDir((const char*)filename_utf8, &umaskv, (UInt32)-1);
-            filename_utf8[j] = '/';
-            if (res != SZ_OK) break;
-          }
+        const UInt32 attrib = f->Attrib;
+        unsigned mode = attrib >> 16;  /* Don't apply the umask. */
+        if (umaskv + 1U == 0U) {  /* Save the current umask to umaskv. */
+          unsigned default_umask = 022;
+          umaskv = umask(default_umask);
+          if (umaskv != default_umask) umask(umaskv);
         }
+        if (!(attrib & FILE_ATTRIBUTE_UNIX_EXTENSION)) {
+          mode = ((attrib & FILE_ATTRIBUTE_READONLY ? 0444 : 0666) |
+              (f->IsDir ? 0111 : 0)) & ~umaskv;
+        }
+        mode &= 07777;
+
         if (f->IsDir) {
           /* 7-Zip stores the directory after its contents, so it's safe to
            * make the directory read-only now.
            */
-          if ((res = MyCreateDir((const char*)filename_utf8, &umaskv, f->Attrib)) != SZ_OK) break;
+          if (mkdir((const char*)filename_utf8, mode) != 0) {
+            if (errno == ENOENT) {
+              if ((res = CreateDirs((char*)filename_utf8, umaskv)) != SZ_OK) break;
+              if (mkdir((const char*)filename_utf8, mode) != 0) goto errd;
+            } else if (errno != EEXIST) { errd:
+              res = SZ_ERROR_WRITE_MKDIR; break;
+            }
+          }
+          /* chmod(...) useful for already existing dirs. */
+          if (0 != chmod((const char*)filename_utf8, mode)) { res = SZ_ERROR_WRITE_MKDIR_CHMOD; break; }
         } else if (f->Attrib != (UInt32)-1 &&
                  (f->Attrib & FILE_ATTRIBUTE_UNIX_EXTENSION) &&
                  S_ISLNK(f->Attrib >> 16)) {
@@ -531,6 +531,10 @@ int MY_CDECL main(int numargs, char *args[])
           res = symlink((const char*)target, (const char*)filename_utf8);
           *target_end = target_end_byte;
           if (res == SZ_OK) {
+          } else if (errno == ENOENT && !had_again) {
+            if ((res = CreateDirs((char*)filename_utf8, umaskv)) != SZ_OK) break;
+            had_again = True;
+            goto again;
           } else if (had_again || errno != EEXIST) { err:
             res = SZ_ERROR_WRITE_SYMLINK;
             break;
@@ -552,9 +556,9 @@ int MY_CDECL main(int numargs, char *args[])
           }
         } else {
           int outFile;
-          if ((res = OutFile_Open(&outFile, (char*)filename_utf8, doYes)) != SZ_OK) break;
+          if ((res = OutFile_Open(&outFile, (char*)filename_utf8, doYes, umaskv)) != SZ_OK) break;
           if (f->Attrib != (UInt32)-1) {
-            if (0 != fchmod(outFile, GetUnixMode(&umaskv, f->Attrib))) {
+            if (0 != fchmod(outFile, mode)) {
               res = SZ_ERROR_WRITE_CHMOD;
               close(outFile);
               break;

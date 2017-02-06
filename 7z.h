@@ -104,7 +104,7 @@ typedef struct
   Byte MTimeDefined;
 } CSzFileItem;
 #define FILE_ATTRIBUTE_READONLY             1
-#define FILE_ATTRIBUTE_DIRECTORY           16
+/*#define FILE_ATTRIBUTE_DIRECTORY           16*/
 #define FILE_ATTRIBUTE_UNIX_EXTENSION   0x8000
 
 typedef struct
