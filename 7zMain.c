@@ -454,7 +454,7 @@ int MY_CDECL main(int numargs, char *args[])
         while (temp_size < filename_alloc) {
           temp_size <<= 1;
         }
-        if ((temp = (UInt16 *)SzAlloc(filename_alloc)) == 0) {
+        if ((temp = (UInt16 *)SzAlloc(temp_size)) == 0) {
           res = SZ_ERROR_MEM;
           break;
         }
