@@ -118,14 +118,6 @@ STATIC UInt64 SzFolder_GetUnpackSize(CSzFolder *p)
   return 0;
 }
 
-STATIC void SzFile_Init(CSzFileItem *p)
-{
-  p->HasStream = 1;
-  p->IsDir = 0;
-  p->CrcDefined = 0;
-  p->MTimeDefined = 0;
-}
-
 STATIC void SzAr_Init(CSzAr *p)
 {
   p->PackSizes = 0;
@@ -943,8 +935,18 @@ static SRes SzReadHeader(
   RDALLOC(CSzFileItem, files, (size_t)numFiles);
 
   p->db.Files = files;
-  for (i = 0; i < numFiles; i++)
-    SzFile_Init(files + i);
+  for (i = 0; i < numFiles; i++) {
+    CSzFileItem *p = files + i;
+    /* p->Size will be initialized later. */
+    /* p->HasStream will be initialized later. */
+    /* p->IsDir will be initialized later. */
+    /* p->MTime will be initialized later, conditionally. */
+    p->MTimeDefined = 0;
+    /* p->Crc will be initialized later, conditionally */
+    p->CrcDefined = 0;
+    /* p->Attrib will be initialized later, conditionally */
+    p->AttribDefined = 0;
+  }
 
   for (;;)
   {
@@ -1002,13 +1004,10 @@ static SRes SzReadHeader(
         RDINOK(SzReadSwitch(sd));
         for (i = 0; i < numFiles; i++)
         {
-          CSzFileItem *f = &files[i];
-          Byte defined = lwtVector[i];
-          f->AttribDefined = defined;
-          f->Attrib = 0;
-          if (defined)
-          {
-            RDINOK(SzReadUInt32(sd, &f->Attrib));
+          CSzFileItem *file = &files[i];
+          if (lwtVector[i]) {
+            file->AttribDefined = 1;
+            RDINOK(SzReadUInt32(sd, &file->Attrib));
           }
         }
         SzFree(lwtVector);
@@ -1021,14 +1020,11 @@ static SRes SzReadHeader(
         RDINOK(SzReadSwitch(sd));
         for (i = 0; i < numFiles; i++)
         {
-          CSzFileItem *f = &files[i];
-          Byte defined = lwtVector[i];
-          f->MTimeDefined = defined;
-          f->MTime.Low = f->MTime.High = 0;
-          if (defined)
-          {
-            RDINOK(SzReadUInt32(sd, &f->MTime.Low));
-            RDINOK(SzReadUInt32(sd, &f->MTime.High));
+          CSzFileItem *file = &files[i];
+          if (lwtVector[i]) {
+            file->MTimeDefined = 1;
+            RDINOK(SzReadUInt32(sd, &file->MTime.Low));
+            RDINOK(SzReadUInt32(sd, &file->MTime.High));
           }
         }
         SzFree(lwtVector);
@@ -1045,25 +1041,19 @@ static SRes SzReadHeader(
   {
     UInt32 emptyFileIndex = 0;
     UInt32 sizeIndex = 0;
-    for (i = 0; i < numFiles; i++)
-    {
+    for (i = 0; i < numFiles; i++) {
       CSzFileItem *file = files + i;
       file->HasStream = !emptyStreamVector || !emptyStreamVector[i];
-      if (file->HasStream)
-      {
+      if (file->HasStream) {
         file->IsDir = 0;
         file->Size = unpackSizes[sizeIndex];
         file->Crc = digests[sizeIndex];
         file->CrcDefined = digestsDefined[sizeIndex];
         sizeIndex++;
-      }
-      else
-      {
+      } else {
         file->IsDir = !emptyFileVector || !emptyFileVector[emptyFileIndex];
-        emptyFileIndex++;
         file->Size = 0;
-        file->Crc = 0;
-        file->CrcDefined = 0;
+        emptyFileIndex++;
       }
     }
   }

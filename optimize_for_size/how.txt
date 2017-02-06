@@ -11,6 +11,8 @@ Ideas to reduce file size:
   contributes to the total execution time.
 * Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
   better?
+* Get rid of FILE_ATTRIBUTE_DIRECTORY, use f->IsDir instead.
+* Merge Byte flags CSzFileItem into a single-byte bitset?
 
 Ideas already implemented:
 

@@ -94,10 +94,10 @@ typedef struct
 
 typedef struct
 {
-  CNtfsFileTime MTime;
+  CNtfsFileTime MTime;  /* Initialized only if MTimeDefined. */
   UInt64 Size;
-  UInt32 Crc;
-  UInt32 Attrib;
+  UInt32 Crc;  /* Initialized only if CrcDefined. */
+  UInt32 Attrib;  /* Initialized only if AttribDefined. */
   Byte HasStream;
   Byte IsDir;
   Byte CrcDefined;
@@ -107,8 +107,6 @@ typedef struct
 #define FILE_ATTRIBUTE_READONLY             1
 #define FILE_ATTRIBUTE_DIRECTORY           16
 #define FILE_ATTRIBUTE_UNIX_EXTENSION   0x8000
-
-STATIC void SzFile_Init(CSzFileItem *p);
 
 typedef struct
 {

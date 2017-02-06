@@ -65,7 +65,7 @@ static Bool Utf16Le_To_Utf8(Byte *dest, size_t *destLen, const Byte *srcUtf16Le,
 
 static unsigned GetUnixMode(unsigned *umaskv, UInt32 attrib) {
   unsigned mode;
-  if (*umaskv + 1U == 0U) {
+  if (*umaskv + 1U == 0U) {  /* Save the current umask to umaskv. */
     unsigned default_umask = 022;
     *umaskv = umask(default_umask);
     if (*umaskv != default_umask) umask(*umaskv);
