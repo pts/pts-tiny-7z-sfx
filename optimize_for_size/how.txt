@@ -4,13 +4,11 @@ system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdi
 
 Ideas to reduce file size:
 
-* (drop the -e flag.)
-* (add support for the l command.)
 * (Don't let filename_utf8 start with '/' or have '..'.)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
-* Get rid of FILE_ATTRIBUTE_DIRECTORY, use f->IsDir instead.
-* Merge Byte flags CSzFileItem into a single-byte bitset? Makes it larger.
+* Merge Byte flags CSzFileItem into a single-byte bitset? Makes the
+  executable larger.
 
 Ideas already implemented:
 
@@ -75,6 +73,7 @@ Ideas already implemented:
    * LZMA2 was created for XZ format and it includes changes that are good for that stream compression format.
    * Also LZMA2 is better than LZMA, if you compress already compressed data.
   * Lzma2Dec.c reuses code from LzmaDec.c
+* DONE: Get rid of FILE_ATTRIBUTE_DIRECTORY, use f->IsDir instead.
 
 Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 
