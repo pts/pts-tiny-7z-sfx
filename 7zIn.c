@@ -1067,6 +1067,10 @@ static SRes SzReadHeader(
   return res == SZ_OK ? SzArEx_Fill(p) : res;
 }
 
+/* Merging this function SzReadAndDecodePackedStreams2 with
+ * SzReadAndDecodePackedStreams actually increases the executable size of
+ * tiny7zx.
+ */
 static SRes SzReadAndDecodePackedStreams2(
     CLookToRead *inStream,
     CSzData *sd,
