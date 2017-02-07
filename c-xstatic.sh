@@ -6,7 +6,7 @@
 set -ex
 # The warning ``main: warning: the use of LEGACY `utimes' is discouraged,
 # use `utime' '' is harmless.
-xstatic gcc -D_FILE_OFFSET_BITS=64 -DSTATIC=static -DUSE_LZMA2 \
+xstatic gcc -D_FILE_OFFSET_BITS=64 -DSTATIC=static -DUSE_LZMA2 -DUSE_CHMODW \
     -m32 -s -Os \
     -W -Wall -Wextra -Werror=implicit -Werror=implicit-function-declaration -Werror=implicit-int -Werror=pointer-sign -Werror=pointer-arith \
     -fno-stack-protector -fomit-frame-pointer -ffunction-sections -fdata-sections -Wl,--gc-sections \

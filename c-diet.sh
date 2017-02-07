@@ -9,7 +9,7 @@
 set -ex
 # The warning ``main: warning: the use of LEGACY `utimes' is discouraged,
 # use `utime' '' is harmless.
-diet -Os gcc -m32 -s -Os -DSTATIC=static -DUSE_LZMA2 \
+diet -Os gcc -m32 -s -Os -DSTATIC=static -DUSE_LZMA2 -DUSE_CHMODW \
     -W -Wall -fno-stack-protector -fomit-frame-pointer \
     -Wl,--build-id=none -Wl,--hash-style=gnu -Wl,-z,norelro \
     -mpreferred-stack-boundary=2 -fno-unroll-loops -fmerge-all-constants \

@@ -7,7 +7,7 @@
 # http://ptspts.blogspot.com/2013/12/how-to-make-smaller-c-and-c-binaries.html
 #
 
-CDEFINES='-DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2'
+CDEFINES='-DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2 -DUSE_CHMODW'
 CFLAGS='-ansi -pedantic -nostdinc -m32 -s -Os -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration --sysroot minidiet -isystem minidiet -static-libgcc'
 # Not needed: ld -z norelro --build-id=none
 LDFLAGS1='-nostdlib -m elf_i386 -static -s'

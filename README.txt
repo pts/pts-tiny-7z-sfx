@@ -63,9 +63,9 @@ To create a .7z archive compatible with tiny7zx:
 
 Compilation options (can be specified for c-*.sh):
 
-* -DUSE_CHMODW: Make tiny7zx work hard on calling chmod() to make files
+* -UUSE_CHMODW: Remove support for chmod() to make files
   and directories writable upon a ``Permission denied''.
-  Adds about 160 bytes to tiny7zx (c-minidiet.sh).
+  Saves about 160 bytes of tiny7zx (c-minidiet.sh).
 
 * -UUSE_LZMA2: Remove LZMA2 decompression support.
   Saves about 784 bytes of tiny7zx (c-minidiet.sh).
