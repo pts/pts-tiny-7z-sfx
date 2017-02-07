@@ -6,18 +6,16 @@ pts-tiny-7z-sfx is a tiny 7-Zip (.7z archive) extractor and self-extractor
 Features:
 
 * Small (the Linux statically linked binary is less than 40 kB).
-* Can be used stand-alone, to extract .7z archives.
-* Can be used to create a SFX (self-extract) binary by prepending to a 7z
-  archive. (Same as the `7z -sfx' flag.)
+* Can be used stand-alone to extract .7z archives.
+* Can be used to create an SFX (self-extracting) executable by prepending it to
+  a .7z archive. (Same as the `7z -sfx' flag.)
 * It supports file and directory attributes (i.e. it calls chmod(2)).
-* It sets the mtime (i.e. it calls utimes(2)).
+* It sets the mtime (i.e. it calls utimes(2)) of extracted files.
 * It can extract symlinks.
-* Has a command-line syntax compatible with the regular console SFX binaries.
-* Implemented in standard C (and C++).
-* Command-line compatible with `7z', `rar', `unrar' and `unzip'.
-* Restores mtime (last-modification time) and Unix permission bits.
-* Restores Unix symlinks.
-* Refuses to modify files with unsafe names (e.g. ../../../etc/passwd).
+* It has a command-line syntax compatible with the regular console SFX binaries.
+* It's implemented in standard C (and C++).
+* Its command-line is compatible with `7z', `rar', `unrar' and `unzip'.
+* It refuses to modify files with unsafe names (e.g. ../../../etc/passwd).
 
 Limitations:
 
@@ -30,46 +28,26 @@ Limitations:
 * Doesn't restore Unix file extended attributes.
 * Doesn't restore Unix character devices, block devices, sockets or pipes.
 
-Memory usage:
+Quick try on Linux i386 and amd64:
 
-* It keeps an uncompressed version of each file in memory.
-* It decompresses solid blocks (it can be whole .7z archive) to memory.
-* You can limit the memory usage of decompression by specifying `7z -m...'
-  flags when creating the .7z archive.
-* The dictionary size (`7z -md=...') doesn't matter for memory usage.
-* Only the solid block size (`7z -ms=...') matters. The default can be
-  very high (up to 4 GB), so always specify something small (e.g.
-  `7z -ms=50000000b') or turn off solid blocks (`7z -ms=off').
-* The memory usage of c-minidiet.c will be (most of the time):
+  wget -O hello.7z https://github.com/pts/pts-tiny-7z-sfx/releases/download/v9.22+pts5/hello.7z
+  wget -O tiny7zx  https://github.com/pts/pts-tiny-7z-sfx/releases/download/v9.22+pts5/tiny7zx
+  chmod +x tiny7zx
+  ./tiny7zx t hello.7z
+  cat tiny7zx hello.7z >hello.sfx.7z  # Create self-extracting archive.
+  chmod +x hello.sfx.7z
+  ./hello.sfx.7z  # The archive self-extracts on Linux i386 and amd64.
+  hello/linkhi.sh  # Runs shell script pointed to by symlink.
+  ./hello.sfx.7z  # Won't overwrite files by default.
+  ./hello.sfx.7z -y  # Overwrites files.
 
-  total_memory_usage_for_tiny7zx_decompression <=
-      static_memory_size +
-      archive_header_size +
-      listing_structures_size +
-      max([solid_block_size] + uncompressed_file_sizes).
-  static_memory_size == 100 000 bytes.
-  archive_header_size == file_count * 32 bytes + sum(filename_sizes).
-  filename_sizes counts each character as 2 bytes (because of UTF-16 encoding).
-  listing_structures_size == file_count * 56 bytes.
-  solid_block_size == value of `7z -ms=...', or 0 if `7z -ms=off'.
-      Be careful, the default can be as large as 4 GB.
-  uncompressed_file_sizes: List of uncompressed file sizes in the archive.
-  file_count and file_size include both files and directories (folders).
+For best results, please use the latest release version number (instead of
+v9.22+pts5) in the links above.
 
-Supported systems:
-
-* Linux i386 without libc (recommended): compile with ./c-minidiet.sh
-  Recommeded compiler is gcc-4.8 or later.
-* Linux with glibc: compile with ./c-dynamic.sh
-* Linux with dietlibc: compile with ./c-diet.sh
-* Linux i386 with xstatic uClibc: compile with ./c-xstatic.sh
-* other Unix: ./c-dynamic.sh probably works, maybe needs minor porting
-* Windows: not supported.
-
-To create a .7z archive compatible with tiny7zx:
+To create a .7z archive compatible with pts-tiny-7z-sfx:
 
 * Run: 7z a -t7z -mx=7 -ms=50m -ms=on foo.7z foo...
-* Use `7z -ms=...' to control the extraction memory usage, see above.
+* Use `7z -ms=...' to limit the extraction memory usage, see also below.
 
 To create a self-extracting archive (SFX):
 
@@ -124,6 +102,47 @@ pts-tiny-7z-sfx compiles cleanly with any of:
 * g++ -std=c++98
 * g++ -std=c++0x
 * g++ -std=c++11
+
+Supported systems:
+
+* Linux i386 without libc (recommended): compile with ./c-minidiet.sh
+  Recommeded compiler is gcc-4.8 or later.
+* Linux with glibc: compile with ./c-dynamic.sh
+* Linux with dietlibc: compile with ./c-diet.sh
+* Linux i386 with xstatic uClibc: compile with ./c-xstatic.sh
+* other Unix: ./c-dynamic.sh probably works, maybe needs minor porting
+* Windows: not supported.
+
+Memory usage
+~~~~~~~~~~~~
+Info about memory usage during extraction:
+
+* It keeps an uncompressed version of each file in memory before writing the
+  file.
+* It decompresses each solid block (it can be the whole .7z archive) to memory.
+* You can limit the memory usage of decompression by specifying `7z -m...'
+  flags when creating the .7z archive.
+* The dictionary size (`7z -md=...') doesn't matter for memory usage.
+* Only the solid block size (`7z -ms=...') matters. The default can be
+  very high (up to 4 GB), so always specify something small (e.g.
+  `7z -ms=50000000b') or turn off solid blocks (`7z -ms=off').
+* The memory usage of c-minidiet.c will be (most of the time):
+
+  total_memory_usage_for_tiny7zx_decompression <=
+      static_memory_size +
+      archive_header_size +
+      listing_structures_size +
+      max([solid_block_size] + uncompressed_file_sizes).
+  static_memory_size == 100 000 bytes.
+  archive_header_size == file_count * 32 bytes + sum(filename_sizes).
+  filename_sizes counts each character as 2 bytes (because of UTF-16 encoding).
+  listing_structures_size == file_count * 56 bytes.
+  solid_block_size == value of `7z -ms=...', or 0 if `7z -ms=off'.
+      Be careful, the default can be as large as 4 GB.
+  uncompressed_file_sizes: List of uncompressed file sizes in the archive.
+  file_count and file_size include both files and directories (folders).
+
+
 
 License
 ~~~~~~~
