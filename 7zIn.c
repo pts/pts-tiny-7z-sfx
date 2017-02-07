@@ -1163,7 +1163,7 @@ static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
   return 0;
 }
 
-static SRes SzArEx_Open2(
+STATIC SRes SzArEx_Open(
     CSzArEx *p,
     CLookToRead *inStream) {
   Int64 startArcPos;
@@ -1257,14 +1257,6 @@ static SRes SzArEx_Open2(
   }
 #endif
   p->HeaderBufStart = bufStart;  /* p takes ownership of the buffer starting at bufStart. */
-  return res;
-}
-
-STATIC SRes SzArEx_Open(CSzArEx *p, CLookToRead *inStream)
-{
-  SRes res = SzArEx_Open2(p, inStream);
-  if (res != SZ_OK)
-    SzArEx_Free(p);
   return res;
 }
 
