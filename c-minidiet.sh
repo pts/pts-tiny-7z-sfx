@@ -7,20 +7,22 @@
 # http://ptspts.blogspot.com/2013/12/how-to-make-smaller-c-and-c-binaries.html
 #
 
-CDEFINES='-DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2 -DUSE_CHMODW'
-CFLAGS='-ansi -pedantic -nostdinc -m32 -s -Os -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration --sysroot minidiet -isystem minidiet -static-libgcc'
-# Not needed: ld -z norelro --build-id=none
-LDFLAGS1='-nostdlib -m elf_i386 -static -s'
-LDFLAGS2='-T minidiet/minidiet.scr'
-
 set -ex
 
 test -f minidiet/miniinc1.h
 test -f minidiet/minidiet.scr
 
-gcc $CDEFINES "$@" $CFLAGS \
-    -c "$@" all.c minidiet/minidiet.c
-ld -o tiny7zx $LDFLAGS1 all.o minidiet.o $LDFLAGS2
+# This will add the following unwanted flags to ld: --build-id -z relro -L/usr/lib/...
+# The linker script (-T) makes `--build-id' and `-z relro' irrelevant.
+# The lack of -l... flags makes `-L...' irrelevant.
+# Not needed (because we use a linker script): -Wl,-z,norelro,--build-id=none
+gcc -m32 -s -Os -static \
+    -DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2 -DUSE_CHMODW \
+    -ansi -pedantic -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration \
+    -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno \
+    --sysroot minidiet -isystem minidiet -nostdlib -nostartfiles -nodefaultlibs -nostdinc -Wl,-T,minidiet/minidiet.scr \
+    -o tiny7zx "$@" \
+    all.c minidiet/minidiet.c
 cp -a tiny7zx tiny7zx.unc
 ./upx.pts -q -q --ultra-brute tiny7zx
 ls -ld tiny7zx tiny7zx.unc
