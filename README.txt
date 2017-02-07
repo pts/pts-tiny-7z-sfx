@@ -142,8 +142,6 @@ Info about memory usage during extraction:
   uncompressed_file_sizes: List of uncompressed file sizes in the archive.
   file_count and file_size include both files and directories (folders).
 
-
-
 License
 ~~~~~~~
 pts-tiny-7z-sfx is released under the GNU GPL v2.
