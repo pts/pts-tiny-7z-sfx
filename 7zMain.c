@@ -292,6 +292,33 @@ static void ConvertFileTimeToString(const CNtfsFileTime *ft, char *s)
   *s = '\0';
 }
 
+/* Returns a Bool indicating whether the specified pathname is safe.
+ *
+ * If a filename contains '.', '..', '//' etc., then it's unsafe, because if
+ * might cause unexpected files to be overwritten. For example, the filenames
+ * /etc/passwd and ../../../../../../../../../../../etc/passwd are unsafe,
+ * because if a .7z archive contains it, and root (UID 0) is running the decompressor,
+ * it will unexpectedly overwrite the security-sensitive file /etc/passwd . The safe
+ * version of this filename is etc/passwd (without the leading slash), and extracting
+ * a .7z archive containing it will create the etc/passwd in the local directory,
+ * rather then in the system root directory.
+ */
+static Bool IsFilenameSafe(const char *p) {
+  const char *q;
+  for (;;) {
+    for (q = p; *p != '\0' && *p != '/'; ++p) {}
+    /* In the first iteration: An empty filename is unsafe. */
+    /* In the first iteration: A leading '/' is unsafe. */
+    /* In subsequent iterations: A trailing '/' is unsafe. */
+    /* In subsequent iterations: A "//" is unsafe. */
+    if (p == q ||
+    /* A pathname component "." is unsafe. */
+    /* A pathname component ".." is unsafe. */
+        (*q == '.' && (q + 1 == p || (q[1] == '.' && q + 2 == p)))) return False;
+    if (*p++ == '\0') return True;
+  }
+}
+
 #ifdef MY_CPU_LE_UNALIGN
 /* We do the comparison in a quirky way so we won't depend on strcmp. */
 #define IS_HELP(p) ((*(const UInt16*)(p) == ('-' | '-' << 8)) && \
@@ -506,6 +533,10 @@ int MY_CDECL main(int numargs, char *args[])
         size_t processedSize;
         const UInt32 attrib = f->Attrib;
         unsigned mode = attrib >> 16;  /* Don't apply the umask. */
+        if (!IsFilenameSafe((const char*)filename_utf8)) {
+          res = SZ_ERROR_UNSAFE_FILENAME;
+          break;
+        }
         if (umaskv + 1U == 0U) {  /* Save the current umask to umaskv. */
           unsigned default_umask = 022;
           umaskv = umask(default_umask);
@@ -620,6 +651,8 @@ int MY_CDECL main(int numargs, char *args[])
     PrintError("can not write output file");
   } else if (res == SZ_ERROR_BAD_FILENAME) {
     PrintError("bad filename (UTF-16 encoding)");
+  } else if (res == SZ_ERROR_UNSAFE_FILENAME) {
+    PrintError("unsafe filename");  /* See IsFilenameSafe. */
   } else if (res == SZ_ERROR_WRITE_MKDIR) {
     PrintError("can not create output dir");
   } else if (res == SZ_ERROR_WRITE_MKDIR_CHMOD) {

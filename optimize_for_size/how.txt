@@ -4,7 +4,6 @@ system calls: (errno) chmod fchmod utimes gettimeofday umask symlink unlink mkdi
 
 Ideas to reduce file size:
 
-* (Don't let filename_utf8 start with '/' or have '..'.)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
 * Merge Byte flags CSzFileItem into a single-byte bitset? Makes the
