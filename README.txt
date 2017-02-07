@@ -5,7 +5,7 @@ pts-tiny-7z-sfx is a tiny 7-Zip (.7z archive) extractor and self-extractor
 
 Features:
 
-* Small (the Linux statically linked binary is less than 40 kB).
+* Small (the Linux statically linked executable is less than 17 kB).
 * Can be used stand-alone to extract .7z archives.
 * Can be used to create an SFX (self-extracting) executable by prepending it to
   a .7z archive. (Same as the `7z -sfx' flag.)
@@ -71,7 +71,7 @@ To compile from source, run `make' and copy the resulting executable
 `tiny7zx.dynamic' as `tiny7zx' to your $PATH.
 
 Alternatively, you can run one of the ./c-*.sh scripts to compile from
-source. To create the tiny Linux i386 binary, run `./c-minidiet.sh'.
+source. To create the tiny Linux i386 executable, run `./c-minidiet.sh'.
 
 Compilation options to add/remove features:
 
