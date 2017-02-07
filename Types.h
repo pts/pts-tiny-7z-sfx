@@ -157,7 +157,7 @@ STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset);
  *    *size == 0.
  */
 STATIC SRes LookToRead_Look(CLookToRead *p, const void **buf, size_t *size);
-STATIC SRes LookToRead_ReadAll(CLookToRead *p, void *buf, size_t *size);
+STATIC SRes LookToRead_ReadAll(CLookToRead *p, void *buf, size_t size);
 /* offset must be <= output(*size) of Look */
 /* STATIC SRes LookToRead_Skip(CLookToRead *p, size_t offset) */
 #define LOOKTOREAD_SKIP(p, offset) do { (p)->pos += (offset); } while (0)

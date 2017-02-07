@@ -44,18 +44,18 @@ STATIC SRes LookToRead_Look(CLookToRead *p, const void **buf, size_t *size) {
   return res;
 }
 
-STATIC SRes LookToRead_ReadAll(CLookToRead *p, void *buf, size_t *size) {
+STATIC SRes LookToRead_ReadAll(CLookToRead *p, void *buf, size_t size) {
   Byte *lbuf;
   SRes res = SZ_OK;
   size_t got;
-  while (*size > 0) {
-    got = *size;
+  while (size > 0) {
+    got = size;
     res = LookToRead_Look(p, (const void**)&lbuf, &got);
     if (res != SZ_OK) break;
     if (got == 0) { res = SZ_ERROR_INPUT_EOF; break; }
     LOOKTOREAD_SKIP(p, got);
     memcpy(buf, lbuf, got);
-    *size -= got;
+    size -= got;
     buf = (Byte*)buf + got;
   }
   return res;

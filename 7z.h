@@ -4,8 +4,6 @@
 #ifndef __7Z_H
 #define __7Z_H
 
-#include "7zBuf.h"
-
 EXTERN_C_BEGIN
 
 #define k7zStartHeaderSize 0x20
@@ -49,11 +47,9 @@ typedef struct
   UInt32 NumInStreams;
   UInt32 NumOutStreams;
   UInt64 MethodID;
-  CBuf Props;
+  Byte *Props;
+  size_t PropsSize;
 } CSzCoderInfo;
-
-STATIC void SzCoderInfo_Init(CSzCoderInfo *p);
-STATIC void SzCoderInfo_Free(CSzCoderInfo *p);
 
 typedef struct
 {
@@ -160,7 +156,7 @@ typedef struct
   Byte *HeaderBufStart;  /* Buffer containing FileNamesInHeaderBufPtr. */
 } CSzArEx;
 
-STATIC void SzArEx_Init(CSzArEx *p);
+/*static void SzArEx_Init(CSzArEx *p);*/
 STATIC void SzArEx_Free(CSzArEx *p);
 STATIC UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
 

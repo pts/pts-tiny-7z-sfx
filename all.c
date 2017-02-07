@@ -1,5 +1,4 @@
 #include "7zAlloc.c"
-#include "7zBuf.c"
 #include "7zCrc.c"
 #include "7zDec.c"
 #include "7zIn.c"

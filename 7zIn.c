@@ -40,14 +40,14 @@ STATIC const Byte k57zSignature[k7zSignatureSize - 1] = {'z', 0xBC, 0xAF, 0x27, 
 #define NUM_FOLDER_CODERS_MAX 32
 #define NUM_CODER_STREAMS_MAX 32
 
-STATIC void SzCoderInfo_Init(CSzCoderInfo *p)
-{
-  Buf_Init(&p->Props);
+static void SzCoderInfo_Init(CSzCoderInfo *p) {
+  p->Props = NULL;
+  p->PropsSize = 0;
 }
 
-STATIC void SzCoderInfo_Free(CSzCoderInfo *p)
+static void SzCoderInfo_Free(CSzCoderInfo *p)
 {
-  Buf_Free(&p->Props);
+  SzFree(p->Props);
   SzCoderInfo_Init(p);
 }
 
@@ -146,7 +146,7 @@ STATIC void SzAr_Free(CSzAr *p)
 }
 
 
-STATIC void SzArEx_Init(CSzArEx *p)
+static void SzArEx_Init(CSzArEx *p)
 {
   SzAr_Init(&p->db);
   p->FolderStartPackStreamIndex = 0;
@@ -269,7 +269,7 @@ typedef struct _CSzState
 {
   Byte *Data;
   size_t Size;
-}CSzData;
+} CSzData;
 
 static SRes SzReadByte(CSzData *sd, Byte *b)
 {
@@ -537,9 +537,10 @@ static SRes SzGetNextFolderItem(CSzData *sd, CSzFolder *folder)
       {
         UInt64 propertiesSize = 0;
         RINOK(SzReadNumber(sd, &propertiesSize));
-        if (!Buf_Create(&coder->Props, (size_t)propertiesSize))
-          return SZ_ERROR_MEM;
-        RINOK(SzReadBytes(sd, coder->Props.data, (size_t)propertiesSize));
+        coder->PropsSize = propertiesSize;
+        if (coder->PropsSize != propertiesSize ||
+           (coder->PropsSize != 0 && !(coder->Props = SzAlloc(coder->PropsSize)))) return SZ_ERROR_MEM;
+        RINOK(SzReadBytes(sd, coder->Props, coder->PropsSize));
       }
     }
     while ((mainByte & 0x80) != 0)
@@ -1069,7 +1070,8 @@ static SRes SzReadHeader(
 static SRes SzReadAndDecodePackedStreams2(
     CLookToRead *inStream,
     CSzData *sd,
-    CBuf *outBuffer,
+    Byte **outBuffer,
+    size_t *outBufferSize,
     UInt64 baseOffset,
     CSzAr *p,
     UInt64 **unpackSizes,
@@ -1083,6 +1085,7 @@ static SRes SzReadAndDecodePackedStreams2(
   UInt64 unpackSize;
   SRes res;
 
+  *outBuffer = NULL;
   RINOK(SzReadStreamsInfo(sd, &dataStartPos, p,
       &numUnpackStreams,  unpackSizes, digestsDefined, digests));
 
@@ -1098,15 +1101,16 @@ static SRes SzReadAndDecodePackedStreams2(
 #endif
   RINOK(LookInStream_SeekTo(inStream, dataStartPos));
 
-  if (!Buf_Create(outBuffer, (size_t)unpackSize))
-    return SZ_ERROR_MEM;
+  *outBufferSize = unpackSize;
+  if (*outBufferSize != unpackSize) return SZ_ERROR_MEM;
+  if (!(*outBuffer = SzAlloc(unpackSize))) return SZ_ERROR_MEM;
 
   res = SzFolder_Decode(folder, p->PackSizes,
           inStream, dataStartPos,
-          outBuffer->data, (size_t)unpackSize);
+          *outBuffer, *outBufferSize);
   RINOK(res);
   if (folder->UnpackCRCDefined)
-    if (CrcCalc(outBuffer->data, (size_t)unpackSize) != folder->UnpackCRC)
+    if (CrcCalc(*outBuffer, *outBufferSize) != folder->UnpackCRC)
       return SZ_ERROR_CRC;
   return SZ_OK;
 }
@@ -1114,7 +1118,8 @@ static SRes SzReadAndDecodePackedStreams2(
 static SRes SzReadAndDecodePackedStreams(
     CLookToRead *inStream,
     CSzData *sd,
-    CBuf *outBuffer,
+    Byte **outBuffer,
+    size_t *outBufferSize,
     UInt64 baseOffset)
 {
   CSzAr p;
@@ -1123,7 +1128,7 @@ static SRes SzReadAndDecodePackedStreams(
   UInt32 *digests = 0;
   SRes res;
   SzAr_Init(&p);
-  res = SzReadAndDecodePackedStreams2(inStream, sd, outBuffer, baseOffset,
+  res = SzReadAndDecodePackedStreams2(inStream, sd, outBuffer, outBufferSize, baseOffset,
     &p, &unpackSizes, &digestsDefined, &digests);
   SzAr_Free(&p);
   SzFree(unpackSizes);
@@ -1160,17 +1165,17 @@ static Int64 FindStartArcPos(CLookToRead *inStream, Byte **buf_out) {
 
 static SRes SzArEx_Open2(
     CSzArEx *p,
-    CLookToRead *inStream)
-{
+    CLookToRead *inStream) {
   Int64 startArcPos;
   UInt64 nextHeaderOffset, nextHeaderSize;
-  size_t nextHeadersize_t;
   UInt32 nextHeaderCRC;
   SRes res;
   Byte *buf = 0;
-  size_t size;
-  CBuf buffer;
+  Byte *bufStart;
+  CSzData sd;
+  UInt64 type;
 
+  SzArEx_Init(p);
   startArcPos = FindStartArcPos(inStream, &buf);
   if (startArcPos == 0) return SZ_ERROR_NO_ARCHIVE;
   if (buf[0] != k7zMajorVersion) return SZ_ERROR_UNSUPPORTED;
@@ -1184,10 +1189,10 @@ static SRes SzArEx_Open2(
   if (CrcCalc(buf + 6, 20) != GetUi32(buf + 2))
     return SZ_ERROR_CRC;
 
-  nextHeadersize_t = (size_t)nextHeaderSize;
-  if (nextHeadersize_t != nextHeaderSize)
+  sd.Size = (size_t)nextHeaderSize;
+  if (sd.Size != nextHeaderSize)
     return SZ_ERROR_MEM;
-  if (nextHeadersize_t == 0)
+  if (sd.Size == 0)
     return SZ_OK;
   if (nextHeaderOffset > nextHeaderOffset + startArcPos)  /* Check for overflow. */
     return SZ_ERROR_NO_ARCHIVE;
@@ -1202,75 +1207,56 @@ static SRes SzArEx_Open2(
 
 #ifdef _SZ_HEADER_DEBUG
   /* Typically only 36..39 bytes */
-  fprintf(stderr, "HEADER read_next size=%ld\n", (long)nextHeadersize_t);
+  fprintf(stderr, "HEADER read_next size=%ld\n", (long)sd.Size);
 #endif
-  size = nextHeadersize_t;
-  if (!Buf_Create(&buffer, nextHeadersize_t)) return SZ_ERROR_MEM;
+  if (!(bufStart = SzAlloc(sd.Size))) return SZ_ERROR_MEM;
+  sd.Data = bufStart;
   /* We need a loop here (implemented by LookToRead_ReadAll) to read
-   * nextHeadersize_t bytes to buffer.data, because LookToRead_Look_Exact is
+   * sd.Size bytes to sd.Data, because LookToRead_Look_Exact is
    * able to read about 16 kB at once, and we may ned 500 kB or more for the
    * archive header.
    */
-  res = LookToRead_ReadAll(inStream, buffer.data, &size);
-  if (res == SZ_OK) {
+  if ((res = LookToRead_ReadAll(inStream, sd.Data, sd.Size)) != SZ_OK) { erra:
+    SzFree(bufStart);
+    return res;
+  }
+  if (CrcCalc(sd.Data, sd.Size) != nextHeaderCRC) {
     res = SZ_ERROR_ARCHIVE;
-    if (CrcCalc(buffer.data, nextHeadersize_t) == nextHeaderCRC)
-    {
-      CSzData sd;
-      UInt64 type;
-      sd.Data = buffer.data;
-      sd.Size = buffer.size;
-      res = SzReadID(&sd, &type);
-      if (res == SZ_OK)
-      {
-        if (type == k7zIdEncodedHeader)
-        {
-          CBuf outBuffer;
-          Buf_Init(&outBuffer);
+    goto erra;
+  }
+  if ((res = SzReadID(&sd, &type)) != SZ_OK) goto erra;
+  if (type == k7zIdEncodedHeader) {
+    CSzData sdu = sd;
 #ifdef _SZ_HEADER_DEBUG
-          /* Typically happens. */
-          fprintf(stderr, "HEADER found_encoded_header\n");
+    /* Typically happens. */
+    fprintf(stderr, "HEADER found_encoded_header\n");
 #endif
-          res = SzReadAndDecodePackedStreams(inStream, &sd, &outBuffer, p->startPosAfterHeader);
-          if (res != SZ_OK)
-            Buf_Free(&outBuffer);
-          else
-          {
-            Buf_Free(&buffer);
-            buffer.data = outBuffer.data;
-            buffer.size = outBuffer.size;
+    res = SzReadAndDecodePackedStreams(inStream, &sdu, &sd.Data, &sd.Size, p->startPosAfterHeader);
+    SzFree(bufStart);
+    bufStart = sd.Data;
+    if (res != SZ_OK) goto erra;
 #ifdef _SZ_HEADER_DEBUG
-            /* Typical value: 521688 bytes */
-            fprintf(stderr, "HEADER encoded_header unpacked size=%ld\n", (long)outBuffer.size);
+    /* Typical value: 521688 bytes */
+    fprintf(stderr, "HEADER encoded_header unpacked size=%lld\n", (long long)sd.Size);
 #endif
-            sd.Data = buffer.data;
-            sd.Size = buffer.size;
-            res = SzReadID(&sd, &type);
-          }
-        }
-      }
-      if (res == SZ_OK)
-      {
-        if (type == k7zIdHeader) {
-#ifdef _SZ_HEADER_DEBUG
-          fprintf(stderr, "HEADER found_header\n");
-#endif
-          res = SzReadHeader(p, &sd);
-        } else {
-          res = SZ_ERROR_UNSUPPORTED;
-        }
-      }
-    }
+    if ((res = SzReadID(&sd, &type)) != SZ_OK) goto erra;
+  }
+  if (type != k7zIdHeader) {
+    res = SZ_ERROR_UNSUPPORTED;
+    goto erra;
   }
 #ifdef _SZ_HEADER_DEBUG
+  fprintf(stderr, "HEADER found_header\n");
+#endif
+  if ((res = SzReadHeader(p, &sd)) != SZ_OK) goto erra;
+#ifdef _SZ_HEADER_DEBUG
   {
-    const Bool FileNamesInHeaderBufPtr_inside = p->FileNamesInHeaderBufPtr >= buffer.data && p->FileNamesInHeaderBufPtr < buffer.data + buffer.size;
+    const Bool FileNamesInHeaderBufPtr_inside = p->FileNamesInHeaderBufPtr >= bufStart && p->FileNamesInHeaderBufPtr < sd.Data + sd.Size;
     fprintf(stderr, "HEADER FileNamesInHeaderBufPtr_inside=%d\n", FileNamesInHeaderBufPtr_inside);
     if (!FileNamesInHeaderBufPtr_inside) abort();
   }
 #endif
-  p->HeaderBufStart = buffer.data;
-  /* Buf_Free(&buffer); */  /* p->HeaderBufStart has taken ownership. */
+  p->HeaderBufStart = bufStart;  /* p takes ownership of the buffer starting at bufStart. */
   return res;
 }
 

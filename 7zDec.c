@@ -29,7 +29,7 @@ static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStre
   SRes res = SZ_OK;
 
   LzmaDec_Construct(&state);
-  RINOK(LzmaDec_AllocateProbs(&state, coder->Props.data, (unsigned)coder->Props.size));
+  RINOK(LzmaDec_AllocateProbs(&state, coder->Props, (unsigned)coder->PropsSize));
   state.dic = outBuffer;
   state.dicBufSize = outSize;
   LzmaDec_Init(&state);
@@ -74,9 +74,9 @@ static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStr
   SRes res = SZ_OK;
 
   Lzma2Dec_Construct(&state);
-  if (coder->Props.size != 1)
+  if (coder->PropsSize != 1)
     return SZ_ERROR_DATA;
-  RINOK(Lzma2Dec_AllocateProbs(&state, coder->Props.data[0]));
+  RINOK(Lzma2Dec_AllocateProbs(&state, coder->Props[0]));
   state.decoder.dic = outBuffer;
   state.decoder.dicBufSize = outSize;
   Lzma2Dec_Init(&state);
@@ -269,7 +269,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
           return SZ_ERROR_DATA;
         if (inSize != size)
           return SZ_ERROR_MEM;
-        RINOK(LookToRead_ReadAll(inStream, outBufCur, &size));
+        RINOK(LookToRead_ReadAll(inStream, outBufCur, size));
       }
       else if (coder->MethodID == k_LZMA)
       {
@@ -312,7 +312,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
       tempBuf[2] = (Byte *)SzAlloc(tempSizes[2]);
       if (tempBuf[2] == 0 && tempSizes[2] != 0)
         return SZ_ERROR_MEM;
-      RINOK(LookToRead_ReadAll(inStream, tempBuf[2], &size));
+      RINOK(LookToRead_ReadAll(inStream, tempBuf[2], size));
       RINOK(Bcj2_Decode(
           tempBuf3, tempSize3,
           tempBuf[0], tempSizes[0],

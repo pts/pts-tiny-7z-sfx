@@ -396,7 +396,6 @@ int MY_CDECL main(int numargs, char *args[])
 
   /*CrcGenerateTable();*/
 
-  SzArEx_Init(&db);
   res = SzArEx_Open(&db, &lookStream);
   if (res == SZ_OK) {
     UInt32 fileIndex;
