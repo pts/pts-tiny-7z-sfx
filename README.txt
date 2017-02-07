@@ -12,13 +12,28 @@ Features:
 * It sets the mtime (i.e. it calls utimes(2)).
 * It can extract symlinks.
 * Has a command-line syntax compatible with the regular console SFX binaries.
+* Implemented in standard C (and C++), compiles cleanly with any of:
+  gcc
+  gcc -ansi
+  gcc -ansi -pedantic
+  gcc -std=c89
+  gcc -std=c90
+  gcc -std=c99
+  gcc -std=c11
+  g++
+  g++ -ansi
+  g++ -ansi -pedantic
+  g++ -std=c++98
+  g++ -std=c++0x
+  g++ -std=c++11
 
 Limitations:
 
-* It supports only: LZMA, LZMA2, BCJ, BCJ2, COPY.
-* Memory usage is high, especially for solid archives. See below.
+* It supports only these compressors: LZMA, LZMA2, BCJ, BCJ2, COPY.
+* Memory usage can be high, especially for solid archives. See below.
 * It always extracts to the current directory.
 * It does not support (and may misbehave for) encryption in archives.
+* Works on Unix only (tested on Linux). Doesn't work on Windows.
 
 Memory usage:
 
@@ -76,4 +91,4 @@ about 7zS2con.sfx, a similar software for Win32.
 Forked from 7z922.tar.bz2 from
 http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.tar.bz2/download
 
-__EOF__
+__END__

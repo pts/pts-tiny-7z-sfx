@@ -539,7 +539,7 @@ static SRes SzGetNextFolderItem(CSzData *sd, CSzFolder *folder)
         RINOK(SzReadNumber(sd, &propertiesSize));
         coder->PropsSize = propertiesSize;
         if (coder->PropsSize != propertiesSize ||
-           (coder->PropsSize != 0 && !(coder->Props = SzAlloc(coder->PropsSize)))) return SZ_ERROR_MEM;
+           (coder->PropsSize != 0 && !(coder->Props = (Byte*)SzAlloc(coder->PropsSize)))) return SZ_ERROR_MEM;
         RINOK(SzReadBytes(sd, coder->Props, coder->PropsSize));
       }
     }
@@ -1107,7 +1107,7 @@ static SRes SzReadAndDecodePackedStreams2(
 
   *outBufferSize = unpackSize;
   if (*outBufferSize != unpackSize) return SZ_ERROR_MEM;
-  if (!(*outBuffer = SzAlloc(unpackSize))) return SZ_ERROR_MEM;
+  if (!(*outBuffer = (Byte*)SzAlloc(unpackSize))) return SZ_ERROR_MEM;
 
   res = SzFolder_Decode(folder, p->PackSizes,
           inStream, dataStartPos,
@@ -1213,7 +1213,7 @@ STATIC SRes SzArEx_Open(
   /* Typically only 36..39 bytes */
   fprintf(stderr, "HEADER read_next size=%ld\n", (long)sd.Size);
 #endif
-  if (!(bufStart = SzAlloc(sd.Size))) return SZ_ERROR_MEM;
+  if (!(bufStart = (Byte*)SzAlloc(sd.Size))) return SZ_ERROR_MEM;
   sd.Data = bufStart;
   /* We need a loop here (implemented by LookToRead_ReadAll) to read
    * sd.Size bytes to sd.Data, because LookToRead_Look_Exact is

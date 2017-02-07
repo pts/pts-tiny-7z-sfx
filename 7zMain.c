@@ -83,7 +83,7 @@ static void WriteMessage(const char *sz) {
   }
 }
 
-STATIC void PrintError(char *sz)
+STATIC void PrintError(const char *sz)
 {
   WriteMessage("\nERROR: ");
   WriteMessage(sz);

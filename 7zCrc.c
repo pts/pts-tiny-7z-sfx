@@ -11,7 +11,7 @@ STATIC UInt32 MY_FAST_CALL CrcCalc(const void *data, size_t size) {
   const UInt32 g0 = kCrcPoly, g1 = g0>>1,
       g2 = g0>>2, g3 = g0>>3, g4 = g0>>4, g5 = g0>>5,
       g6 = (g0>>6)^g0, g7 = ((g0>>6)^g0)>>1;
-  register const Byte *p = data;
+  register const Byte *p = (const Byte*)data;
   register const Byte *pend = p + size;
   register Int32 crc = -1;
   if (p != pend) {
