@@ -202,8 +202,6 @@ static UInt64 GetSum(const UInt64 *values, UInt32 index)
   return sum;
 }
 
-#define CASE_BRA_CONV(isa) case k_ ## isa: isa ## _Convert(outBuffer, outSize, 0, 0); break;
-
 static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
     CLookToRead *inStream, UInt64 startPos,
     Byte *outBuffer, size_t outSize,
@@ -338,7 +336,12 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
           x86_Convert(outBuffer, outSize, 0, &state, 0);
           break;
         }
-        CASE_BRA_CONV(ARM)
+        case k_ARM:
+#ifdef _SZ_CODER_DEBUG
+          fprintf(stderr, "CODER ARM\n");
+#endif
+          ARM_Convert(outBuffer, outSize, 0, 0);
+          break;
         default:
           return SZ_ERROR_UNSUPPORTED;
       }
