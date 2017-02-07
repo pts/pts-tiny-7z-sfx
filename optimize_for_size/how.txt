@@ -9,10 +9,8 @@ Ideas to reduce file size:
 * (Don't let filename_utf8 start with '/' or have '..'.)
 * Measure how much slower the new (non-table) CrcCalc is and how much it
   contributes to the total execution time.
-* Remove LZMA2? .7z archives by default seem to use LZMA. Why is LZMA2
-  better?
 * Get rid of FILE_ATTRIBUTE_DIRECTORY, use f->IsDir instead.
-* Merge Byte flags CSzFileItem into a single-byte bitset?
+* Merge Byte flags CSzFileItem into a single-byte bitset? Makes it larger.
 
 Ideas already implemented:
 
@@ -66,6 +64,17 @@ Ideas already implemented:
 * DONE: Get rid of the memcpy in SzArEx_GetFileNameUtf16 (and the entire function),
   for that FileNamesInHeaderBufPtr needs to be on a 2-aligned address on
   some architectures.
+* DONE: Remove LZMA2 optionally (-UUSE_LZMA2).
+  * .7z archives by default seem to use LZMA. Why is LZMA2 better?
+  * On Wikipedia: LZMA2 is a simple container format that can include both
+    uncompressed data and LZMA data, possibly with multiple different LZMA
+    encoding parameters. LZMA2 supports arbitrarily scalable multithreaded
+    compression and decompression and efficient compression of data which is
+    partially incompressible.
+   * LZMA2 is faster for 4-threads, if you compress big file (more than 256 MB), so 7-Zip will be able to split it to blocks.
+   * LZMA2 was created for XZ format and it includes changes that are good for that stream compression format.
+   * Also LZMA2 is better than LZMA, if you compress already compressed data.
+  * Lzma2Dec.c reuses code from LzmaDec.c
 
 Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
 

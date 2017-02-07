@@ -7,8 +7,8 @@
 # http://ptspts.blogspot.com/2013/12/how-to-make-smaller-c-and-c-binaries.html
 #
 
-CDEFINES='-DUSE_MINIINC1 -DUSE_MINIALLOC'
-CFLAGS='-ansi -pedantic -nostdinc -m32 -s -Os -U_FORTIFY_SOURCE -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration --sysroot minidiet -isystem minidiet -static-libgcc -DUSE_MINIINC2'
+CDEFINES='-DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2'
+CFLAGS='-ansi -pedantic -nostdinc -m32 -s -Os -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration --sysroot minidiet -isystem minidiet -static-libgcc'
 # Not needed: ld -z norelro --build-id=none
 LDFLAGS1='-nostdlib -m elf_i386 -static -s'
 LDFLAGS2='-T minidiet/minidiet.scr'
@@ -18,7 +18,8 @@ set -ex
 test -f minidiet/miniinc1.h
 test -f minidiet/minidiet.scr
 
-gcc $CDEFINES "$@" $CFLAGS -c all.c minidiet/minidiet.c
+gcc $CDEFINES "$@" $CFLAGS \
+    -c "$@" all.c minidiet/minidiet.c
 ld -o tiny7zx $LDFLAGS1 all.o minidiet.o $LDFLAGS2
 cp -a tiny7zx tiny7zx.unc
 ./upx.pts -q -q --ultra-brute tiny7zx

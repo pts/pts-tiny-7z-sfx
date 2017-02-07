@@ -6,6 +6,8 @@
 
 #include "LzmaDec.h"
 
+#ifdef USE_LZMA2
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -72,5 +74,7 @@ Returns:
 #ifdef __cplusplus
 }
 #endif
+
+#endif  /* USE_LZMA2 */
 
 #endif

@@ -7,6 +7,8 @@
 
 #include "Lzma2Dec.h"
 
+#ifdef USE_LZMA2
+
 /*
 00000000  -  EOS
 00000001 U U  -  Uncompressed Reset Dic
@@ -276,3 +278,5 @@ STATIC SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, size_t dicLimit,
   *status = LZMA_STATUS_FINISHED_WITH_MARK;
   return SZ_OK;
 }
+
+#endif

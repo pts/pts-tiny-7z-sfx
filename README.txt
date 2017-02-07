@@ -49,6 +49,7 @@ Memory usage:
 Supported systems:
 
 * Linux i386 without libc (recommended): compile with ./c-minidiet.sh
+  Recommeded compiler is gcc-4.8 or later.
 * Linux with glibc: compile with ./c-dynamic.sh
 * Linux with dietlibc: compile with ./c-diet.sh
 * Linux i386 with xstatic uClibc: compile with ./c-xstatic.sh
@@ -62,8 +63,12 @@ To create a .7z archive compatible with tiny7zx:
 
 Compilation options (can be specified for c-*.sh):
 
-* -DUSE_CHMODW: tiny7zx should work hard on calling chmod() to make files
+* -DUSE_CHMODW: Make tiny7zx work hard on calling chmod() to make files
   and directories writable upon a ``Permission denied''.
+  Adds about 160 bytes to tiny7zx (c-minidiet.sh).
+
+* -UUSE_LZMA2: Remove LZMA2 decompression support.
+  Saves about 784 bytes of tiny7zx (c-minidiet.sh).
 
 See http://sourceforge.net/p/sevenzip/discussion/45797/thread/233f5efd
 about 7zS2con.sfx, a similar software for Win32.

@@ -66,6 +66,7 @@ static SRes SzDecodeLzma(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStre
   return res;
 }
 
+#ifdef USE_LZMA2
 static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStream,
     Byte *outBuffer, size_t outSize)
 {
@@ -110,6 +111,7 @@ static SRes SzDecodeLzma2(CSzCoderInfo *coder, UInt64 inSize, CLookToRead *inStr
   Lzma2Dec_FreeProbs(&state);
   return res;
 }
+#endif
 
 static Bool IS_MAIN_METHOD(UInt32 m)
 {
@@ -117,7 +119,9 @@ static Bool IS_MAIN_METHOD(UInt32 m)
   {
     case k_Copy:
     case k_LZMA:
+#ifdef USE_LZMA2
     case k_LZMA2:
+#endif
       return True;
   }
   return False;
@@ -276,6 +280,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
 #endif
         RINOK(SzDecodeLzma(coder, inSize, inStream, outBufCur, outSizeCur));
       }
+#ifdef USE_LZMA2
       else if (coder->MethodID == k_LZMA2)
       {
 #ifdef _SZ_CODER_DEBUG
@@ -283,6 +288,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
 #endif
         RINOK(SzDecodeLzma2(coder, inSize, inStream, outBufCur, outSizeCur));
       }
+#endif
       else
       {
         return SZ_ERROR_UNSUPPORTED;
