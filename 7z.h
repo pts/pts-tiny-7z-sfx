@@ -4,6 +4,8 @@
 #ifndef __7Z_H
 #define __7Z_H
 
+#include "Types.h"
+
 EXTERN_C_BEGIN
 
 #define k7zStartHeaderSize 0x20
