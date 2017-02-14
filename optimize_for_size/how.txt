@@ -89,12 +89,23 @@ Should we compress the tiny7zx with LZMA and reuse the LZMA decoder?
   -rwxr-x--- 1 pts eng 32208 Jan 19  2014 tiny7zx.xstatic
   -rw-r----- 1 pts eng 14392 Feb  2 08:48 tiny7zx.xz
   -rw-r----- 1 pts eng 14384 Feb  2 08:47 tiny7zx.xz7z
-* Estimated size of the LZMA decoder (LzmaDec.c): 7600 bytes.
-* Estimated size of the ELF stub running the LZMA decoder: 300 bytes.
-* Estimated size of tiny7zx.unc without the LZMA decoder: 24400 - 7400 == 17000 bytes.
-* Estimated size of tiny7zx.lzma without the LZMA decoder: 17000 * (14400 / 24400) = 10000 bytes.
-* Estimated size of the output ELF: 7600 + 300 + 10000 == 17900 bytes.
-* ... So probably not worth writing, because tiny7zx.upx is already 16640 bytes.
+* Try1:
+** Estimated size of the LZMA decoder (LzmaDec.c): 7600 bytes.
+** Estimated size of the ELF stub running the LZMA decoder: 300 bytes.
+** Estimated size of tiny7zx.unc without the LZMA decoder: 24400 - 7400 == 17000 bytes.
+** Estimated size of tiny7zx.lzma without the LZMA decoder: 17000 * (14400 / 24400) = 10000 bytes.
+** Estimated size of the output ELF: 7600 + 300 + 10000 == 17900 bytes.
+** ... So probably not worth writing, because tiny7zx.upx is already 16640 bytes.
+* Try2:
+** Estimated size of the LZMA decoder from UPX, in assembly: 2900 bytes.
+** Estimated size of the ELF stub running the LZMA decoder: 300 bytes.
+** Estimated size of tiny7zx.unc without the LZMA decoder: 24400 - 7400 == 17000 bytes.
+** Estimated size of tiny7zx.lzma without the LZMA decoder: 17000 * (14400 / 24400) = 10000 bytes.
+** Estimated size of the output ELF: 2900 + 300 + 10000 == 13200 bytes.
+** ... So probably worth douing, because tiny7zx.upx is about 16640 bytes, we could save about 3400 bytes
+   -- but only if the LZMA decoder from UPX can be used modularly, e.g. in
+   Lzma2Dec.c.
+
 
 Typical values:
 
