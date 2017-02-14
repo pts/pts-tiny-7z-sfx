@@ -225,7 +225,7 @@ struct stat64 {
   unsigned long  st_gid;
   __extension__  unsigned long long st_rdev;
   unsigned char  __pad3[4];
-  __extension__ __off_t  st_size;
+  __extension__  unsigned long long st_size;
   unsigned long  st_blksize;
   /* Number 512-byte blocks allocated. */
   __extension__  unsigned long long st_blocks;
@@ -236,7 +236,6 @@ struct stat64 {
   unsigned long  st_ctime;
   unsigned long  st_ctime_nsec;
   __extension__  unsigned long long st_ino;
-  unsigned char __pad_end[8];  /* Without this lstat64 seems to clobber the stack after this. */
 }  __attribute__((packed));
 
 extern int errno __asm__("__minidiet_errno");
