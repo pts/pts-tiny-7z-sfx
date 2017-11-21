@@ -23,10 +23,11 @@ Limitations:
 * Memory usage can be high, especially for solid archives. See below.
 * It always extracts to the current directory.
 * It does not support (and may misbehave for) encryption in archives.
-* Works on Unix only (tested on Linux). Doesn't work on Windows.
-* Doesn't restore Unix file owners (UID, GID).
-* Doesn't restore Unix file extended attributes.
-* Doesn't restore Unix character devices, block devices, sockets or pipes.
+* It works on Unix only (tested on Linux). Doesn't work on Windows.
+* It doesn't restore Unix file owners (UID, GID).
+* It doesn't restore Unix file extended attributes.
+* It doesn't restore Unix character devices, block devices, sockets or pipes.
+* It is not able to run a command (via RunProgram) after extraction.
 
 Quick try on Linux i386 and amd64:
 
@@ -142,6 +143,34 @@ Info about memory usage during extraction:
   uncompressed_file_sizes: List of uncompressed file sizes in the archive.
   file_count and file_size include both files and directories (folders).
 
+Building installers
+~~~~~~~~~~~~~~~~~~~
+https://sevenzip.osdn.jp/chm/cmdline/switches/sfx.htm documents many .7z
+self-extractor programs for Windows, two of them (7zS.sfx and 7zD.sfx) being
+installers. For installers it's possibly to specify a config file during
+concatenation:
+
+  cat installer.sfx config.txt archive.7z >installer          # Unix
+  copy /b installer.sfx + config.txt + archive.7z >installer  # Windows.
+
+Typical contents of config.txt:
+
+  ;!@Install@!UTF-8!
+  Title="MyTool 4.00"
+  BeginPrompt="Do you want to install MyTool 4.00?"
+  RunProgram="setup.exe"
+  ;!@InstallEnd@!
+
+If the setting RunProgram="..." or ExecuteFile="..." is specified in the
+config file, then the installer will run this command after extraction.
+
+pts-tiny-7z-sfx doesn't provide an installer. In fact, if tiny7zx is used as
+installer.sfx, then the contents of config.txt will be ignored after the
+extraction, and commands will not be run.
+
+See also https://github.com/pts/pts-tiny-7z-sfx/issues/1 about building an
+installer (tiny7zi).
+
 License
 ~~~~~~~
 pts-tiny-7z-sfx is released under the GNU GPL v2.
@@ -149,7 +178,7 @@ pts-tiny-7z-sfx is released under the GNU GPL v2.
 Related software
 ~~~~~~~~~~~~~~~~
 See http://sourceforge.net/p/sevenzip/discussion/45797/thread/233f5efd
-about 7zS2con.sfx, a similar software for Win32.
+about 7zS2con.sfx, a similar software for Windows.
 
 Forked from 7z922.tar.bz2 from
 http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.tar.bz2/download
