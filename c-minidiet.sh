@@ -21,10 +21,9 @@ gcc -m32 -s -Os -static \
     -ansi -pedantic -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration \
     -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno \
     --sysroot minidiet -isystem minidiet -nostdlib -nostartfiles -nodefaultlibs -nostdinc -Wl,-T,minidiet/minidiet.scr \
-    -o tiny7zx "$@" \
+    -o tiny7zx.unc "$@" \
     all.c minidiet/minidiet.c
-cp -a tiny7zx tiny7zx.unc
-./upx.pts -q -q --ultra-brute tiny7zx
+./upxbc --upx=./upx.pts --elftiny -f -o tiny7zx tiny7zx.unc
 ls -ld tiny7zx tiny7zx.unc
 
 : c-minidiet.sh OK.

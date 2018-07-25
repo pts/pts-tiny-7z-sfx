@@ -18,15 +18,8 @@ diet -Os gcc -m32 -s -Os -DSTATIC=static -DUSE_LZMA2 -DUSE_CHMODW \
     -ffunction-sections -fdata-sections -Wl,--gc-sections \
     -o tiny7zx.diet.unc "$@" \
     all.c
-# This stripping saves about 136 bytes.
-strip -s --strip-unneeded --remove-section=.note.gnu.gold-version \
-    --remove-section=.comment --remove-section=.note \
-    --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag \
-    --remove-section=.eh_frame --remove-section=.eh_frame_ptr \
-    --remove-section=.jcr --remove-section=.got.plt \
-    tiny7zx.diet.unc
-./sstrip tiny7zx.diet.unc
-cp -a tiny7zx.diet.unc tiny7zx.diet
-upx.pts --ultra-brute tiny7zx.diet
+# This doesn't make a difference for --elftiny below.
+./upxbc --elfstrip tiny7zx.diet.unc
+./upxbc --upx=./upx.pts --elftiny -f -o tiny7zx.diet tiny7zx.diet.unc
 
 : c-diet.sh OK.

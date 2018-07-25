@@ -17,7 +17,6 @@ strip -s --remove-section=.note.gnu.gold-version \
     --remove-section=.comment --remove-section=.note \
     --remove-section=.note.gnu.build-id \
     tiny7zx.xstatic.unc
-cp -a tiny7zx.xstatic.unc tiny7zx.xstatic
-upx.pts --ultra-brute tiny7zx.xstatic
+./upxbc --upx=./upx.pts --elftiny -f -o tiny7zx.xstatic tiny7zx.xstatic.unc
 
 : c-xstatic.sh OK.
