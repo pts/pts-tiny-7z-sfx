@@ -11,7 +11,10 @@
 
 struct AssertSsizeTSizeAtMost8 { int _ : sizeof(ssize_t) <= 8; };
 #ifdef USE_MINIINC1
-#define HEAP_SIZE 2100000000  /* 2.1 GB */
+/* 2.1 GB doesn't work on some Ubuntu 14.04 amd64 systems, Linux 3.13.
+ * It's unreliable, sometimes 2.0 GB doesn't work either.
+ */
+#define HEAP_SIZE 1900000000  /* 1.9 GB */
 #else
 #define HEAP_SIZE 220000000
 #endif
