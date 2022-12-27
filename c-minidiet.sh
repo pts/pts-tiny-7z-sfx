@@ -24,7 +24,7 @@ gcc -m32 -s -Os -static \
     -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno \
     --sysroot minidiet -isystem minidiet -nostdlib -nostartfiles -nodefaultlibs -nostdinc -Wl,-T,minidiet/minidiet.scr \
     -o tiny7zx.unc "$@" \
-    all.c minidiet/minidiet.c minidiet/minidiet32.o
+    all.c minidiet/minidiet32.o
 ./upxbc --upx=./upx.pts --elftiny -f -o tiny7zx tiny7zx.unc
 ls -ld tiny7zx tiny7zx.unc
 
