@@ -9,7 +9,6 @@
 #include <miniinc1.h>
 
 int errno __asm__("__minidiet_errno");
-char **environ __asm__("__minidiet_environ");
 
 /* The entry point function: _start.
  * by pts@fazekas.hu at Wed Feb  1 17:04:13 CET 2017
@@ -46,11 +45,8 @@ __asm__("\n\
 /* ^^^ 00000012  29D3              sub ebx,edx */\n\
 .byte 0xC1, 0xEB, 0x02\n\
 /* ^^^ 00000014  C1EB02            shr ebx,0x2 */\n\
-.byte 0x89, 0x0D\n\
 ");
 __asm__("\n\
-.long __minidiet_environ\n\
-/* ^^^ 00000017  890D????????      mov [__minidiet_environ],ecx */\n\
 .byte 0x51\n\
 /* ^^^ 0000001D  51                push ecx */\n\
 .byte 0x52\n\

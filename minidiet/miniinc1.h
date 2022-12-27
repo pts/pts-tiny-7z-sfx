@@ -239,7 +239,6 @@ struct stat64 {
 }  __attribute__((packed));
 
 extern int errno __asm__("__minidiet_errno");
-extern char **environ __asm__("__minidiet_environ");
 
 /* Constants from asm/unistd_32.h */
 #define __NR_restart_syscall      0
