@@ -766,15 +766,11 @@ _syscall1(int,unlink,const char*,pathname)
 _syscall2(int,utimes,const char*,filename,const struct timeval*,times)
 _syscall2(int,lstat64,const char*,path,struct stat64*,buf)
 
-#define stat stat64
+#define stat stat64  /* For `struct stat'. */
 #define lstat lstat64
 
-__attribute__((__nothrow__)) static __inline__ off64_t lseek64(
-    int fd, off64_t offset, int whence) {
-  off64_t result;  /* Pacify gcc. */
-  return _llseek(fd, offset >> 32, (off_t)offset, &result, whence) == 0 ?
-      result : -1;
-}
+/* Returns 0 on success, anything else (and sets errno) on error. */
+__attribute__((__nothrow__)) __attribute__((regparm(3))) int lseek64set(int fd, off64_t offset);
 
 /*extern void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
 #define memcpy __builtin_memcpy
