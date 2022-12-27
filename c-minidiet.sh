@@ -18,7 +18,7 @@ nasm -O999 -f elf -o minidiet/minidiet32.o minidiet/minidiet32.nasm
 # The linker script (-T) makes `--build-id' and `-z relro' irrelevant.
 # The lack of -l... flags makes `-L...' irrelevant.
 # Not needed (because we use a linker script): -Wl,-z,norelro,--build-id=none
-gcc -m32 -s -Os -static \
+gcc -m32 -s -Os -static -march=i686 \
     -DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2 -DUSE_CHMODW \
     -ansi -pedantic -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration \
     -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno \
