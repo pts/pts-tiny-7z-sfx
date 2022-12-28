@@ -264,6 +264,6 @@ int __LIBC_FUNC(lstat64, (const char *path, struct stat64 *buf));
 #define lstat lstat64
 
 /*void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
-#define memcpy __builtin_memcpy  /* TODO(pts): Is the minidiet32 memcpy smaller? */
+void* __LIBC_FUNC(memcpy, (void *dest, const void *src, size_t n));
 
 #endif  /* _MINIINC1_H_ */

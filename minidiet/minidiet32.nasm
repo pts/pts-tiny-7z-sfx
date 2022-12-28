@@ -1,6 +1,17 @@
 		bits 32
 		cpu 386
 
+global memcpy__RP3__
+memcpy__RP3__:	push edi
+		xchg esi, edx
+		xchg edi, eax		; EDI := dest; EAX := junk.
+		push edi
+		rep movsb
+		pop eax			; Will return dest.
+		xchg esi, edx		; Restore ESI.
+		pop edi
+		ret
+
 ;extern __minidiet_errno
 common __minidiet_errno 4 4
 
