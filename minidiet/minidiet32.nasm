@@ -52,8 +52,8 @@ extern main
 _start:  ; Program entry point.
 		pop eax			; argc.
 		mov edx, esp		; argv.
-		push edx		; TODO(pts): Remove this if main is regparm(3).
-		push eax		; TODO(pts): Remove this if main is regparm(3).
+		push edx		; Not needed iff main is regparm(3).
+		push eax		; Not needed iff main is regparm(3).
 		call main
 		; Fall through to exit.
 

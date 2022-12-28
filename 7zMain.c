@@ -330,7 +330,12 @@ static Bool IsFilenameSafe(const char *p) {
 #define STRCMP1(p, c) (((const Byte*)(p))[0] == (c) && ((const Byte*)(p))[1] == 0)
 #endif
 
-int MY_CDECL main(int numargs, char *args[])
+#if 0 && defined(USE_MINIINC1)  /* No significant savings. */
+__attribute__((regparm(3))) int
+#else
+int MY_CDECL
+#endif
+main(int numargs, char *args[])
 {
   CLookToRead lookStream;
   CSzArEx db;
