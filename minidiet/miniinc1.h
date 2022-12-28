@@ -339,27 +339,31 @@ __asm__ __volatile__ ("int $0x80" \
 __syscall_return(type,__res); \
 }
 
-_syscall1_nomemory(int,close,int,fd)
-_syscall3(int,open,const char*,pathname,int,flags,mode_t,mode)
 _syscall2(int,chmod,const char*,path,mode_t,mode)
 _syscall2_nomemory(int,fchmod,int,fd,mode_t,mode)
 _syscall2(int,gettimeofday,struct timeval*,tv,struct timezone*,tz)
-_syscall3(ssize_t,write,int,fd,const void*,buf,size_t,count)
-_syscall3(ssize_t,read,int,fd,void*,buf,size_t,count)
 _syscall1_nomemory(mode_t,umask,mode_t,mask)
-_syscall2(int,mkdir,const char*,pathname,mode_t,mode)
 _syscall2(int,symlink,const char*,oldpath,const char*,newpath)
-_syscall1(int,unlink,const char*,pathname)
 _syscall2(int,utimes,const char*,filename,const struct timeval*,times)
 _syscall2(int,lstat64,const char*,path,struct stat64*,buf)
+
+#define __LIBC_CALL __attribute__((__nothrow__, regparm(3)))
+#define __LIBC_FUNC(name, args) __LIBC_CALL name args __asm__(#name "__RP3__")
+
+void* __LIBC_FUNC(sys_brk, (void *addr));
+int __LIBC_FUNC(open, (const char *pathname, int flags, mode_t mode));
+int __LIBC_FUNC(close, (int fd));
+ssize_t __LIBC_FUNC(read, (int fd, void *buf, size_t count));
+ssize_t __LIBC_FUNC(write, (int fd, const void *buf, size_t count));
+int __LIBC_FUNC(unlink, (const char *pathname));
+int __LIBC_FUNC(mkdir, (const char *pathname, mode_t mode));
+/* Returns 0 on success, anything else (and sets errno) on error. */
+int __LIBC_FUNC(lseek64set, (int fd, off64_t offset));
 
 #define stat stat64  /* For `struct stat'. */
 #define lstat lstat64
 
-/* Returns 0 on success, anything else (and sets errno) on error. */
-__attribute__((__nothrow__)) __attribute__((regparm(3))) int lseek64set(int fd, off64_t offset);
-
-/*extern void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
-#define memcpy __builtin_memcpy
+/*void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
+#define memcpy __builtin_memcpy  /* TODO(pts): Is the minidiet32 memcpy smaller? */
 
 #endif  /* _MINIINC1_H_ */
