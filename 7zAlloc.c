@@ -9,15 +9,16 @@
 
 #ifdef USE_MINIALLOC
 
-struct AssertSsizeTSizeAtMost8 { int _ : sizeof(ssize_t) <= 8; };
 #ifdef USE_MINIINC1
+static char *heap_start;
+static char *heap_end;
+static char *heap_pos;
+struct AssertSsizeTSizeAtMost8 { int _ : sizeof(ssize_t) <= 8; };
+#else
 /* 2.1 GB doesn't work on some Ubuntu 14.04 amd64 systems, Linux 3.13.
  * It's unreliable, sometimes 2.0 GB doesn't work either.
  */
-#define HEAP_SIZE 1900000000  /* 1.9 GB */
-#else
-#define HEAP_SIZE 220000000
-#endif
+#define HEAP_SIZE 220000000  /* 220 MB */
 /* Almost 2 GB of virtual memory, should be enough. Please note that physical
  * memory is not allocated until used.
  *
@@ -28,6 +29,7 @@ struct AssertSsizeTSizeAtMost8 { int _ : sizeof(ssize_t) <= 8; };
  */
 static char heap[HEAP_SIZE] __attribute__((aligned(8)));
 static char *heap_pos = heap + 8;
+#endif
 
 #ifdef _SZ_ALLOC_ASSERT
 #define ALLOC_ASSERT(cond, msg) do { \
@@ -43,11 +45,34 @@ static char *heap_pos = heap + 8;
 #endif
 
 STATIC void *SzAlloc(size_t size) {
+  size_t alloc;
   size_t size_padded;
   char *result;
   if ((ssize_t)size <= 0) return 0;  /* Disallow 0, check for overflow. */
   size_padded = size + sizeof(ssize_t);
   size_padded += -size_padded & 7;  /* Align to 8-byte boundary. */
+#ifdef USE_MINIINC1
+  if (!heap_start) {  /* TODO(pts): Use sys_brk directly. */
+    /* !! TODO(pts): Is this always aligned? */
+    if (!(heap_start = malloc(size_padded + 8))) return 0;  /* Out of memory. */
+    heap_end = heap_start + size_padded + 8;
+    heap_pos = heap_start + 8;
+    ((ssize_t*)heap_pos)[-1] = -1;  /* Mark block as used. */
+  } else {
+    if (heap_pos + size_padded > heap_end) {
+      alloc = heap_pos + size_padded - heap_end;
+      if (!(result = (char*)malloc(alloc))) return 0;  /* Out of memory. */
+      heap_end = result + alloc;
+    }
+    ALLOC_ASSERT(((ssize_t*)heap_pos)[-1] >= 0, "heap_pos is free in SzAlloc.");
+    /* GCC complies this negation to a `not' instruction on i386 and amd64. */
+    ((ssize_t*)heap_pos)[-1] ^= (ssize_t)-1;  /* Mark block as used. */
+  }  
+  result = heap_pos;
+  heap_pos += size_padded;
+   /* Mark next block (heap_pos) as free, set backward linked list pointer. */
+  ((ssize_t*)heap_pos)[-1] = size_padded;
+#else
   /* Report out-of-memory error. */
   if (size_padded > (size_t)(heap + sizeof(heap) - heap_pos)) return 0;
   ALLOC_ASSERT(((ssize_t*)heap_pos)[-1] >= 0, "heap_pos is free in SzAlloc.");
@@ -57,6 +82,7 @@ STATIC void *SzAlloc(size_t size) {
   heap_pos += size_padded;
    /* Mark next block (heap_pos) as free, set backward linked list pointer. */
   ((ssize_t*)heap_pos)[-1] = size_padded;
+#endif
 #ifdef _SZ_ALLOC_DEBUG
 #ifdef USE_MINIINC1
   (void)!write(2, "@", 1);

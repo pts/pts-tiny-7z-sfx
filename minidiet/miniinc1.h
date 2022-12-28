@@ -265,5 +265,7 @@ int __LIBC_FUNC(lstat64, (const char *path, struct stat64 *buf));
 
 /*void *memcpy(void *__restrict __dest,   __const void *__restrict __src, size_t __n) __attribute__((__nothrow__)) __attribute__((__nonnull__(1, 2)));*/
 void* __LIBC_FUNC(memcpy, (void *dest, const void *src, size_t n));
+void* __LIBC_FUNC(malloc, (size_t size));
+/*__attribute__((noreturn)) void __LIBC_FUNC(exit, (int status));*/
 
 #endif  /* _MINIINC1_H_ */
