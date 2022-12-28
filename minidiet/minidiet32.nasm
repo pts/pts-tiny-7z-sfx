@@ -32,13 +32,20 @@ global %1__RP3__
 		jmp strict short __do_syscall3
 %endm
 
-;__LIBC_LINUX_SYSCALL sys_brk, 45  ; void* __LIBC_FUNC(sys_brk, (void *addr));  ; Currently unused.
-__LIBC_LINUX_SYSCALL unlink, 10   ; int __LIBC_FUNC(unlink, (const char *pathname));
-__LIBC_LINUX_SYSCALL close, 6     ; int __LIBC_FUNC(close, (int fd));
-__LIBC_LINUX_SYSCALL open, 5      ; int __LIBC_FUNC(open, (const char *pathname, int flags, mode_t mode));
-__LIBC_LINUX_SYSCALL read, 3      ; ssize_t __LIBC_FUNC(read, (int fd, void *buf, size_t count));
-__LIBC_LINUX_SYSCALL write, 4     ; ssize_t __LIBC_FUNC(write, (int fd, const void *buf, size_t count));
-__LIBC_LINUX_SYSCALL mkdir, 39    ; int __LIBC_FUNC(mkdir, (const char *pathname, mode_t mode));
+;__LIBC_LINUX_SYSCALL sys_brk, 45       ; void* __LIBC_FUNC(sys_brk, (void *addr));  ; Currently unused.
+__LIBC_LINUX_SYSCALL unlink, 10        ; int __LIBC_FUNC(unlink, (const char *pathname));
+__LIBC_LINUX_SYSCALL close, 6          ; int __LIBC_FUNC(close, (int fd));
+__LIBC_LINUX_SYSCALL open, 5           ; int __LIBC_FUNC(open, (const char *pathname, int flags, mode_t mode));
+__LIBC_LINUX_SYSCALL read, 3           ; ssize_t __LIBC_FUNC(read, (int fd, void *buf, size_t count));
+__LIBC_LINUX_SYSCALL write, 4          ; ssize_t __LIBC_FUNC(write, (int fd, const void *buf, size_t count));
+__LIBC_LINUX_SYSCALL mkdir, 39         ; int __LIBC_FUNC(mkdir, (const char *pathname, mode_t mode));
+__LIBC_LINUX_SYSCALL chmod, 15         ; int __LIBC_FUNC(chmod, (const char *path, mode_t mode));
+__LIBC_LINUX_SYSCALL fchmod, 94        ; int __LIBC_FUNC(fchmod, (int fd, mode_t mode));
+__LIBC_LINUX_SYSCALL gettimeofday, 78  ; int __LIBC_FUNC(gettimeofday, (struct timeval *tv, struct timezone *tz));
+__LIBC_LINUX_SYSCALL umask, 60         ; mode_t __LIBC_FUNC(umask, (mode_t mask));
+__LIBC_LINUX_SYSCALL symlink, 83       ; int __LIBC_FUNC(symlink, (const char *oldpath, const char *newpath));
+__LIBC_LINUX_SYSCALL utimes, 271       ; int __LIBC_FUNC(utimes, (const char *filename, const struct timeval *times));
+__LIBC_LINUX_SYSCALL lstat64, 196      ; int __LIBC_FUNC(lstat64, (const char *path, struct stat64 *buf));
 
 global _start
 extern main

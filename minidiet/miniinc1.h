@@ -240,113 +240,6 @@ struct stat64 {
 
 extern int errno __asm__("__minidiet_errno");
 
-/* Constants from asm/unistd_32.h */
-#define __NR_read		  3
-#define __NR_write		  4
-#define __NR_open		  5
-#define __NR_close		  6
-#define __NR_unlink		 10
-#define __NR_chmod		 15
-#define __NR_mkdir		 39
-#define __NR_brk		 45
-#define __NR_umask		 60
-#define __NR_gettimeofday	 78
-#define __NR_symlink		 83
-#define __NR_fchmod		 94
-#define __NR_lstat64		196
-#define __NR_utimes		271
-
-#define __syscall_return(type, res) \
-do { \
-  if ((unsigned long)(res) >= (unsigned long)(-200)) { \
-    errno = -(res); \
-    res = -1; \
-  } \
-  return (type) (res); \
-} while (0)
-
-#define _syscall0_nomemory(type,name) \
-static __inline__ type name(void) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name)); \
-__syscall_return(type,__res); \
-}
-
-#define _syscall1(type,name,type1,arg1) \
-static __inline__ type name(type1 __##arg1) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1)) \
-  : "memory");  /* No need to specify "cc" (for eflags, also tried it) or "esi" or "edi" here, see http://lxr.free-electrons.com/source/arch/x86/kernel/entry_32.S?v=3.14#L17 and SAVE_ALL */ \
-__syscall_return(type,__res); \
-}
-
-#define _syscall1_nomemory(type,name,type1,arg1) \
-static __inline__ type name(type1 __##arg1) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1))); \
-__syscall_return(type,__res); \
-}
-
-#define _syscall2_nomemory(type,name,type1,arg1,type2,arg2) \
-static __inline__ type name(type1 __##arg1,type2 __##arg2) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1)),"c" ((long)(__##arg2))); \
-__syscall_return(type,__res); \
-}
-
-#define _syscall2(type,name,type1,arg1,type2,arg2) \
-static __inline__ type name(type1 __##arg1,type2 __##arg2) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1)),"c" ((long)(__##arg2)) : "memory"); \
-__syscall_return(type,__res); \
-}
-
-#define _syscall3_nomemory(type,name,type1,arg1,type2,arg2,type3,arg3) \
-static __inline__ type name(type1 __##arg1,type2 __##arg2,type3 __##arg3) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1)),"c" ((long)(__##arg2)), "d" ((long)(__##arg3))); \
-__syscall_return(type,__res); \
-}
-
-#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3) \
-static __inline__ type name(type1 __##arg1,type2 __##arg2,type3 __##arg3) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1)),"c" ((long)(__##arg2)), "d" ((long)(__##arg3)) : "memory"); \
-__syscall_return(type,__res); \
-}
-
-#define _syscall3_nomemory(type,name,type1,arg1,type2,arg2,type3,arg3) \
-static __inline__ type name(type1 __##arg1,type2 __##arg2,type3 __##arg3) { \
-long __res; \
-__asm__ __volatile__ ("int $0x80" \
-  : "=a" (__res) \
-  : "0" (__NR_##name),"b" ((long)(__##arg1)),"c" ((long)(__##arg2)), \
-      "d" ((long)(__##arg3))); \
-__syscall_return(type,__res); \
-}
-
-_syscall2(int,chmod,const char*,path,mode_t,mode)
-_syscall2_nomemory(int,fchmod,int,fd,mode_t,mode)
-_syscall2(int,gettimeofday,struct timeval*,tv,struct timezone*,tz)
-_syscall1_nomemory(mode_t,umask,mode_t,mask)
-_syscall2(int,symlink,const char*,oldpath,const char*,newpath)
-_syscall2(int,utimes,const char*,filename,const struct timeval*,times)
-_syscall2(int,lstat64,const char*,path,struct stat64*,buf)
-
 #define __LIBC_CALL __attribute__((__nothrow__, regparm(3)))
 #define __LIBC_FUNC(name, args) __LIBC_CALL name args __asm__(#name "__RP3__")
 
@@ -359,6 +252,13 @@ int __LIBC_FUNC(unlink, (const char *pathname));
 int __LIBC_FUNC(mkdir, (const char *pathname, mode_t mode));
 /* Returns 0 on success, anything else (and sets errno) on error. */
 int __LIBC_FUNC(lseek64set, (int fd, off64_t offset));
+int __LIBC_FUNC(chmod, (const char *path, mode_t mode));
+int __LIBC_FUNC(fchmod, (int fd, mode_t mode));
+int __LIBC_FUNC(gettimeofday, (struct timeval *tv, struct timezone *tz));
+mode_t __LIBC_FUNC(umask, (mode_t mask));
+int __LIBC_FUNC(symlink, (const char *oldpath, const char *newpath));
+int __LIBC_FUNC(utimes, (const char *filename, const struct timeval *times));
+int __LIBC_FUNC(lstat64, (const char *path, struct stat64 *buf));
 
 #define stat stat64  /* For `struct stat'. */
 #define lstat lstat64
