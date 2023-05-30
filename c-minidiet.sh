@@ -19,7 +19,7 @@ nasm -O999 -f elf -o minidiet/minidiet32.o minidiet/minidiet32.nasm
 # The lack of -l... flags makes `-L...' irrelevant.
 # Not needed (because we use a linker script): -Wl,-z,norelro,--build-id=none
 gcc -m32 -s -Os -static -march=i386 \
-    -DUSE_MINIINC1 -DUSE_MINIALLOC -DUSE_LZMA2 -DUSE_CHMODW \
+    -DUSE_MINIINC1 -DUSE_MINIALLOC_SYS_BRK -DUSE_LZMA2 -DUSE_CHMODW \
     -ansi -pedantic -W -Wall -Wextra -Wsystem-headers -Werror=implicit -Werror=implicit-int -Werror=implicit-function-declaration \
     -fno-builtin-memcpy -fno-builtin-malloc -fno-stack-protector -fno-ident -fomit-frame-pointer -mpreferred-stack-boundary=2 -falign-functions=1 -falign-jumps=1 -falign-loops=1 -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops -fmerge-all-constants -fno-math-errno \
     --sysroot minidiet -isystem minidiet -nostdlib -nostartfiles -nodefaultlibs -nostdinc -Wl,-T,minidiet/minidiet.scr \

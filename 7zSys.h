@@ -1,6 +1,14 @@
 #ifndef __7Z_SYS_H
 #define __7Z_SYS_H
 
+#if defined(USE_MINIINC1) && !defined(USE_MINIALLOC_SYS_BRK)
+#  define USE_MINIALLOC_SYS_BRK 1
+#endif
+
+#if defined(USE_MINIALLOC_SYS_BRK) && !defined(USE_MINIALLOC)
+#  define USE_MINIALLOC 1
+#endif
+
 #ifdef USE_MINIINC1
 #include <miniinc1.h>
 #else
@@ -38,6 +46,11 @@
 
 #ifndef UNDER_CE
 #include <errno.h>
+#endif
+
+#ifdef USE_STAT64
+#define stat stat64
+#define lstat lstat64
 #endif
 
 #endif  /* USE_MINIINC1 */

@@ -9,7 +9,7 @@
 
 #ifdef USE_MINIALLOC
 
-#ifdef USE_MINIINC1
+#ifdef USE_MINIALLOC_SYS_BRK
 static char *heap_pos;
 struct AssertSsizeTSizeAtMost8 { int _ : sizeof(ssize_t) <= 8; };
 #else
@@ -43,7 +43,7 @@ static char *heap_pos = heap + 8;
 #endif
 
 STATIC void *SzAlloc(size_t size) {
-#ifdef USE_MINIINC1
+#ifdef USE_MINIALLOC_SYS_BRK
   static char *base, *end;
   ssize_t new_heap_size;
   size_t delta;
@@ -53,7 +53,7 @@ STATIC void *SzAlloc(size_t size) {
   if ((ssize_t)size <= 0) return 0;  /* Disallow 0, check for overflow. */
   size_padded = size + sizeof(ssize_t);
   size_padded += -size_padded & 7;  /* Align to 8-byte boundary. */
-#ifdef USE_MINIINC1
+#ifdef USE_MINIALLOC_SYS_BRK
   delta = 0;
   if (!base || size_padded > (size_t)(end - heap_pos)) {
     if (!base) {
@@ -93,7 +93,7 @@ STATIC void *SzAlloc(size_t size) {
    /* Mark next block (heap_pos) as free, set backward linked list pointer. */
   ((ssize_t*)heap_pos)[-1] = size_padded;
 #ifdef _SZ_ALLOC_DEBUG
-#ifdef USE_MINIINC1
+#ifdef USE_MINIALLOC_SYS_BRK
   (void)!write(2, "@", 1);
 #else
   fprintf(stderr, "DYNAMIC ALLOC %lld = %p AT %lld\n", (long long)size, result, (long long)(heap_pos - heap));
@@ -104,7 +104,7 @@ STATIC void *SzAlloc(size_t size) {
 
 STATIC void SzFree(void *address) {
 #ifdef _SZ_ALLOC_DEBUG
-#ifdef USE_MINIINC1
+#ifdef USE_MINIALLOC_SYS_BRK
   (void)!write(2, ".", 1);
 #else
   fprintf(stderr, "DYNAMIC FREE %p\n", address);
@@ -130,7 +130,7 @@ STATIC void SzFree(void *address) {
     if (heap_pos == heap + 8) {
       (void)!write(2, "DYNAMIC HEAP IS EMPTY\n", 22);
     }
-#ifndef USE_MINIINC1
+#ifndef USE_MINIALLOC_SYS_BRK
     fprintf(stderr, "DYNAMIC REMAINING %lld %p\n", (long long)(heap_pos - heap), heap_pos);
 #endif
 #endif
