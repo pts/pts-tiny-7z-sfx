@@ -15,9 +15,15 @@ STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset)
   p->pos = p->size = 0;
   return result == 0 ? SZ_OK : SZ_ERROR_READ;
 #else
+#ifdef __MINILIBC686__
+  const int result = lseek64_set(p->fd, offset);
+  p->pos = p->size = 0;
+  return result == 0 ? SZ_OK : SZ_ERROR_READ;
+#else
   const UInt64 offset1 = lseek64(p->fd, offset, SEEK_SET);
   p->pos = p->size = 0;
   return offset == offset1 ? SZ_OK : SZ_ERROR_READ;
+#endif
 #endif
 }
 
