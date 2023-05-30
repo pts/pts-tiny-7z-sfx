@@ -868,7 +868,8 @@ static SRes SzReadFileNames(const Byte *p, size_t size, UInt32 numFiles, size_t 
         return SZ_ERROR_ARCHIVE;
       ++pos;
 #ifdef MY_CPU_LE_UNALIGN
-      if ((*(UInt16**)&p)++[0] == 0)
+      p += 2;
+      if (((UInt16*)p)[-1] == 0)
         break;
 #else
       p += 2;
