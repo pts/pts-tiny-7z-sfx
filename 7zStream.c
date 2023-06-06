@@ -20,9 +20,15 @@ STATIC SRes LookInStream_SeekTo(CLookToRead *p, UInt64 offset)
   p->pos = p->size = 0;
   return result == 0 ? SZ_OK : SZ_ERROR_READ;
 #else
+#ifdef __WATCOMC__  /* OpenWatcom doesn't have the lseek64(...) function, and its _lseeki64(...) function is buggy. */
+  /*const UInt64 offset1 = _lseeki64(p->fd, offset, SEEK_SET);*/  /* Buggy. */
+  Int64 offset1;
+  if (_llseek(p->fd, offset >> 32, offset, &offset1, SEEK_SET)) return SZ_ERROR_READ;
+#else
   const UInt64 offset1 = lseek64(p->fd, offset, SEEK_SET);
+#endif
   p->pos = p->size = 0;
-  return offset == offset1 ? SZ_OK : SZ_ERROR_READ;
+  return offset == (UInt64)offset1 ? SZ_OK : SZ_ERROR_READ;
 #endif
 #endif
 }

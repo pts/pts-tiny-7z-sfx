@@ -168,7 +168,16 @@ static WRes SetMTime(const char *filename,
   } else {
     tv[1] = tv[0];
   }
+#if defined(__WATCOMC__) && !defined(__MINILIBC686__) && !defined(USE_MINIINC1)  /* This ignores tv_usec, so it loses subsecond precision. But __WATCOMC__ doesn't have utimes(2). */
+  {
+    struct utimbuf utb;
+    utb.actime = tv[0].tv_sec;
+    utb.modtime = tv[1].tv_sec;
+    return utime(filename, &utb) != 0;
+  }
+#else
   return utimes(filename, tv) != 0;
+#endif
 }
 
 #ifdef USE_CHMODW
