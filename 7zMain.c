@@ -148,6 +148,25 @@ static void GetTimeSecAndUsec(
   *usec_out = UInt64DivAndGetMod(sec_out, 10000000) / 10;
 }
 
+#if defined(__WATCOMC__) && defined(__LINUX__) && defined(__386__) && !defined(__MINILIBC686__) && !defined(USE_MINIINC1)
+#undef  USE_UTIMES
+#define USE_UTIMES 1
+#define utimes my_utimes
+__declspec(naked) static int __watcall my_utimes(const char *filename, const struct timeval times[2]) {
+  (void)filename; (void)times;
+  __asm {
+		push ebx
+		xchg eax, ebx
+		mov eax, 271  /* __NR_utimes. */
+		xchg ecx, edx
+		int 0x80  /* Linux i386 syscall. */
+		xchg ecx, edx  /* Restore ECX. */
+		pop ebx
+		ret
+  }
+}
+#endif
+
 /* tv[0] is assumed to be prefilled with the desired st_atime */
 static WRes SetMTime(const char *filename,
                      const CNtfsFileTime *mtime,
@@ -168,8 +187,8 @@ static WRes SetMTime(const char *filename,
   } else {
     tv[1] = tv[0];
   }
-#if defined(__WATCOMC__) && !defined(__MINILIBC686__) && !defined(USE_MINIINC1)  /* This ignores tv_usec, so it loses subsecond precision. But __WATCOMC__ doesn't have utimes(2). */
-  {
+#if defined(__WATCOMC__) && !defined(__MINILIBC686__) && !defined(USE_MINIINC1) && !defined(USE_UTIMES)
+  { /* This ignores tv_usec, so it loses subsecond precision. But __WATCOMC__ doesn't have utimes(2). */
     struct utimbuf utb;
     utb.actime = tv[0].tv_sec;
     utb.modtime = tv[1].tv_sec;
