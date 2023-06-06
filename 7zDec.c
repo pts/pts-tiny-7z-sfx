@@ -324,7 +324,8 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
     {
       if (ci != 1)
         return SZ_ERROR_UNSUPPORTED;
-      switch(coder->MethodID)
+      if (coder->MethodID >> 32) goto unsupported;
+      switch((UInt32)coder->MethodID)
       {
         case k_BCJ:
         {
@@ -343,6 +344,7 @@ static SRes SzFolder_Decode2(const CSzFolder *folder, const UInt64 *packSizes,
           ARM_Convert(outBuffer, outSize, 0, 0);
           break;
         default:
+        unsupported:
           return SZ_ERROR_UNSUPPORTED;
       }
     }

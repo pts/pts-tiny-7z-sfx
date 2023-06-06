@@ -90,9 +90,9 @@ STATIC void PrintError(const char *sz)
   WriteMessage("\n");
 }
 
-/* Returns *a % b, and sets *a = *a_old / b; */
+/* Returns *a_old % b, and sets *a = *a_old / b; */
 static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
-#ifdef __i386__  /* u64 / u32 division with little i386 machine code. */
+#if defined(__i386__) && !defined(__WATCOMC__)  /* u64 / u32 division with little i386 machine code. */
   /* http://stackoverflow.com/a/41982320/97248 */
   UInt32 upper = ((UInt32*)a)[1], r;
   ((UInt32*)a)[1] = 0;
