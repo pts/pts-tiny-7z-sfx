@@ -91,8 +91,36 @@ STATIC void PrintError(const char *sz)
 }
 
 /* Returns *a_old % b, and sets *a = *a_old / b; */
+#if 0 && defined(USE_MINIINC1)  /* Shorter, but longer after compressoin with UPX. */
+UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b);  /* Implemented in minidiet/minidiet32.nasm. */
+#else
+#if defined(MY_CPU_X86) && defined(__WATCOMC__) && defined(__MINILIBC686__)
+__declspec(naked) static UInt32 __cdecl UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
+  (void)a; (void)b;
+  __asm {
+		push ebx
+		mov ecx, [esp+0x8]
+		mov ebx, [esp+0xc]
+		mov edx, [ecx+0x4]
+		cmp edx, ebx
+		jnb L2
+		sub [ecx+0x4], edx  /* Set it to 0. */
+		jmp short L3
+   L2:		xchg eax, edx  /* EAX := EDX; EDX := junk. */
+		xor edx, edx
+		div ebx
+		mov [ecx+0x4], eax
+   L3:		mov eax, [ecx]
+		div ebx
+		mov [ecx], eax
+		xchg eax, edx  /* EAX := EDX; EDX := junk. */
+		pop ebx
+		ret
+  }
+}
+#else
 static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
-#if defined(__i386__) && !defined(__WATCOMC__)  /* u64 / u32 division with little i386 machine code. */
+#if defined(MY_CPU_X86) && !defined(__WATCOMC__)  /* u64 / u32 division with little i386 machine code. */
   /* http://stackoverflow.com/a/41982320/97248 */
   UInt32 upper = ((UInt32*)a)[1], r;
   ((UInt32*)a)[1] = 0;
@@ -110,6 +138,8 @@ static UInt32 UInt64DivAndGetMod(UInt64 *a, UInt32 b) {
   return r;
 #endif
 }
+#endif
+#endif
 
 static void GetTimeSecAndUsec(
     const CNtfsFileTime *mtime, UInt64 *sec_out, UInt32 *usec_out) {

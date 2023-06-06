@@ -98,3 +98,28 @@ __do_syscall3:	xchg ebx, [esp]	; Keep EBX pushed.
 		or eax, byte -1  	; Set return value to -1.
 .ok:		pop ebx
 		ret
+
+%if 0
+; Shorter reimplementation of code in 7zMain.c.
+global UInt64DivAndGetMod
+UInt64DivAndGetMod:  ; uint32_t UInt64DivAndGetMod(uint64_t *a, uint32_t b);
+; Returns *a_old % b, and sets *a = *a_old / b.
+		push ebx
+		mov ecx, [esp+0x8]
+		mov ebx, [esp+0xc]
+		mov edx, [ecx+0x4]
+		cmp edx, ebx
+		jnb .2
+		sub [ecx+0x4], edx  ; Set it to 0.
+		jmp short .3
+.2:		xchg eax, edx  ; EAX := EDX; EDX := junk.
+		xor edx, edx
+		div ebx
+		mov [ecx+0x4], eax
+.3:		mov eax, [ecx]
+		div ebx
+		mov [ecx], eax
+		xchg eax, edx  ; EAX := EDX; EDX := junk.
+		pop ebx
+		ret
+%endif
