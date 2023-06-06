@@ -12,7 +12,7 @@
 set -ex
 
 # Recommended C compiler: GCC 4.8.4. Newer versions of GCC generate larger code.
-minicc -DUSE_MINIALLOC_SYS_BRK -DUSE_LZMA2 -DUSE_CHMODW -DUSE_STAT64 -Wl,-N -march=i386 -fno-unroll-loops -fmerge-all-constants -fno-math-errno -o tiny7zx.ml all.c
+minicc --gcc -DUSE_MINIALLOC_SYS_BRK -DUSE_LZMA2 -DUSE_CHMODW -DUSE_STAT64 -Wl,-N -march=i386 -fno-unroll-loops -fmerge-all-constants -fno-math-errno -o tiny7zx.ml all.c
 ls -ld tiny7zx.ml
 
 : c-minilibc686.sh OK.
