@@ -25,6 +25,7 @@ gcc -m32 -s -Os -static -march=i386 -fno-pic \
     --sysroot minidiet -isystem minidiet -nostdlib -nostartfiles -nodefaultlibs -nostdinc -Wl,-T,minidiet/minidiet.scr \
     -o tiny7zx.unc "$@" \
     all.c minidiet/minidiet32.o
+rm -f minidiet/minidiet32.o
 ./upxbc --upx=./upx.pts --elftiny -f -o tiny7zx tiny7zx.unc
 ls -ld tiny7zx tiny7zx.unc
 
