@@ -22,6 +22,7 @@ __extension__ typedef unsigned long long uint64_t;
 #define O_CREAT 0100
 #define O_EXCL  0200
 #define O_TRUNC 01000
+#define O_LARGEFILE  0100000
 
 #define S_IFMT  00170000
 #define S_IFSOCK 0140000

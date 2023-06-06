@@ -192,7 +192,11 @@ static SRes CreateDirs(char *filename, unsigned umaskv) {
 }
 
 static SRes OutFile_Open(int *p, char *filename, Bool doYes, unsigned umaskv) {
-  mode_t mode = O_WRONLY | O_CREAT | O_TRUNC;
+  mode_t mode = O_WRONLY | O_CREAT | O_TRUNC
+#ifdef O_LARGEFILE
+      | O_LARGEFILE
+#endif
+      ;
   Bool had_again = False;
   if (!doYes) mode |= O_EXCL;
  again:
@@ -419,7 +423,11 @@ main(int numargs, char *args[])
   WriteMessage(archive);
   WriteMessage("\n");
   WriteMessage("\n");
-  if ((lookStream.fd = open(archive, O_RDONLY, 0)) < 0) {
+  if ((lookStream.fd = open(archive,
+#ifdef O_LARGEFILE
+      O_LARGEFILE |
+#endif
+      O_RDONLY, 0)) < 0) {
     PrintError("can not open input archive");
     return 1;
   }
