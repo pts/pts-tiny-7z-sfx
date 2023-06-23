@@ -67,33 +67,40 @@ SECTIONS {
   PROVIDE(_etext = ABSOLUTE(.));
   PROVIDE(etext = ABSOLUTE(.));
   .ctors : ALIGN(4) SUBALIGN(4) {
+    __ctors_start = .;
     *(.ctors)
     /* This doesn't trigger if there are no .ctors in the input. */
-    ASSERT(0, "Constructors (.ctors) are not supported.");
+    ASSERT(__ctors_start == ., "Constructors (.ctors) are not supported.");
   }
   .dtors : ALIGN(4) SUBALIGN(4) {
+    __dtors_start = .;
     *(.dtors)
-    ASSERT(0, "Destructors (.dtors) are not supported.");
+    ASSERT(__dtors_start == ., "Destructors (.dtors) are not supported.");
   }
   .init : ALIGN(4) SUBALIGN(4) {
+    __init_start = .;
     *(.init)
-    ASSERT(0, "Old-style constructors (.init) are not supported.");
+    ASSERT(__init_start == ., "Old-style constructors (.init) are not supported.");
   }
   .fini : ALIGN(4) SUBALIGN(4) {
+    __fini_start = .;
     *(.fini)
-    ASSERT(0, "Old-style destructors (.fini) are not supported.");
+    ASSERT(__fini_start == ., "Old-style destructors (.fini) are not supported.");
   }
-  .pre_init_array : ALIGN(4) SUBALIGN(4) {
-    *(.init_array)
-    ASSERT(0, "Old-style constructors (.preinit_array) are not supported.");
+  .preinit_array : ALIGN(4) SUBALIGN(4) {
+    __preinit_array_start = .;
+    *(.preinit_array)
+    ASSERT(__preinit_array_start == ., "Old-style constructors (.preinit_array) are not supported.");
   }
   .init_array : ALIGN(4) SUBALIGN(4) {
+    __init_array_start = .;
     *(.init_array)
-    ASSERT(0, "Old-style constructors (.init_array) are not supported.");
+    ASSERT(__init_array_start == ., "Old-style constructors (.init_array) are not supported.");
   }
   .fini_array : ALIGN(4) SUBALIGN(4) {
+    __fini_array_start = .;
     *(.fini_array)
-    ASSERT(0, "Old-style destructors (.fini_array) are not supported.");
+    ASSERT(__fini_array_start == ., "Old-style destructors (.fini_array) are not supported.");
   }
   /* Thread Local Storage sections -- not supported. */
   /* .tdata : { *(.tdata .tdata.* .gnu.linkonce.td.*) } */
@@ -149,8 +156,9 @@ SECTIONS {
    * executable. We don't know how to handle them, so let's not append them.
    */
   .unsupported : ALIGN(1) SUBALIGN(1) {
+    __unsupported_start = .;
     *(*)
-    ASSERT(0, "Found non-empty unsupported section in ELF inputs.");
+    ASSERT(__unsupported_start == ., "Found non-empty unsupported section in ELF inputs.");
   }
   __p_memsz = .;
 }
