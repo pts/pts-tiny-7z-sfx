@@ -31,8 +31,8 @@ Limitations:
 
 Quick try on Linux i386 and amd64:
 
-  wget -O hello.7z https://github.com/pts/pts-tiny-7z-sfx/releases/download/v9.22+pts5/hello.7z
-  wget -O tiny7zx  https://github.com/pts/pts-tiny-7z-sfx/releases/download/v9.22+pts5/tiny7zx
+  wget -O hello.7z https://github.com/pts/pts-tiny-7z-sfx/releases/download/v9.22+pts8/hello.7z
+  wget -O tiny7zx  https://github.com/pts/pts-tiny-7z-sfx/releases/download/v9.22+pts8/tiny7zx
   chmod +x tiny7zx
   ./tiny7zx t hello.7z
   cat tiny7zx hello.7z >hello.sfx.7z  # Create self-extracting archive.
@@ -43,7 +43,7 @@ Quick try on Linux i386 and amd64:
   ./hello.sfx.7z -y  # Overwrites files.
 
 For best results, please use the latest release version number (instead of
-v9.22+pts5) in the links above.
+v9.22+pts8) in the links above.
 
 To create a .7z archive compatible with pts-tiny-7z-sfx:
 
