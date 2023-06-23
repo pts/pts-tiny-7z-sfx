@@ -6,6 +6,13 @@
 # See the explanation why these flags are useful for small output here:
 # http://ptspts.blogspot.com/2013/12/how-to-make-smaller-c-and-c-binaries.html
 #
+# TODO(pts): Why does it generate larger output than without the linker
+# script (-Wl,-T,minidiet/minidiet.scr)? It's not only the 32 bytes of
+# PT_GNU_STACK.
+#
+# GCC 7.5.0 generates shorter uncompressed output, but GCC 4.8.4 generates
+# shorter compressed output.
+#
 
 set -ex
 
